@@ -1,0 +1,333 @@
+{% extends "base.html" %} {% block title %}{{ current_user.nom }} {{
+current_user.prenom }} | DEFITECH{% endblock %} {% block content %}
+
+<!-- Toast notifications
+<div id="toast-container" class="fixed top-20 left-1/2 transform -translate-x-1/2 z-50 w-full max-w-xs px-4"></div>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+  //   const messages = [
+  //     {% with messages = get_flashed_messages(with_categories = true) %}
+  //       {% if messages %}
+  // {% for category, message in messages %}
+  // { category: '{{ category }}', message: `{{ message|escape }}` } {% if not loop.last %}, {% endif %}
+  // {% endfor %}
+  // {% endif %}
+  // {% endwith %}
+  //   ];
+
+  // const colors = {
+  //   success: 'bg-green-500 text-white',
+  //   error: 'bg-red-500 text-white',
+  //   warning: 'bg-yellow-400 text-gray-900',
+  //   info: 'bg-blue-500 text-white',
+  // };
+
+  // const container = document.getElementById('toast-container');
+
+  // messages.forEach((msg, i) => {
+  //   const toast = document.createElement('div');
+  //   toast.className = `flex items-center justify-between px-4 py-3 rounded-lg shadow-lg mb-2 animate-fade-in ${colors[msg.category] || colors.info}`;
+  //   toast.style.opacity = 0;
+  //   toast.innerHTML = `
+  //       <span class="flex-1 pr-2 text-sm">${msg.message}</span>
+  //       <button class="ml-2 text-xl font-bold focus:outline-none hover:opacity-80" aria-label="Fermer">&times;</button>
+  //     `;
+  //   container.appendChild(toast);
+
+  //   setTimeout(() => { toast.style.opacity = 1; }, 100);
+
+  //   // Fermeture manuelle
+  //   toast.querySelector('button').onclick = () => {
+  //     toast.style.opacity = 0;
+  //     setTimeout(() => toast.remove(), 400);
+  //   };
+
+  //   // Fermeture auto
+  //   setTimeout(() => {
+  //     toast.style.opacity = 0;
+  //     setTimeout(() => toast.remove(), 400);
+  //   }, 4000 + i * 200);
+  // });
+  // });
+</script> -->
+
+<style>
+  @keyframes fade-in {
+    from {
+      opacity: 0;
+      transform: translateY(-10px);
+    }
+
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .animate-fade-in {
+    animation: fade-in 0.4s;
+    transition: opacity 0.4s;
+  }
+</style>
+
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
+  <!-- Informations personnelles -->
+  <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4 sm:p-6 mb-6 sm:mb-8">
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 gap-3">
+      <h2 class="text-lg sm:text-xl font-semibold text-gray-900">
+        Informations personnelles
+      </h2>
+      <span
+        class="inline-flex items-center px-3 py-1 text-xs sm:text-sm font-semibold rounded-full bg-green-100 text-green-800 w-fit">
+        <i class="fas fa-check-circle mr-1"></i>Actif
+      </span>
+    </div>
+
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
+      <div>
+        <p class="text-xs sm:text-sm font-medium text-gray-600 mb-1">
+          Nom complet
+        </p>
+        <p class="text-base sm:text-lg text-gray-900 font-medium">
+          {{ current_user.nom }} {{ current_user.prenom }}
+        </p>
+      </div>
+
+      <div>
+        <p class="text-xs sm:text-sm font-medium text-gray-600 mb-1">Email</p>
+        <p class="text-base sm:text-lg text-gray-900 truncate" title="{{ current_user.email }}">
+          {{ current_user.email }}
+        </p>
+      </div>
+
+      {% if etudiant %}
+      <div>
+        <p class="text-xs sm:text-sm font-medium text-gray-600 mb-1">Filière</p>
+        <p class="text-base sm:text-lg text-gray-900">{{ etudiant.filiere }}</p>
+      </div>
+
+      <div>
+        <p class="text-xs sm:text-sm font-medium text-gray-600 mb-1">Année</p>
+        <p class="text-base sm:text-lg text-gray-900">{{ etudiant.annee }}</p>
+      </div>
+      {% endif %}
+
+      <div>
+        <p class="text-xs sm:text-sm font-medium text-gray-600 mb-1">
+          Numéro étudiant
+        </p>
+        <p class="text-base sm:text-lg text-gray-900">
+          {{ etudiant.numero_etudiant if etudiant else 'Non assigné' }}
+        </p>
+      </div>
+
+      <div>
+        <p class="text-xs sm:text-sm font-medium text-gray-600 mb-1">
+          Date de naissance
+        </p>
+        <p class="text-base sm:text-lg text-gray-900">
+          {{ current_user.date_naissance }}
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Statistiques -->
+  <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 md:gap-6 mb-6 sm:mb-8">
+    <!-- Moyenne générale -->
+    <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4 sm:p-6">
+      <div class="flex flex-col sm:flex-row sm:items-center gap-3">
+        <div class="p-2 sm:p-3 rounded-full bg-green-100 text-green-600 w-fit">
+          <i class="fas fa-star text-lg sm:text-2xl"></i>
+        </div>
+        <div>
+          <p class="text-xs sm:text-sm font-medium text-gray-600">Moyenne</p>
+          <p class="text-xl sm:text-2xl font-semibold text-gray-900">
+            {% if average is not none %} {{ "%.2f"|format(average) }} {% else %}
+            <span class="text-sm text-gray-500">Aucune note</span>
+            {% endif %}
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Matières -->
+    <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4 sm:p-6">
+      <div class="flex flex-col sm:flex-row sm:items-center gap-3">
+        <div class="p-2 sm:p-3 rounded-full bg-blue-100 text-blue-600 w-fit">
+          <i class="fas fa-book text-lg sm:text-2xl"></i>
+        </div>
+        <div>
+          <p class="text-xs sm:text-sm font-medium text-gray-600">Matières</p>
+          <p class="text-xl sm:text-2xl font-semibold text-gray-900">
+            {{ notes|length }}
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Présence -->
+    <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4 sm:p-6">
+      <div class="flex flex-col sm:flex-row sm:items-center gap-3">
+        <div class="p-2 sm:p-3 rounded-full bg-purple-100 text-purple-600 w-fit">
+          <i class="fas fa-calendar-check text-lg sm:text-2xl"></i>
+        </div>
+        <div>
+          <p class="text-xs sm:text-sm font-medium text-gray-600">Présence</p>
+          <p class="text-xl sm:text-2xl font-semibold text-gray-900">
+            {# presence is always a float now (0.0 when no courses) #} {{
+            "%.1f"|format(presence) }}%
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Devoirs -->
+    <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4 sm:p-6">
+      <div class="flex flex-col sm:flex-row sm:items-center gap-3">
+        <div class="p-2 sm:p-3 rounded-full bg-yellow-100 text-yellow-600 w-fit">
+          <i class="fas fa-tasks text-lg sm:text-2xl"></i>
+        </div>
+        <div>
+          <p class="text-xs sm:text-sm font-medium text-gray-600">Devoirs</p>
+          <p class="text-xl sm:text-2xl font-semibold text-gray-900">
+            {{ devoirs_count }}
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Actions rapides et contenu -->
+  <div class="grid grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 mb-6 sm:mb-8">
+    <!-- Actions rapides -->
+    <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4 sm:p-6">
+      <h3 class="text-base sm:text-lg font-semibold text-gray-900 mb-4">
+        Actions rapides
+      </h3>
+      <div class="space-y-2 sm:space-y-3">
+        <a href="{{ url_for('etudiant_voir_notes') }}"
+          class="flex items-center p-3 bg-green-50 rounded-lg hover:bg-green-100 transition-colors group">
+          <i class="fas fa-star text-green-600 mr-3 text-sm sm:text-base"></i>
+          <span class="text-sm sm:text-base text-green-900 group-hover:font-medium">Consulter mes notes</span>
+        </a>
+        <a href="{{ url_for('etudiant_emploi_temps') }}"
+          class="flex items-center p-3 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors group">
+          <i class="fas fa-clock text-blue-600 mr-3 text-sm sm:text-base"></i>
+          <span class="text-sm sm:text-base text-blue-900 group-hover:font-medium">Emploi du temps</span>
+        </a>
+        <a href="{{ url_for('etudiant_devoirs') }}"
+          class="flex items-center p-3 bg-purple-50 rounded-lg hover:bg-purple-100 transition-colors group">
+          <i class="fas fa-tasks text-purple-600 mr-3 text-sm sm:text-base"></i>
+          <span class="text-sm sm:text-base text-purple-900 group-hover:font-medium">Devoirs et examens</span>
+        </a>
+        <a href="{{ url_for('community.index') }}"
+          class="flex items-center p-2 bg-gradient-to-r from-pink-50 to-pink-100 rounded-lg hover:from-pink-100 hover:to-pink-200 transition-all duration-200 group">
+          <i class="fas fa-users text-pink-600 mr-2"></i>
+          <span class="text-sm font-medium text-pink-900 flex-1">Communauté</span>
+        </a>
+        <a href="{{ url_for('resources.index') }}"
+          class="flex items-center p-3 bg-green-50 rounded-lg hover:bg-green-100 transition-colors group">
+          <i class="fas fa-book text-green-600 mr-3 text-sm sm:text-base"></i>
+          <span class="text-sm sm:text-base text-green-900 group-hover:font-medium">Ressources numériques</span>
+        </a>
+      </div>
+    </div>
+
+    <!-- Notes récentes -->
+    <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4 sm:p-6">
+      <h3 class="text-base sm:text-lg font-semibold text-gray-900 mb-4">
+        Notes récentes
+      </h3>
+      {% if notes %}
+      <div class="space-y-2 sm:space-y-3">
+        {% for note in notes[:5] %}
+        <div class="p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+          <div class="flex items-center justify-between gap-2">
+            <div class="min-w-0 flex-1">
+              <p class="font-medium text-gray-900 text-sm sm:text-base truncate">
+                {{ note.matiere.nom }}
+              </p>
+              <p class="text-xs sm:text-sm text-gray-600 truncate">
+                {{ note.type_evaluation }}
+              </p>
+            </div>
+            <span
+              class="inline-flex px-2 py-1 text-xs font-semibold rounded-full whitespace-nowrap {% if note.note >= 10 %}bg-green-100 text-green-800{% elif note.note >= 8 %}bg-yellow-100 text-yellow-800{% else %}bg-red-100 text-red-800{% endif %}">
+              {{ note.note }}/20
+            </span>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+      {% else %}
+      <div class="text-center py-6 sm:py-8">
+        <i class="fas fa-star text-3xl sm:text-4xl text-gray-300 mb-3 sm:mb-4"></i>
+        <p class="text-sm sm:text-base text-gray-500">Aucune note disponible</p>
+      </div>
+      {% endif %}
+    </div>
+
+    <!-- Notifications récentes -->
+    <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4 sm:p-6">
+      <h3 class="text-base sm:text-lg font-semibold text-gray-900 mb-4">
+        Notifications
+      </h3>
+      <div class="space-y-2 sm:space-y-3">
+        {% if notifications %} {% for notif in notifications[:5] %}
+        <div class="p-3 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors">
+          <p class="text-xs sm:text-sm text-blue-900">{{ notif.message }}</p>
+          <p class="text-xs text-blue-600 mt-1">
+            {{ notif.date_created.strftime('%d/%m/%Y %H:%M') }}
+          </p>
+        </div>
+        {% endfor %} {% else %}
+        <div class="text-center py-6 sm:py-8">
+          <i class="fas fa-bell text-3xl sm:text-4xl text-gray-300 mb-3 sm:mb-4"></i>
+          <p class="text-sm sm:text-base text-gray-500">Aucune notification</p>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <!-- Emploi du temps du jour -->
+  <div class="bg-white rounded-lg shadow-sm border border-gray-200">
+    <div class="px-4 sm:px-6 py-3 sm:py-4 border-b border-gray-200">
+      <h3 class="text-base sm:text-lg font-semibold text-gray-900">
+        Emploi du temps - Aujourd'hui
+      </h3>
+    </div>
+    <div class="p-4 sm:p-6">
+      {% if emploi_temps and emploi_temps|length > 0 %}
+      <ul class="divide-y divide-gray-200">
+        {% for cours in emploi_temps %}
+        <li class="py-3 flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2">
+          <div class="flex items-center gap-2">
+            <i class="fas fa-clock text-blue-600 text-sm"></i>
+            <span class="text-sm sm:text-base text-gray-900 font-medium">
+              {{ cours.heure_debut.strftime('%H:%M') }} - {{
+              cours.heure_fin.strftime('%H:%M') }}
+            </span>
+          </div>
+          <div class="flex items-center gap-2 ml-6 sm:ml-0">
+            <i class="fas fa-door-open text-gray-500 text-sm"></i>
+            <span class="text-sm sm:text-base text-gray-700">{{ cours.salle }}</span>
+          </div>
+        </li>
+        {% endfor %}
+      </ul>
+      {% else %}
+      <div class="text-center py-6 sm:py-8">
+        <i class="fas fa-calendar-day text-3xl sm:text-4xl text-gray-300 mb-3 sm:mb-4"></i>
+        <p class="text-sm sm:text-base text-gray-500">
+          Aucun cours programmé aujourd'hui
+        </p>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+{% endblock %}

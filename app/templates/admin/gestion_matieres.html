@@ -1,0 +1,554 @@
+{% extends "admin/base.html" %}
+{% block title %}Gestion des matières{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
+    <!-- Header -->
+    <div class="mb-6 sm:mb-8">
+        <h1 class="text-2xl sm:text-3xl font-bold text-gray-900 flex items-center">
+            <i class="fas fa-book text-blue-600 mr-3"></i>
+            Gestion des Matières par Filière
+        </h1>
+        <p class="mt-2 text-sm text-gray-600">Gérez les matières et leurs enseignants pour chaque filière</p>
+    </div>
+
+    <!-- Sélection de la filière -->
+    <div class="bg-white rounded-xl shadow-lg overflow-hidden mb-6">
+        <div class="bg-gradient-to-r from-blue-600 to-blue-700 px-6 py-5">
+            <h2 class="text-xl font-semibold text-white flex items-center">
+                <i class="fas fa-filter mr-2"></i>
+                Sélectionner une filière
+            </h2>
+        </div>
+        <div class="p-6">
+            <div class="flex flex-col sm:flex-row gap-4">
+                <div class="flex-1">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                        <i class="fas fa-graduation-cap text-gray-400 mr-1"></i>
+                        Filière
+                    </label>
+                    <select id="filiereSelect"
+                        class="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 px-4 py-3">
+                        <option value="">-- Sélectionner une filière --</option>
+                        {% for filiere in filieres %}
+                        <option value="{{ filiere.id }}">{{ filiere.nom }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Liste des matières de la filière -->
+    <div id="matieresContainer" class="bg-white rounded-xl shadow-lg overflow-hidden hidden">
+        <div class="bg-gradient-to-r from-blue-600 to-blue-700 px-6 py-5">
+            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                <h2 class="text-xl font-semibold text-white flex items-center">
+                    <i class="fas fa-list mr-2"></i>
+                    Matières de la filière
+                </h2>
+                <button id="ajouterMatiereBtn"
+                    class="inline-flex items-center justify-center px-5 py-2.5 bg-white text-blue-600 font-semibold rounded-lg hover:bg-blue-50 active:bg-blue-100 transition-colors shadow-md">
+                    <i class="fas fa-plus mr-2"></i>
+                    Ajouter une matière
+                </button>
+            </div>
+        </div>
+
+        <div class="p-6">
+            <div id="matieresList" class="space-y-3">
+                <!-- Les matières seront chargées ici dynamiquement -->
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Template pour une ligne de matière -->
+<template id="matiereTemplate">
+    <div
+        class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 p-4 border border-gray-200 rounded-lg hover:bg-blue-50 hover:border-blue-300 transition-all shadow-sm">
+        <div class="flex-1 min-w-0">
+            <div class="matiere-nom"></div>
+        </div>
+        <div class="flex gap-2 flex-shrink-0">
+            <button
+                class="modifier-matiere inline-flex items-center px-3 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 active:bg-blue-800 transition-colors"
+                data-id="" data-nom="" data-enseignant-id="" data-annee="">
+                <i class="fas fa-edit mr-1.5"></i>
+                <span class="hidden sm:inline">Modifier</span>
+            </button>
+            <button
+                class="supprimer-matiere inline-flex items-center px-3 py-2 bg-red-600 text-white text-sm font-medium rounded-lg hover:bg-red-700 active:bg-red-800 transition-colors"
+                data-id="">
+                <i class="fas fa-trash mr-1.5"></i>
+                <span class="hidden sm:inline">Supprimer</span>
+            </button>
+        </div>
+    </div>
+</template>
+
+<!-- Modal d'ajout de matière -->
+<div id="ajoutMatiereModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50 p-4">
+    <div class="bg-white rounded-xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
+        <!-- Header -->
+        <div class="bg-gradient-to-r from-blue-600 to-blue-700 px-6 py-5">
+            <h3 class="text-xl font-bold text-white flex items-center">
+                <i class="fas fa-plus-circle mr-2"></i>
+                Ajouter une matière
+            </h3>
+        </div>
+
+        <!-- Content -->
+        <div class="p-6 space-y-5">
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">
+                    <i class="fas fa-book text-gray-400 mr-1"></i>
+                    Nom de la matière <span class="text-red-500">*</span>
+                </label>
+                <input type="text" id="nomMatiere"
+                    class="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    placeholder="Ex: Mathématiques, Physique...">
+            </div>
+
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">
+                    <i class="fas fa-calendar text-gray-400 mr-1"></i>
+                    Année <span class="text-red-500">*</span>
+                </label>
+                <select id="anneeSelect"
+                    class="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                    <option value="1ère année">1ère année</option>
+                    <option value="2ème année">2ème année</option>
+                    <option value="3ème année">3ème année</option>
+                    <option value="4ème année">4ème année</option>
+                    <option value="5ème année">5ème année</option>
+                </select>
+            </div>
+
+            <div id="enseignantSelectContainer" class="hidden">
+                <label class="block text-sm font-medium text-gray-700 mb-2">
+                    <i class="fas fa-user-tie text-gray-400 mr-1"></i>
+                    Enseignant <span class="text-red-500">*</span>
+                </label>
+                <select id="enseignantSelect"
+                    class="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                    <option value="">Sélectionnez un enseignant</option>
+                </select>
+                <p class="mt-2 text-xs text-gray-500 flex items-start">
+                    <i class="fas fa-info-circle mr-1 mt-0.5"></i>
+                    <span>Tous les enseignants de la base de données sont affichés</span>
+                </p>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="px-6 py-4 bg-gray-50 border-t border-gray-200 flex flex-col sm:flex-row gap-3 sm:justify-end">
+            <button type="button" id="annulerAjout"
+                class="px-5 py-2.5 border border-gray-300 text-gray-700 font-medium rounded-lg hover:bg-gray-100 active:bg-gray-200 transition-colors">
+                <i class="fas fa-times mr-2"></i>Annuler
+            </button>
+            <button type="button" id="confirmerAjout"
+                class="px-5 py-2.5 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 active:bg-blue-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                disabled>
+                <i class="fas fa-check mr-2"></i>Ajouter
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de modification de matière -->
+<div id="modifierMatiereModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50 p-4">
+    <div class="bg-white rounded-xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
+        <!-- Header -->
+        <div class="bg-gradient-to-r from-blue-600 to-blue-700 px-6 py-5">
+            <h2 class="text-xl font-bold text-white flex items-center">
+                <i class="fas fa-edit mr-2"></i>
+                Modifier la matière
+            </h2>
+        </div>
+
+        <!-- Content -->
+        <form id="formModifierMatiere" class="p-6 space-y-5">
+            <input type="hidden" id="editMatiereId">
+
+            <div>
+                <label for="editNom" class="block text-sm font-medium text-gray-700 mb-2">
+                    <i class="fas fa-book text-gray-400 mr-1"></i>
+                    Nom de la matière <span class="text-red-500">*</span>
+                </label>
+                <input type="text" id="editNom" name="nom" required
+                    class="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+            </div>
+
+            <div>
+                <label for="editAnnee" class="block text-sm font-medium text-gray-700 mb-2">
+                    <i class="fas fa-calendar text-gray-400 mr-1"></i>
+                    Année <span class="text-red-500">*</span>
+                </label>
+                <select id="editAnnee" name="annee" required
+                    class="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                    <option value="1ère année">1ère année</option>
+                    <option value="2ème année">2ème année</option>
+                    <option value="3ème année">3ème année</option>
+                    <option value="4ème année">4ème année</option>
+                    <option value="5ème année">5ème année</option>
+                </select>
+            </div>
+
+            <div>
+                <label for="editEnseignant" class="block text-sm font-medium text-gray-700 mb-2">
+                    <i class="fas fa-user-tie text-gray-400 mr-1"></i>
+                    Enseignant <span class="text-red-500">*</span>
+                </label>
+                <select id="editEnseignant" name="enseignant_id" required
+                    class="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                </select>
+            </div>
+
+            <!-- Footer -->
+            <div class="flex flex-col sm:flex-row gap-3 sm:justify-end pt-4 border-t border-gray-200">
+                <button type="button" onclick="document.getElementById('modifierMatiereModal').classList.add('hidden')"
+                    class="px-5 py-2.5 border border-gray-300 text-gray-700 font-medium rounded-lg hover:bg-gray-100 active:bg-gray-200 transition-colors">
+                    <i class="fas fa-times mr-2"></i>Annuler
+                </button>
+                <button type="submit"
+                    class="px-5 py-2.5 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 active:bg-blue-800 transition-colors">
+                    <i class="fas fa-save mr-2"></i>Enregistrer
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        // Variables globales
+        let filiereId = null;
+
+        const filiereSelect = document.getElementById('filiereSelect');
+        const matieresContainer = document.getElementById('matieresContainer');
+        const matieresList = document.getElementById('matieresList');
+        const ajouterMatiereBtn = document.getElementById('ajouterMatiereBtn');
+        const ajoutMatiereModal = document.getElementById('ajoutMatiereModal');
+        const nomMatiereInput = document.getElementById('nomMatiere');
+        const confirmerAjoutBtn = document.getElementById('confirmerAjout');
+        const annulerAjoutBtn = document.getElementById('annulerAjout');
+        const matiereTemplate = document.getElementById('matiereTemplate');
+
+        // Gérer la sélection d'une filière
+        filiereSelect.addEventListener('change', function () {
+            filiereId = this.value;
+            if (filiereId) {
+                chargerMatieres(filiereId);
+                matieresContainer.classList.remove('hidden');
+            } else {
+                matieresContainer.classList.add('hidden');
+            }
+        });
+
+        // Gérer l'ouverture du modal d'ajout
+        ajouterMatiereBtn.addEventListener('click', async () => {
+            if (!filiereId) {
+                showNotification('Veuillez d\'abord sélectionner une filière', 'error');
+                return;
+            }
+
+            try {
+                const response = await fetch(`/admin/filiere/${filiereId}/enseignants`, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': '{{ csrf_token() }}'
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error(`Erreur ${response.status}`);
+                }
+
+                const enseignants = await response.json();
+                const select = document.getElementById('enseignantSelect');
+                select.innerHTML = '<option value="">Sélectionnez un enseignant</option>';
+
+                if (!enseignants || enseignants.length === 0) {
+                    select.innerHTML += '<option value="" disabled>Aucun enseignant trouvé pour cette filière</option>';
+                    confirmerAjoutBtn.disabled = true;
+                } else {
+                    enseignants.forEach(ens => {
+                        const option = document.createElement('option');
+                        option.value = ens.id;
+                        option.textContent = ens.nom_complet;
+                        select.appendChild(option);
+                    });
+                    confirmerAjoutBtn.disabled = false;
+                }
+
+                document.getElementById('enseignantSelectContainer').classList.remove('hidden');
+                ajoutMatiereModal.classList.remove('hidden');
+                ajoutMatiereModal.classList.add('flex');
+            } catch (error) {
+                console.error('Erreur lors du chargement des enseignants:', error);
+                showNotification('Erreur lors du chargement des enseignants', 'error');
+            }
+        });
+
+        // Fermer le modal
+        annulerAjoutBtn.addEventListener('click', fermerModal);
+        ajoutMatiereModal.addEventListener('click', (e) => {
+            if (e.target === ajoutMatiereModal) fermerModal();
+        });
+
+        function fermerModal() {
+            ajoutMatiereModal.classList.add('hidden');
+            ajoutMatiereModal.classList.remove('flex');
+            nomMatiereInput.value = '';
+            document.getElementById('anneeSelect').value = '1ère année';
+            document.getElementById('enseignantSelect').value = '';
+        }
+
+        // Gérer l'ajout d'une matière
+        confirmerAjoutBtn.addEventListener('click', async () => {
+            const nom = nomMatiereInput.value.trim();
+            const annee = document.getElementById('anneeSelect').value;
+            const enseignantId = document.getElementById('enseignantSelect').value;
+
+            if (!nom) {
+                showNotification('Veuillez saisir un nom de matière', 'error');
+                return;
+            }
+
+            if (!enseignantId) {
+                showNotification('Veuillez sélectionner un enseignant', 'error');
+                return;
+            }
+
+            try {
+                const response = await fetch('/admin/filiere/matiere/ajouter', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': '{{ csrf_token() }}',
+                    },
+                    body: JSON.stringify({
+                        filiere_id: filiereId,
+                        nom: nom,
+                        annee: annee,
+                        enseignant_id: enseignantId
+                    })
+                });
+
+                const data = await response.json();
+                if (data.success) {
+                    showNotification('Matière ajoutée avec succès !', 'success');
+                    fermerModal();
+                    chargerMatieres(filiereId);
+                } else {
+                    showNotification('Erreur: ' + data.message, 'error');
+                }
+            } catch (error) {
+                console.error('Erreur:', error);
+                showNotification('Une erreur est survenue', 'error');
+            }
+        });
+
+        // Charger les matières d'une filière
+        async function chargerMatieres(filiereId) {
+            if (!filiereId) return;
+
+            try {
+                matieresList.innerHTML = '<div class="text-center py-8"><i class="fas fa-spinner fa-spin text-3xl text-blue-600"></i><p class="mt-2 text-gray-600">Chargement...</p></div>';
+
+                const response = await fetch(`/admin/filiere/${filiereId}/matieres`);
+                const data = await response.json();
+
+                if (data.length > 0 && data[0].filiere_nom) {
+                    document.querySelector('#matieresContainer h2').innerHTML =
+                        `<i class="fas fa-list mr-2"></i>Matières de la filière ${data[0].filiere_nom}`;
+                }
+
+                matieresList.innerHTML = '';
+
+                if (data.length === 0) {
+                    matieresList.innerHTML = `
+                        <div class="text-center py-12">
+                            <i class="fas fa-inbox text-5xl text-gray-300 mb-4"></i>
+                            <p class="text-gray-500 font-medium">Aucune matière trouvée</p>
+                            <p class="text-gray-400 text-sm mt-2">Cliquez sur "Ajouter une matière" pour commencer</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                data.forEach(matiere => {
+                    const matiereElement = matiereTemplate.content.cloneNode(true);
+                    matiereElement.querySelector('.matiere-nom').innerHTML = `
+                        <div class="flex flex-col sm:flex-row sm:items-center gap-2">
+                            <span class="font-semibold text-gray-900 text-base">${matiere.nom}</span>
+                            <span class="inline-flex items-center px-2 py-1 bg-blue-100 text-blue-800 text-xs font-medium rounded-full w-fit">
+                                ${matiere.annee || 'Année non définie'}
+                            </span>
+                        </div>
+                        <div class="text-sm text-gray-600 mt-1 flex items-center">
+                            <i class="fas fa-user-tie mr-1.5 text-gray-400"></i>
+                            Enseignant: <span class="font-medium ml-1">${matiere.enseignant_nom || 'Non attribué'}</span>
+                        </div>
+                    `;
+
+                    const modifierBtn = matiereElement.querySelector('.modifier-matiere');
+                    modifierBtn.dataset.id = matiere.id;
+                    modifierBtn.dataset.nom = matiere.nom;
+                    modifierBtn.dataset.annee = matiere.annee || '1ère année';
+                    modifierBtn.dataset.enseignantId = matiere.enseignant_id || '';
+
+                    const deleteBtn = matiereElement.querySelector('.supprimer-matiere');
+                    deleteBtn.dataset.id = matiere.id;
+                    deleteBtn.addEventListener('click', () => supprimerMatiere(matiere.id));
+
+                    matieresList.appendChild(matiereElement);
+                });
+            } catch (error) {
+                console.error('Erreur:', error);
+                matieresList.innerHTML = `
+                    <div class="text-center py-8">
+                        <i class="fas fa-exclamation-circle text-4xl text-red-500 mb-4"></i>
+                        <p class="text-red-600 font-medium">Erreur lors du chargement des matières</p>
+                    </div>
+                `;
+            }
+        }
+
+        // Gérer la suppression d'une matière
+        async function supprimerMatiere(matiereId) {
+            if (!confirm('Êtes-vous sûr de vouloir supprimer cette matière ? Cette action est irréversible.')) return;
+
+            try {
+                const response = await fetch(`/admin/filiere/matiere/${matiereId}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'X-CSRFToken': '{{ csrf_token() }}'
+                    }
+                });
+
+                const data = await response.json();
+                if (data.success) {
+                    showNotification('Matière supprimée avec succès !', 'success');
+                    chargerMatieres(filiereId);
+                } else {
+                    showNotification('Erreur: ' + data.message, 'error');
+                }
+            } catch (error) {
+                console.error('Erreur:', error);
+                showNotification('Une erreur est survenue lors de la suppression', 'error');
+            }
+        }
+
+        // Fonction pour charger la liste des enseignants
+        async function chargerEnseignants() {
+            const response = await fetch(`/admin/filiere/${filiereId}/enseignants`, {
+                method: 'GET',
+                headers: {
+                    'X-CSRFToken': '{{ csrf_token() }}'
+                }
+            });
+            return await response.json();
+        }
+
+        // Gestion du clic sur le bouton de modification
+        document.addEventListener('click', async function (e) {
+            if (e.target.closest('.modifier-matiere')) {
+                const btn = e.target.closest('.modifier-matiere');
+                const modal = document.getElementById('modifierMatiereModal');
+
+                document.getElementById('editMatiereId').value = btn.dataset.id;
+                document.getElementById('editNom').value = btn.dataset.nom;
+                document.getElementById('editAnnee').value = btn.dataset.annee;
+
+                const enseignants = await chargerEnseignants();
+                const selectEnseignant = document.getElementById('editEnseignant');
+                selectEnseignant.innerHTML = enseignants.map(ens =>
+                    `<option value="${ens.id}" ${ens.id == btn.dataset.enseignantId ? 'selected' : ''}>
+                        ${ens.nom_complet || (ens.prenom + ' ' + ens.nom)}
+                    </option>`
+                ).join('');
+
+                modal.classList.remove('hidden');
+                modal.classList.add('flex');
+            }
+        });
+
+        // Gestion de la soumission du formulaire de modification
+        document.getElementById('formModifierMatiere').addEventListener('submit', async function (e) {
+            e.preventDefault();
+
+            const matiereId = document.getElementById('editMatiereId').value;
+            const formData = {
+                nom: document.getElementById('editNom').value,
+                annee: document.getElementById('editAnnee').value,
+                enseignant_id: document.getElementById('editEnseignant').value
+            };
+
+            try {
+                const response = await fetch(`/admin/filiere/matiere/${matiereId}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': '{{ csrf_token() }}'
+                    },
+                    body: JSON.stringify(formData)
+                });
+
+                const result = await response.json();
+
+                if (response.ok) {
+                    showNotification('Matière mise à jour avec succès !', 'success');
+                    document.getElementById('modifierMatiereModal').classList.add('hidden');
+                    document.getElementById('modifierMatiereModal').classList.remove('flex');
+                    chargerMatieres(filiereId);
+                } else {
+                    showNotification('Erreur: ' + (result.message || 'Échec de la mise à jour'), 'error');
+                }
+            } catch (error) {
+                console.error('Erreur:', error);
+                showNotification('Une erreur est survenue lors de la mise à jour', 'error');
+            }
+        });
+
+        // Fonction pour afficher les notifications
+        function showNotification(message, type = 'success') {
+            const notification = document.createElement('div');
+            notification.className = `fixed top-4 right-4 z-50 px-6 py-4 rounded-lg shadow-lg transform transition-all duration-300 ${type === 'success' ? 'bg-green-500' : 'bg-red-500'
+                } text-white font-medium`;
+            notification.innerHTML = `
+                <div class="flex items-center">
+                    <i class="fas ${type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle'} mr-2"></i>
+                    ${message}
+                </div>
+            `;
+            document.body.appendChild(notification);
+
+            setTimeout(() => {
+                notification.style.opacity = '0';
+                setTimeout(() => notification.remove(), 300);
+            }, 3000);
+        }
+    });
+</script>
+
+<style>
+    @keyframes slideIn {
+        from {
+            opacity: 0;
+            transform: translateY(-10px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    #matieresContainer {
+        animation: slideIn 0.3s ease-out;
+    }
+</style>
+{% endblock %}

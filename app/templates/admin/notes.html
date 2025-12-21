@@ -1,0 +1,388 @@
+{% extends "admin/base.html" %}
+{% block title %}Gestion des Notes | DEFITECH{% endblock %}
+{% block content %}
+
+<div class="max-w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
+    <!-- Header -->
+    <div class="mb-6 sm:mb-8">
+        <h1 class="text-2xl sm:text-3xl font-bold text-gray-900 flex items-center">
+            <i class="fas fa-chart-line text-blue-600 mr-3"></i>
+            Gestion des Notes
+        </h1>
+        <p class="mt-2 text-sm text-gray-600">Consultez et filtrez toutes les notes des étudiants</p>
+    </div>
+
+    <!-- Filters Card -->
+    <div class="bg-white rounded-xl shadow-lg overflow-hidden mb-6">
+        <div class="bg-gradient-to-r from-blue-600 to-blue-700 px-6 py-5">
+            <h2 class="text-xl font-semibold text-white flex items-center">
+                <i class="fas fa-filter mr-2"></i>
+                Filtres de recherche
+            </h2>
+        </div>
+
+        <form method="get" class="p-6">
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <!-- Année -->
+                <div>
+                    <label for="annee" class="block text-sm font-medium text-gray-700 mb-2">
+                        <i class="fas fa-calendar text-gray-400 mr-1"></i>
+                        Année
+                    </label>
+                    <select name="annee" id="annee"
+                        class="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                        <option value="">Toutes les années</option>
+                        {% for a in annees %}
+                        <option value="{{ a[0] }}" {% if selected_annee==a[0] %}selected{% endif %}>{{ a[0] }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <!-- Filière -->
+                <div>
+                    <label for="filiere" class="block text-sm font-medium text-gray-700 mb-2">
+                        <i class="fas fa-graduation-cap text-gray-400 mr-1"></i>
+                        Filière
+                    </label>
+                    <select name="filiere" id="filiere"
+                        class="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                        <option value="">Toutes les filières</option>
+                        {% for f in filieres %}
+                        <option value="{{ f[0] }}" {% if selected_filiere==f[0] %}selected{% endif %}>{{ f[0] }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <!-- Recherche -->
+                <div>
+                    <label for="search" class="block text-sm font-medium text-gray-700 mb-2">
+                        <i class="fas fa-search text-gray-400 mr-1"></i>
+                        Recherche étudiant
+                    </label>
+                    <input type="text" name="search" id="search" value="{{ search }}" placeholder="Nom ou prénom..."
+                        class="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                </div>
+
+                <!-- Bouton Filtrer -->
+                <div class="flex items-end">
+                    <button type="submit"
+                        class="w-full px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg transition-colors shadow-md">
+                        <i class="fas fa-search mr-2"></i>Filtrer
+                    </button>
+                </div>
+            </div>
+
+            <!-- Active Filters Display -->
+            {% if selected_annee or selected_filiere or search %}
+            <div class="mt-4 pt-4 border-t border-gray-200">
+                <div class="flex flex-wrap items-center gap-2">
+                    <span class="text-sm font-medium text-gray-700">Filtres actifs:</span>
+                    {% if selected_annee %}
+                    <span
+                        class="inline-flex items-center px-3 py-1 bg-blue-100 text-blue-800 text-xs font-medium rounded-full">
+                        Année: {{ selected_annee }}
+                        <a href="?filiere={{ selected_filiere }}&search={{ search }}"
+                            class="ml-2 text-blue-600 hover:text-blue-800">
+                            <i class="fas fa-times"></i>
+                        </a>
+                    </span>
+                    {% endif %}
+                    {% if selected_filiere %}
+                    <span
+                        class="inline-flex items-center px-3 py-1 bg-green-100 text-green-800 text-xs font-medium rounded-full">
+                        Filière: {{ selected_filiere }}
+                        <a href="?annee={{ selected_annee }}&search={{ search }}"
+                            class="ml-2 text-green-600 hover:text-green-800">
+                            <i class="fas fa-times"></i>
+                        </a>
+                    </span>
+                    {% endif %}
+                    {% if search %}
+                    <span
+                        class="inline-flex items-center px-3 py-1 bg-purple-100 text-purple-800 text-xs font-medium rounded-full">
+                        Recherche: {{ search }}
+                        <a href="?annee={{ selected_annee }}&filiere={{ selected_filiere }}"
+                            class="ml-2 text-purple-600 hover:text-purple-800">
+                            <i class="fas fa-times"></i>
+                        </a>
+                    </span>
+                    {% endif %}
+                    <a href="{{ url_for('admin_notes') }}" class="text-sm text-red-600 hover:text-red-800 font-medium">
+                        <i class="fas fa-times-circle mr-1"></i>Effacer tous les filtres
+                    </a>
+                </div>
+            </div>
+            {% endif %}
+        </form>
+    </div>
+
+    <!-- Results Card -->
+    <div class="bg-white rounded-xl shadow-lg overflow-hidden">
+        <!-- Results Header -->
+        <div class="px-6 py-4 bg-gray-50 border-b border-gray-200">
+            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                <h3 class="text-lg font-semibold text-gray-900">
+                    Résultats
+                    <span class="ml-2 px-3 py-1 bg-blue-100 text-blue-800 text-sm font-medium rounded-full">
+                        {{ notes|length }} note(s)
+                    </span>
+                </h3>
+                {% if notes %}
+                <button onclick="exportToExcel()"
+                    class="inline-flex items-center px-4 py-2 bg-green-600 hover:bg-green-700 text-white text-sm font-medium rounded-lg transition-colors shadow-sm">
+                    <i class="fas fa-file-excel mr-2"></i>Exporter Excel
+                </button>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Desktop Table -->
+        <div class="hidden lg:block overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-100">
+                    <tr>
+                        <th class="px-4 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
+                            Étudiant
+                        </th>
+                        <th class="px-4 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
+                            Formation
+                        </th>
+                        <th class="px-4 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
+                            Matière
+                        </th>
+                        <th class="px-4 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
+                            Type
+                        </th>
+                        <th class="px-4 py-3 text-center text-xs font-bold text-gray-700 uppercase tracking-wider">
+                            Note
+                        </th>
+                        <th class="px-4 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
+                            Enseignant
+                        </th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-100">
+                    {% for note in notes %}
+                    <tr class="hover:bg-blue-50 transition-colors">
+                        <td class="px-4 py-3">
+                            <div class="flex items-center">
+                                <div class="flex-shrink-0 h-10 w-10">
+                                    <div class="h-10 w-10 rounded-full bg-gradient-to-br 
+                                        {% if note.etudiant.user.sexe == 'M' %}from-blue-400 to-blue-600
+                                        {% else %}from-pink-400 to-pink-600{% endif %} 
+                                        flex items-center justify-center shadow-md">
+                                        <i class="fas fa-user text-white"></i>
+                                    </div>
+                                </div>
+                                <div class="ml-3">
+                                    <div class="text-sm font-semibold text-gray-900">
+                                        {{ note.etudiant.user.nom }} {{ note.etudiant.user.prenom }}
+                                    </div>
+                                    <div class="text-xs text-gray-500">
+                                        {{ note.etudiant.user.sexe }}
+                                    </div>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="px-4 py-3">
+                            <div class="text-sm font-medium text-gray-900">{{ note.etudiant.filiere }}</div>
+                            <div class="text-xs text-gray-500">{{ note.etudiant.annee }}</div>
+                        </td>
+                        <td class="px-4 py-3">
+                            <div class="text-sm font-medium text-gray-900">{{ note.matiere.nom }}</div>
+                        </td>
+                        <td class="px-4 py-3">
+                            <span class="inline-flex items-center px-2.5 py-1 text-xs font-medium rounded-full
+                                {% if note.type_evaluation == 'Devoir' %}bg-blue-100 text-blue-800
+                                {% elif note.type_evaluation == 'Exercice' %}bg-green-100 text-green-800
+                                {% elif note.type_evaluation == 'Examen' %}bg-red-100 text-red-800
+                                {% elif note.type_evaluation == 'TP' %}bg-purple-100 text-purple-800
+                                {% else %}bg-gray-100 text-gray-800{% endif %}">
+                                {{ note.type_evaluation }}
+                            </span>
+                        </td>
+                        <td class="px-4 py-3">
+                            <div class="flex items-center justify-center">
+                                {% if note.valeur != '-' and note.valeur %}
+                                {% set note_val = note.valeur|float %}
+                                <div class="flex items-center px-3 py-1.5 rounded-lg
+                                        {% if note_val >= 16 %}bg-green-100
+                                        {% elif note_val >= 14 %}bg-blue-100
+                                        {% elif note_val >= 10 %}bg-yellow-100
+                                        {% else %}bg-red-100{% endif %}">
+                                    <span class="text-xl font-bold
+                                            {% if note_val >= 16 %}text-green-700
+                                            {% elif note_val >= 14 %}text-blue-700
+                                            {% elif note_val >= 10 %}text-yellow-700
+                                            {% else %}text-red-700{% endif %}">
+                                        {{ '%.2f'|format(note_val) }}
+                                    </span>
+                                    <span class="ml-1 text-sm text-gray-600 font-medium">/20</span>
+                                </div>
+                                {% else %}
+                                <span class="px-3 py-1.5 bg-gray-100 rounded-lg text-gray-600 font-medium text-sm">
+                                    Non noté
+                                </span>
+                                {% endif %}
+                            </div>
+                        </td>
+                        <td class="px-4 py-3">
+                            <div class="flex items-center">
+                                <i class="fas fa-chalkboard-teacher text-gray-400 mr-2"></i>
+                                <div class="text-sm text-gray-900">
+                                    {{ note.matiere.enseignant.user.nom }} {{ note.matiere.enseignant.user.prenom }}
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="6" class="px-4 py-12 text-center">
+                            <i class="fas fa-inbox text-5xl text-gray-300 mb-4"></i>
+                            <p class="text-gray-500 font-medium text-lg">Aucune note trouvée</p>
+                            <p class="text-gray-400 text-sm mt-2">Modifiez vos filtres pour afficher d'autres résultats
+                            </p>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Mobile Cards -->
+        <div class="lg:hidden divide-y divide-gray-200">
+            {% for note in notes %}
+            <div class="p-5 hover:bg-gray-50 transition-colors">
+                <!-- Student Info -->
+                <div class="flex items-start mb-4">
+                    <div class="flex-shrink-0 h-12 w-12">
+                        <div class="h-12 w-12 rounded-full bg-gradient-to-br 
+                            {% if note.etudiant.user.sexe == 'M' %}from-blue-400 to-blue-600
+                            {% else %}from-pink-400 to-pink-600{% endif %} 
+                            flex items-center justify-center shadow-md">
+                            <i class="fas fa-user text-white text-lg"></i>
+                        </div>
+                    </div>
+                    <div class="ml-3 flex-1 min-w-0">
+                        <div class="text-base font-bold text-gray-900 break-words">
+                            {{ note.etudiant.user.nom }} {{ note.etudiant.user.prenom }}
+                        </div>
+                        <div class="text-sm text-gray-600 mt-1">
+                            {{ note.etudiant.user.sexe }} • {{ note.etudiant.filiere }} • {{ note.etudiant.annee }}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Note Details -->
+                <div class="space-y-3">
+                    <!-- Matière -->
+                    <div class="flex items-center justify-between py-2 border-t border-gray-100">
+                        <span class="text-sm text-gray-600 flex items-center">
+                            <i class="fas fa-book text-gray-400 mr-2"></i>
+                            Matière
+                        </span>
+                        <span class="text-sm font-semibold text-gray-900">{{ note.matiere.nom }}</span>
+                    </div>
+
+                    <!-- Type & Note -->
+                    <div class="flex items-center justify-between py-2 border-t border-gray-100">
+                        <span class="text-sm text-gray-600">Type</span>
+                        <span class="inline-flex items-center px-2.5 py-1 text-xs font-medium rounded-full
+                            {% if note.type_evaluation == 'Devoir' %}bg-blue-100 text-blue-800
+                            {% elif note.type_evaluation == 'Exercice' %}bg-green-100 text-green-800
+                            {% elif note.type_evaluation == 'Examen' %}bg-red-100 text-red-800
+                            {% elif note.type_evaluation == 'TP' %}bg-purple-100 text-purple-800
+                            {% else %}bg-gray-100 text-gray-800{% endif %}">
+                            {{ note.type_evaluation }}
+                        </span>
+                    </div>
+
+                    <div class="flex items-center justify-between py-2 border-t border-gray-100">
+                        <span class="text-sm text-gray-600">Note</span>
+                        {% if note.valeur != '-' and note.valeur %}
+                        {% set note_val = note.valeur|float %}
+                        <div class="flex items-center px-3 py-1.5 rounded-lg
+                                {% if note_val >= 16 %}bg-green-100
+                                {% elif note_val >= 14 %}bg-blue-100
+                                {% elif note_val >= 10 %}bg-yellow-100
+                                {% else %}bg-red-100{% endif %}">
+                            <span class="text-2xl font-bold
+                                    {% if note_val >= 16 %}text-green-700
+                                    {% elif note_val >= 14 %}text-blue-700
+                                    {% elif note_val >= 10 %}text-yellow-700
+                                    {% else %}text-red-700{% endif %}">
+                                {{ '%.2f'|format(note_val) }}
+                            </span>
+                            <span class="ml-1 text-sm text-gray-600 font-medium">/20</span>
+                        </div>
+                        {% else %}
+                        <span class="px-3 py-1.5 bg-gray-100 rounded-lg text-gray-600 font-medium text-sm">
+                            Non noté
+                        </span>
+                        {% endif %}
+                    </div>
+
+                    <!-- Enseignant -->
+                    <div class="flex items-center justify-between py-2 border-t border-gray-100">
+                        <span class="text-sm text-gray-600 flex items-center">
+                            <i class="fas fa-chalkboard-teacher text-gray-400 mr-2"></i>
+                            Enseignant
+                        </span>
+                        <span class="text-sm font-medium text-gray-900">
+                            {{ note.matiere.enseignant.user.nom }} {{ note.matiere.enseignant.user.prenom }}
+                        </span>
+                    </div>
+                </div>
+            </div>
+            {% else %}
+            <div class="p-12 text-center">
+                <i class="fas fa-inbox text-6xl text-gray-300 mb-4"></i>
+                <p class="text-gray-500 font-medium text-lg">Aucune note trouvée</p>
+                <p class="text-gray-400 text-sm mt-2">Modifiez vos filtres pour afficher d'autres résultats</p>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script>
+    function exportToExcel() {
+        const table = document.querySelector('table');
+        if (!table) {
+            showNotification('Aucune donnée à exporter', 'error');
+            return;
+        }
+
+        const ws = XLSX.utils.table_to_sheet(table);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, 'Notes');
+
+        const date = new Date().toISOString().split('T')[0];
+        const filename = `notes_etudiants_${date}.xlsx`;
+
+        XLSX.writeFile(wb, filename);
+        showNotification(`✓ Fichier "${filename}" téléchargé avec succès !`, 'success');
+    }
+
+    function showNotification(message, type = 'success') {
+        const notification = document.createElement('div');
+        notification.className = `fixed top-4 right-4 z-50 px-6 py-4 rounded-lg shadow-lg transform transition-all duration-300 ${type === 'success' ? 'bg-green-500' : 'bg-red-500'
+            } text-white font-medium max-w-md`;
+        notification.innerHTML = `
+            <div class="flex items-center">
+                <i class="fas ${type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle'} text-xl mr-3"></i>
+                <span>${message}</span>
+            </div>
+        `;
+        document.body.appendChild(notification);
+
+        setTimeout(() => {
+            notification.style.opacity = '0';
+            setTimeout(() => notification.remove(), 300);
+        }, 3000);
+    }
+</script>
+
+{% endblock %}

@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+
+{% block title %}400 - Bad Request{% endblock %}
+
+{% block content %}
+<div class="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+    <div class="max-w-md w-full space-y-8">
+        <div class="text-center">
+            <div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100">
+                <i class="fas fa-exclamation-triangle text-red-600 text-xl"></i>
+            </div>
+            <h2 class="mt-6 text-3xl font-extrabold text-gray-900">400 - Bad Request</h2>
+            <p class="mt-2 text-sm text-gray-600">
+                La requête envoyée au serveur est invalide.
+            </p>
+        </div>
+
+        <div class="mt-8 bg-white shadow rounded-lg p-6">
+            <h3 class="text-lg font-medium text-gray-900 mb-4">Que s'est-il passé ?</h3>
+            <ul class="text-sm text-gray-600 space-y-2">
+                <li>• Les données envoyées sont incorrectes ou incomplètes</li>
+                <li>• Le format de la requête n'est pas valide</li>
+                <li>• Un paramètre requis est manquant</li>
+                <li>• La syntaxe de la requête est erronée</li>
+            </ul>
+
+            <div class="mt-6 pt-6 border-t border-gray-200">
+                <h4 class="text-sm font-medium text-gray-900 mb-2">Comment résoudre ce problème ?</h4>
+                <ul class="text-sm text-gray-600 space-y-1">
+                    <li>• Vérifiez les données du formulaire</li>
+                    <li>• Rechargez la page et réessayez</li>
+                    <li>• Contactez le support si le problème persiste</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="flex space-x-4">
+            <a href="{{ url_for('main.index') }}"
+                class="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg text-center transition duration-200">
+                <i class="fas fa-home mr-2"></i>
+                Retour à l'accueil
+            </a>
+            <button onclick="history.back()"
+                class="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-800 font-medium py-2 px-4 rounded-lg transition duration-200">
+                <i class="fas fa-arrow-left mr-2"></i>
+                Page précédente
+            </button>
+        </div>
+    </div>
+</div>
+{% endblock %}

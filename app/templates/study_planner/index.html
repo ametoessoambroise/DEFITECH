@@ -1,0 +1,586 @@
+{% extends "base.html" %}
+{% block title %}Planificateur d'Études - DEFITECH{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-indigo-50 py-8">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <!-- Header -->
+        <div class="mb-8">
+            <div class="flex items-center justify-between flex-wrap gap-4">
+                <div>
+                    <h1 class="text-3xl md:text-4xl font-bold text-gray-900 flex items-center">
+                        <i class="fas fa-calendar-alt text-blue-600 mr-3"></i>
+                        Mon Planificateur d'Études
+                    </h1>
+                    <p class="mt-2 text-gray-600">
+                        Optimisez votre apprentissage avec un planning intelligent
+                    </p>
+                </div>
+                <div class="flex gap-3">
+                    <button onclick="refreshDashboard()"
+                        class="px-4 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
+                        <i class="fas fa-sync-alt mr-2"></i>
+                        Actualiser
+                    </button>
+                    <button onclick="openGeneratePlanModal()"
+                        class="px-6 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg hover:from-blue-700 hover:to-indigo-700 transition-all shadow-md">
+                        <i class="fas fa-magic mr-2"></i>
+                        Générer un Plan
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Loading State -->
+        <div id="loading-state" class="hidden">
+            <div class="flex items-center justify-center py-20">
+                <div class="animate-spin rounded-full h-16 w-16 border-b-2 border-blue-600"></div>
+            </div>
+        </div>
+
+        <!-- Dashboard Content -->
+        <div id="dashboard-content">
+            <!-- Overview Cards -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                <!-- Moyenne Générale -->
+                <div class="bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl shadow-lg p-6 text-white">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="bg-white/20 rounded-lg p-3">
+                            <i class="fas fa-star text-2xl"></i>
+                        </div>
+                        <span id="moyenne-badge" class="text-xs bg-white/20 px-2 py-1 rounded-full">--</span>
+                    </div>
+                    <h3 class="text-sm font-medium opacity-90">Moyenne Générale</h3>
+                    <p id="moyenne-generale" class="text-3xl font-bold mt-2">--</p>
+                    <p id="nb-notes" class="text-xs mt-2 opacity-75">-- notes</p>
+                </div>
+
+                <!-- Taux de Présence -->
+                <div class="bg-gradient-to-br from-green-500 to-green-600 rounded-2xl shadow-lg p-6 text-white">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="bg-white/20 rounded-lg p-3">
+                            <i class="fas fa-calendar-check text-2xl"></i>
+                        </div>
+                        <span id="presence-status" class="text-xs bg-white/20 px-2 py-1 rounded-full">--</span>
+                    </div>
+                    <h3 class="text-sm font-medium opacity-90">Taux de Présence</h3>
+                    <p id="taux-presence" class="text-3xl font-bold mt-2">--%</p>
+                    <p class="text-xs mt-2 opacity-75">Assiduité</p>
+                </div>
+
+                <!-- Devoirs à Venir -->
+                <div class="bg-gradient-to-br from-orange-500 to-orange-600 rounded-2xl shadow-lg p-6 text-white">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="bg-white/20 rounded-lg p-3">
+                            <i class="fas fa-clipboard-list text-2xl"></i>
+                        </div>
+                        <span id="devoirs-urgents-badge"
+                            class="text-xs bg-red-500 px-2 py-1 rounded-full hidden">!</span>
+                    </div>
+                    <h3 class="text-sm font-medium opacity-90">Devoirs à Venir</h3>
+                    <p id="devoirs-a-venir" class="text-3xl font-bold mt-2">--</p>
+                    <p id="devoirs-urgents" class="text-xs mt-2 opacity-75">-- urgents</p>
+                </div>
+
+                <!-- Temps d'Étude Recommandé -->
+                <div class="bg-gradient-to-br from-purple-500 to-purple-600 rounded-2xl shadow-lg p-6 text-white">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="bg-white/20 rounded-lg p-3">
+                            <i class="fas fa-clock text-2xl"></i>
+                        </div>
+                        <span class="text-xs bg-white/20 px-2 py-1 rounded-full">par jour</span>
+                    </div>
+                    <h3 class="text-sm font-medium opacity-90">Temps Recommandé</h3>
+                    <p id="temps-etude" class="text-3xl font-bold mt-2">-- min</p>
+                    <p class="text-xs mt-2 opacity-75">Étude quotidienne</p>
+                </div>
+            </div>
+
+            <!-- Main Content Grid -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+                <!-- Prochains Devoirs -->
+                <div class="lg:col-span-2 bg-white rounded-2xl shadow-lg border border-gray-200 overflow-hidden">
+                    <div class="bg-gradient-to-r from-blue-600 to-indigo-600 px-6 py-4">
+                        <h3 class="text-xl font-bold text-white flex items-center">
+                            <i class="fas fa-tasks mr-2"></i>
+                            Prochains Devoirs
+                        </h3>
+                    </div>
+                    <div id="prochains-devoirs" class="p-6">
+                        <div class="space-y-4">
+                            <div class="animate-pulse">
+                                <div class="h-20 bg-gray-200 rounded-lg"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Matières à Améliorer -->
+                <div class="bg-white rounded-2xl shadow-lg border border-gray-200 overflow-hidden">
+                    <div class="bg-gradient-to-r from-red-500 to-red-600 px-6 py-4">
+                        <h3 class="text-xl font-bold text-white flex items-center">
+                            <i class="fas fa-exclamation-triangle mr-2"></i>
+                            À Améliorer
+                        </h3>
+                    </div>
+                    <div id="matieres-faibles" class="p-6">
+                        <div class="space-y-3">
+                            <div class="animate-pulse">
+                                <div class="h-16 bg-gray-200 rounded-lg"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recommandations IA -->
+            <div class="bg-white rounded-2xl shadow-lg border border-gray-200 overflow-hidden mb-8">
+                <div class="bg-gradient-to-r from-indigo-600 to-purple-600 px-6 py-4">
+                    <h3 class="text-xl font-bold text-white flex items-center">
+                        <i class="fas fa-robot mr-2"></i>
+                        Recommandations Intelligentes IA
+                    </h3>
+                </div>
+                <div id="recommendations" class="p-6">
+                    <div class="space-y-4">
+                        <div class="animate-pulse">
+                            <div class="h-24 bg-gray-200 rounded-lg"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- CTA Section -->
+            <div
+                class="bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 rounded-2xl shadow-2xl p-8 text-center">
+                <div class="max-w-3xl mx-auto">
+                    <i class="fas fa-magic text-5xl text-white mb-4"></i>
+                    <h2 class="text-3xl font-bold text-white mb-4">
+                        Prêt à optimiser votre apprentissage ?
+                    </h2>
+                    <p class="text-blue-100 mb-6 text-lg">
+                        Générez un plan d'étude personnalisé basé sur vos performances, vos devoirs et vos objectifs.
+                    </p>
+                    <button onclick="openGeneratePlanModal()"
+                        class="px-8 py-4 bg-white text-blue-600 rounded-xl font-semibold hover:bg-blue-50 transition-all transform hover:scale-105 shadow-lg">
+                        <i class="fas fa-calendar-plus mr-2"></i>
+                        Générer Mon Plan d'Étude
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Génération de Plan -->
+<div id="generate-plan-modal" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+        <div class="sticky top-0 bg-gradient-to-r from-blue-600 to-indigo-600 px-6 py-4 rounded-t-2xl">
+            <div class="flex items-center justify-between">
+                <h3 class="text-2xl font-bold text-white flex items-center">
+                    <i class="fas fa-magic mr-3"></i>
+                    Générer un Plan d'Étude
+                </h3>
+                <button onclick="closeGeneratePlanModal()" class="text-white hover:text-blue-100 transition-colors">
+                    <i class="fas fa-times text-2xl"></i>
+                </button>
+            </div>
+        </div>
+
+        <form id="generate-plan-form" class="p-6 space-y-6">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">
+                        <i class="fas fa-calendar-alt mr-1 text-blue-600"></i>
+                        Date de début
+                    </label>
+                    <input type="date" id="start-date"
+                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        required />
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">
+                        <i class="fas fa-calendar-check mr-1 text-blue-600"></i>
+                        Date de fin
+                    </label>
+                    <input type="date" id="end-date"
+                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        required />
+                </div>
+            </div>
+
+            <div>
+                <label class="block text-sm font-semibold text-gray-700 mb-2">
+                    <i class="fas fa-clock mr-1 text-blue-600"></i>
+                    Heures d'étude par jour
+                </label>
+                <div class="flex items-center gap-4">
+                    <input type="range" id="study-hours" min="1" max="8" value="3" class="flex-1"
+                        oninput="updateStudyHoursLabel()" />
+                    <span id="study-hours-label" class="text-2xl font-bold text-blue-600 w-16 text-center">3h</span>
+                </div>
+                <p class="text-xs text-gray-500 mt-2">Recommandé : 2-4 heures par jour</p>
+            </div>
+
+            <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                <div class="flex">
+                    <i class="fas fa-info-circle text-blue-600 mt-1 mr-3"></i>
+                    <div>
+                        <h4 class="font-semibold text-blue-900 mb-1">Comment ça marche ?</h4>
+                        <p class="text-sm text-blue-800">
+                            Notre algorithme intelligent analyse vos performances, vos devoirs urgents et vos matières
+                            faibles pour créer un plan d'étude optimisé avec la technique Pomodoro.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <button type="submit"
+                class="w-full px-6 py-4 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl font-semibold hover:from-blue-700 hover:to-indigo-700 transition-all shadow-lg flex items-center justify-center">
+                <i class="fas fa-magic mr-2"></i>
+                Générer Mon Plan
+            </button>
+        </form>
+    </div>
+</div>
+
+<script>
+    // ==================== INITIALISATION ====================
+    document.addEventListener("DOMContentLoaded", function () {
+        loadDashboard();
+        setDefaultDates();
+    });
+
+    // ==================== CHARGEMENT DASHBOARD ====================
+    async function loadDashboard() {
+        showLoading(true);
+
+        try {
+            const response = await fetch("/study-planner/api/dashboard");
+            const result = await response.json();
+
+            if (result.success) {
+                updateDashboard(result.data);
+            } else {
+                showError("Erreur lors du chargement des données");
+            }
+        } catch (error) {
+            console.error("Error loading dashboard:", error);
+            showError("Erreur de connexion");
+        } finally {
+            showLoading(false);
+        }
+    }
+
+    function showLoading(isLoading) {
+        const loadingState = document.getElementById("loading-state");
+        const dashboardContent = document.getElementById("dashboard-content");
+
+        if (isLoading) {
+            loadingState.classList.remove("hidden");
+            dashboardContent.classList.add("hidden");
+        } else {
+            loadingState.classList.add("hidden");
+            dashboardContent.classList.remove("hidden");
+        }
+    }
+
+    // ==================== UPDATE DASHBOARD ====================
+    function updateDashboard(data) {
+        const performance = data.performance || {};
+        document.getElementById("moyenne-generale").textContent = performance.moyenne_generale || "0.00";
+        document.getElementById("nb-notes").textContent = `${performance.nombre_notes || 0} notes`;
+        document.getElementById("taux-presence").textContent = `${performance.taux_presence || 0}%`;
+
+        // Badge moyenne
+        const moyenne = parseFloat(performance.moyenne_generale || 0);
+        const moyenneBadge = document.getElementById("moyenne-badge");
+        if (moyenne >= 16) {
+            moyenneBadge.textContent = "Excellent";
+            moyenneBadge.className = "text-xs bg-green-500 px-2 py-1 rounded-full";
+        } else if (moyenne >= 14) {
+            moyenneBadge.textContent = "Très bien";
+            moyenneBadge.className = "text-xs bg-blue-500 px-2 py-1 rounded-full";
+        } else if (moyenne >= 12) {
+            moyenneBadge.textContent = "Bien";
+            moyenneBadge.className = "text-xs bg-yellow-500 px-2 py-1 rounded-full";
+        } else {
+            moyenneBadge.textContent = "À améliorer";
+            moyenneBadge.className = "text-xs bg-red-500 px-2 py-1 rounded-full";
+        }
+
+        // Devoirs
+        const devoirs = data.devoirs || {};
+        document.getElementById("devoirs-a-venir").textContent = devoirs.a_venir || 0;
+        document.getElementById("devoirs-urgents").textContent = `${devoirs.urgents || 0} urgents`;
+
+        if (devoirs.urgents > 0) {
+            document.getElementById("devoirs-urgents-badge").classList.remove("hidden");
+        }
+
+        // Temps d'étude
+        document.getElementById("temps-etude").textContent = `${data.temps_etude_recommande || 120} min`;
+
+        // Render components
+        renderProchainsDevoirs(data.prochains_devoirs || []);
+        renderMatieiresFaibles(data.matieres_faibles || []);
+        loadRecommendations();
+    }
+
+    // ==================== RENDER COMPONENTS ====================
+    function renderProchainsDevoirs(devoirs) {
+        const container = document.getElementById("prochains-devoirs");
+
+        if (devoirs.length === 0) {
+            container.innerHTML = `
+            <div class="text-center py-8">
+                <i class="fas fa-check-circle text-green-500 text-5xl mb-3"></i>
+                <p class="text-gray-600">Aucun devoir à venir</p>
+            </div>
+        `;
+            return;
+        }
+
+        container.innerHTML = devoirs.map((devoir) => {
+            const urgentClass = devoir.urgent ? "border-red-500 bg-red-50" : "border-gray-200";
+            const urgentBadge = devoir.urgent
+                ? '<span class="text-xs bg-red-500 text-white px-2 py-1 rounded-full">Urgent</span>'
+                : "";
+
+            return `
+            <div class="border-l-4 ${urgentClass} rounded-lg p-4 hover:shadow-md transition-shadow">
+                <div class="flex items-start justify-between">
+                    <div class="flex-1">
+                        <div class="flex items-center gap-2 mb-1">
+                            <h4 class="font-semibold text-gray-900">${devoir.titre}</h4>
+                            ${urgentBadge}
+                        </div>
+                        <p class="text-sm text-gray-600">${devoir.type}</p>
+                        <div class="flex items-center gap-4 mt-2 text-xs text-gray-500">
+                            <span><i class="far fa-calendar mr-1"></i>${devoir.date_rendu ? new Date(devoir.date_rendu).toLocaleDateString("fr-FR") : "N/A"}</span>
+                            <span><i class="far fa-clock mr-1"></i>${devoir.jours_restants} jours restants</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+        }).join("");
+    }
+
+    function renderMatieiresFaibles(matieres) {
+        const container = document.getElementById("matieres-faibles");
+
+        if (matieres.length === 0) {
+            container.innerHTML = `
+            <div class="text-center py-8">
+                <i class="fas fa-trophy text-yellow-500 text-4xl mb-3"></i>
+                <p class="text-gray-600 text-sm">Toutes vos matières sont au-dessus de 12/20 !</p>
+            </div>
+        `;
+            return;
+        }
+
+        container.innerHTML = matieres.slice(0, 3).map((matiere) => {
+            const colorClass = matiere.moyenne < 8
+                ? "bg-red-100 text-red-800"
+                : matiere.moyenne < 10
+                    ? "bg-orange-100 text-orange-800"
+                    : "bg-yellow-100 text-yellow-800";
+
+            return `
+            <div class="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
+                <div class="flex items-center justify-between mb-2">
+                    <h4 class="font-semibold text-gray-900 text-sm">${matiere.matiere}</h4>
+                    <span class="${colorClass} text-xs px-2 py-1 rounded-full font-semibold">${matiere.moyenne}/20</span>
+                </div>
+                <div class="flex items-center justify-between text-xs text-gray-500">
+                    <span>${matiere.niveau_difficulte}</span>
+                    <span>Priorité: ${Math.round(matiere.priorite)}/100</span>
+                </div>
+            </div>
+        `;
+        }).join("");
+    }
+
+    // ==================== RECOMMANDATIONS AI ====================
+    async function loadRecommendations() {
+        const container = document.getElementById("recommendations");
+
+        // Loading state
+        container.innerHTML = `
+        <div class="flex items-center justify-center py-8">
+            <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mr-4"></div>
+            <span class="text-gray-600">Génération des recommandations IA...</span>
+        </div>
+    `;
+
+        try {
+            const response = await fetch("/study-planner/api/recommendations");
+            const result = await response.json();
+
+            if (result.success && result.data) {
+                // Parse et afficher les recommendations
+                renderRecommendations(result.data);
+            } else {
+                container.innerHTML = `
+                <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                    <div class="flex">
+                        <i class="fas fa-exclamation-triangle text-yellow-600 text-xl mt-1 mr-3"></i>
+                        <div>
+                            <h4 class="font-semibold text-yellow-900 mb-1">Service IA temporairement indisponible</h4>
+                            <p class="text-sm text-yellow-800">Les recommandations intelligentes ne peuvent pas être générées pour le moment. Veuillez réessayer plus tard.</p>
+                        </div>
+                    </div>
+                </div>
+            `;
+            }
+        } catch (error) {
+            console.error("Error loading recommendations:", error);
+            container.innerHTML = `
+            <div class="bg-red-50 border border-red-200 rounded-lg p-4">
+                <div class="flex">
+                    <i class="fas fa-times-circle text-red-600 text-xl mt-1 mr-3"></i>
+                    <div>
+                        <h4 class="font-semibold text-red-900 mb-1">Erreur de connexion</h4>
+                        <p class="text-sm text-red-800">Impossible de charger les recommandations. Vérifiez votre connexion internet.</p>
+                    </div>
+                </div>
+            </div>
+        `;
+        }
+    }
+
+    function renderRecommendations(recommendations) {
+        const container = document.getElementById("recommendations");
+
+        if (!Array.isArray(recommendations) || recommendations.length === 0) {
+            container.innerHTML = `
+            <div class="text-center py-8">
+                <i class="fas fa-check-circle text-green-500 text-4xl mb-3"></i>
+                <p class="text-gray-600">Vous êtes sur la bonne voie !</p>
+            </div>
+        `;
+            return;
+        }
+
+        container.innerHTML = recommendations.map((rec) => {
+            const iconColor = rec.type === "critique" ? "text-red-600"
+                : rec.type === "warning" ? "text-yellow-600"
+                    : rec.type === "success" ? "text-green-600"
+                        : "text-blue-600";
+
+            const bgColor = rec.type === "critique" ? "bg-red-50 border-red-200"
+                : rec.type === "warning" ? "bg-yellow-50 border-yellow-200"
+                    : rec.type === "success" ? "bg-green-50 border-green-200"
+                        : "bg-blue-50 border-blue-200";
+
+            const actionsHTML = rec.actions && Array.isArray(rec.actions) ? `
+            <ul class="space-y-2 mt-3">
+                ${rec.actions.map(action => `
+                    <li class="text-sm text-gray-700 flex items-start">
+                        <i class="fas fa-check-circle text-green-500 mr-2 mt-0.5"></i>
+                        <span>${action}</span>
+                    </li>
+                `).join("")}
+            </ul>
+        ` : "";
+
+            return `
+            <div class="border ${bgColor} rounded-lg p-5 hover:shadow-md transition-shadow">
+                <div class="flex">
+                    <i class="${rec.icon || 'fas fa-info-circle'} ${iconColor} text-2xl mt-1 mr-4 flex-shrink-0"></i>
+                    <div class="flex-1">
+                        <h4 class="font-bold text-gray-900 mb-2 text-lg">${rec.title || "Recommandation"}</h4>
+                        <p class="text-sm text-gray-700 leading-relaxed">${rec.message || ""}</p>
+                        ${actionsHTML}
+                    </div>
+                </div>
+            </div>
+        `;
+        }).join("");
+    }
+
+    // ==================== MODAL FUNCTIONS ====================
+    function openGeneratePlanModal() {
+        document.getElementById("generate-plan-modal").classList.remove("hidden");
+    }
+
+    function closeGeneratePlanModal() {
+        document.getElementById("generate-plan-modal").classList.add("hidden");
+    }
+
+    function setDefaultDates() {
+        const today = new Date();
+        const nextWeek = new Date(today);
+        nextWeek.setDate(today.getDate() + 7);
+
+        document.getElementById("start-date").valueAsDate = today;
+        document.getElementById("end-date").valueAsDate = nextWeek;
+    }
+
+    function updateStudyHoursLabel() {
+        const hours = document.getElementById("study-hours").value;
+        document.getElementById("study-hours-label").textContent = `${hours}h`;
+    }
+
+    // ==================== FORM SUBMISSION ====================
+    document.getElementById("generate-plan-form").addEventListener("submit", async function (e) {
+        e.preventDefault();
+
+        const startDate = document.getElementById("start-date").value;
+        const endDate = document.getElementById("end-date").value;
+        const studyHours = document.getElementById("study-hours").value;
+
+        // Show loading in button
+        const submitBtn = e.target.querySelector('button[type="submit"]');
+        const originalHTML = submitBtn.innerHTML;
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Génération en cours...';
+        submitBtn.disabled = true;
+
+        try {
+            const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute("content") || "";
+
+            const response = await fetch("/study-planner/api/generate-plan", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-CSRFToken": csrfToken,
+                },
+                body: JSON.stringify({
+                    start_date: startDate,
+                    end_date: endDate,
+                    study_hours_per_day: parseInt(studyHours),
+                    focus_areas: [],
+                }),
+            });
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
+            const result = await response.json();
+
+            if (result.success) {
+                window.location.href = "/study-planner/view-plan?data=" + encodeURIComponent(JSON.stringify(result.data));
+            } else {
+                alert("Erreur: " + result.error);
+            }
+        } catch (error) {
+            console.error("Error generating plan:", error);
+            alert("Erreur lors de la génération du plan: " + error.message);
+        } finally {
+            submitBtn.innerHTML = originalHTML;
+            submitBtn.disabled = false;
+        }
+    });
+
+    function refreshDashboard() {
+        loadDashboard();
+    }
+
+    function showError(message) {
+        alert(message);
+    }
+</script>
+
+{% endblock %}

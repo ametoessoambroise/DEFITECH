@@ -1,0 +1,418 @@
+{% extends "base.html" %}
+{% block title %}{{ room.name }} - Visioconférence{% endblock %}
+
+{% block extra_css %}
+{{ super() }}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+<style>
+    /* Base Modern Styles */
+    :root {
+        --glass-bg: rgba(15, 23, 42, 0.85);
+        --glass-border: rgba(255, 255, 255, 0.1);
+        --primary-accent: #3b82f6;
+        --danger-accent: #ef4444;
+    }
+
+    body {
+        overflow: hidden;
+        background-color: #0f172a;
+        /* Slate 900 */
+    }
+
+    /* Layout Transitions */
+    .transition-all-300 {
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    /* Video Container Aspect Ratio & Fit */
+    .video-card {
+        background-color: #1e293b;
+        border-radius: 12px;
+        overflow: hidden;
+        position: relative;
+        transition: transform 0.2s;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    }
+
+    .video-card video {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+        /* Like Meet, ensure whole video sees */
+        background-color: #000;
+        transform: scaleX(-1);
+        /* Mirror effect by default for local, toggleable */
+    }
+
+    .video-card.screen-share video {
+        transform: none !important;
+        object-fit: contain;
+    }
+
+    /* Avatar Placeholder (when video off) */
+    .avatar-placeholder {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background-color: #334155;
+        z-index: 10;
+    }
+
+    /* Participant Info Label */
+    .participant-label {
+        position: absolute;
+        bottom: 12px;
+        left: 12px;
+        background: rgba(0, 0, 0, 0.6);
+        backdrop-filter: blur(4px);
+        padding: 4px 12px;
+        border-radius: 6px;
+        color: white;
+        font-size: 0.875rem;
+        font-weight: 500;
+        z-index: 20;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        max-width: 80%;
+    }
+
+    /* Active Speaker Ring */
+    .active-speaker-ring {
+        position: absolute;
+        inset: 0;
+        border: 3px solid #3b82f6;
+        border-radius: 12px;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.2s;
+        z-index: 30;
+    }
+
+    .is-speaking .active-speaker-ring {
+        opacity: 1;
+    }
+
+    /* Audio Visu / Status Icons */
+    .status-indicator {
+        width: 24px;
+        height: 24px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.1);
+    }
+
+    .status-indicator.is-muted {
+        background: rgba(239, 68, 68, 0.2);
+        color: #ef4444;
+    }
+
+    /* Control Bar Glassmorphism */
+    .control-bar {
+        background: rgba(30, 41, 59, 0.8);
+        backdrop-filter: blur(12px);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+    }
+
+    /* Layout Modes */
+    #layout-container {
+        display: grid;
+        gap: 16px;
+        height: 100%;
+        width: 100%;
+        padding: 16px;
+    }
+
+    /* Grid Mode (Default) */
+    .layout-grid {
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        grid-auto-rows: 1fr;
+        align-content: center;
+        justify-content: center;
+    }
+
+    /* Spotlight Mode (Stage + Filmstrip) */
+    .layout-spotlight {
+        display: flex !important;
+        flex-direction: column;
+        gap: 16px;
+    }
+
+    .layout-spotlight .stage-area {
+        flex: 1;
+        width: 100%;
+        position: relative;
+    }
+
+    .layout-spotlight .filmstrip-area {
+        height: 140px;
+        flex-shrink: 0;
+        display: flex;
+        gap: 12px;
+        overflow-x: auto;
+        padding-bottom: 4px;
+        justify-content: center;
+    }
+
+    .layout-spotlight .filmstrip-area .video-card {
+        width: 220px;
+        height: 100%;
+        flex-shrink: 0;
+    }
+
+    /* Toast Animation */
+    @keyframes slideUpFade {
+        from {
+            transform: translateY(100%);
+            opacity: 0;
+        }
+
+        to {
+            transform: translateY(0);
+            opacity: 1;
+        }
+    }
+
+    .toast-animate {
+        animation: slideUpFade 0.3s ease-out forwards;
+    }
+
+    /* Pin Overlay */
+    .pin-overlay {
+        position: absolute;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.3);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        opacity: 0;
+        transition: opacity 0.2s;
+        cursor: pointer;
+        z-index: 25;
+    }
+
+    .video-card:hover .pin-overlay {
+        opacity: 1;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Preflight / Device Check Modal -->
+<div id="preflight-modal" class="fixed inset-0 z-[100] bg-slate-900 flex items-center justify-center p-4">
+    <div
+        class="bg-slate-800 rounded-2xl shadow-2xl max-w-4xl w-full border border-slate-700 flex flex-col md:flex-row overflow-hidden">
+
+        <!-- Preview Side -->
+        <div class="flex-1 p-6 flex flex-col items-center justify-center bg-black/40">
+            <div
+                class="relative w-full max-w-lg aspect-video bg-slate-900 rounded-xl overflow-hidden shadow-lg border border-slate-700">
+                <video id="preflight-video" autoplay muted playsinline class="w-full h-full object-cover"></video>
+                <div id="preflight-placeholder"
+                    class="absolute inset-0 flex items-center justify-center text-slate-400">
+                    <i class="fas fa-video-slash text-4xl mb-2"></i>
+                    <span>Caméra éteinte</span>
+                </div>
+                <!-- Audio Meter Overlay -->
+                <div class="absolute bottom-4 left-4 right-4 h-1 bg-slate-700 rounded-full overflow-hidden">
+                    <div id="preflight-audio-bar" class="h-full bg-green-500 w-0 transition-all duration-75"></div>
+                </div>
+            </div>
+            <p class="mt-4 text-slate-400 text-sm">Vérifiez votre apparence et votre son avant de rejoindre.</p>
+        </div>
+
+        <!-- Controls Side -->
+        <div class="w-full md:w-96 p-8 bg-slate-800 flex flex-col justify-center border-l border-slate-700">
+            <h2 class="text-2xl font-bold text-white mb-2">Prêt à rejoindre ?</h2>
+            <p class="text-slate-400 mb-8">{{ room.name }}</p>
+
+            <div class="space-y-6 flex-1">
+                <!-- Device Selectors -->
+                <div class="space-y-2">
+                    <label class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Microphone</label>
+                    <div class="relative">
+                        <i class="fas fa-microphone absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                        <select id="microphone-select"
+                            class="w-full pl-10 pr-4 py-2.5 bg-slate-900 text-white rounded-lg border border-slate-700 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none appearance-none transition-colors"></select>
+                    </div>
+                </div>
+
+                <div class="space-y-2">
+                    <label class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Caméra</label>
+                    <div class="relative">
+                        <i class="fas fa-video absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                        <select id="camera-select"
+                            class="w-full pl-10 pr-4 py-2.5 bg-slate-900 text-white rounded-lg border border-slate-700 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none appearance-none transition-colors"></select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="mt-8 flex gap-3">
+                <button id="preflight-cancel"
+                    class="px-4 py-3 rounded-xl font-medium text-slate-300 hover:bg-slate-700 transition-colors flex-1">
+                    Annuler
+                </button>
+                <button id="preflight-join"
+                    class="px-4 py-3 rounded-xl font-medium text-white bg-blue-600 hover:bg-blue-700 shadow-lg shadow-blue-600/20 transition-all hover:scale-[1.02] active:scale-[0.98] flex-1">
+                    Rejoindre
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Main App Container -->
+<div class="h-screen flex flex-col relative text-white">
+
+    <!-- Navbar / Header (Auto-hides) -->
+    <div
+        class="absolute top-0 left-0 right-0 z-40 p-4 transition-transform duration-300 hover:translate-y-0 -translate-y-full hover:bg-gradient-to-b hover:from-black/60 hover:to-transparent">
+        <div class="flex items-center justify-between">
+            <div
+                class="flex items-center gap-3 bg-black/40 backdrop-blur-md px-4 py-2 rounded-full border border-white/10">
+                <span class="font-medium text-sm">{{ room.name }}</span>
+                <span class="w-px h-4 bg-white/20"></span>
+                <span id="header-clock" class="text-xs text-slate-300">00:00</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content Area -->
+    <div class="flex-1 flex overflow-hidden relative">
+
+        <!-- Video Grid / Stage -->
+        <main id="layout-container" class="layout-grid p-4 transition-all-300">
+            <!-- Videos injected here by JS -->
+            <!-- Example structure for JS to build:
+                 <div class="video-card"> ... </div> 
+            -->
+        </main>
+
+        <!-- Right Sidebar (Chat/Participants) -->
+        <aside id="side-panel"
+            class="w-80 bg-slate-900 border-l border-slate-700 transform translate-x-full transition-transform duration-300 absolute inset-y-0 right-0 z-30 flex flex-col">
+            <!-- Sidebar Header -->
+            <div class="p-4 border-b border-slate-700 flex items-center justify-between">
+                <h3 id="panel-title" class="font-semibold text-lg">Participants</h3>
+                <button id="close-panel" class="text-slate-400 hover:text-white transition-colors">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+
+            <!-- Content Container -->
+            <div id="panel-content" class="flex-1 overflow-y-auto p-2">
+                <!-- Dynamic Content: Participant List OR Chat Messages -->
+                <div id="participants-view" class="space-y-1">
+                    <!-- Participant Items -->
+                </div>
+                <div id="chat-view" class="hidden h-full flex flex-col">
+                    <div id="chat-messages" class="flex-1 space-y-3 p-2 overflow-y-auto"></div>
+                    <form id="chat-form" class="mt-2 relative">
+                        <input type="text" id="chat-input" placeholder="Envoyer un message..."
+                            class="w-full bg-slate-800 text-white rounded-full px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 border border-slate-700">
+                        <button type="submit"
+                            class="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 flex items-center justify-center bg-blue-600 rounded-full text-white hover:bg-blue-700 transition-colors">
+                            <i class="fas fa-paper-plane text-xs"></i>
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </aside>
+
+    </div>
+
+    <!-- Bottom Control Bar -->
+    <div class="absolute bottom-6 left-1/2 -translate-x-1/2 z-50">
+        <div
+            class="control-bar px-6 py-3 rounded-2xl flex items-center gap-4 transition-all duration-300 hover:scale-105">
+
+            <!-- Mic -->
+            <button id="btn-mic"
+                class="w-12 h-12 rounded-full flex items-center justify-center bg-slate-700 hover:bg-slate-600 text-white transition-all tooltip-trigger"
+                data-tooltip="Microphone (Ctrl+D)">
+                <i class="fas fa-microphone"></i>
+            </button>
+
+            <!-- Camera -->
+            <button id="btn-cam"
+                class="w-12 h-12 rounded-full flex items-center justify-center bg-slate-700 hover:bg-slate-600 text-white transition-all"
+                data-tooltip="Caméra (Ctrl+E)">
+                <i class="fas fa-video"></i>
+            </button>
+
+            <div class="w-px h-8 bg-white/10"></div>
+
+            <!-- Screen Share -->
+            <button id="btn-screen"
+                class="w-12 h-12 rounded-full flex items-center justify-center bg-slate-700 hover:bg-slate-600 text-white transition-all"
+                data-tooltip="Partager l'écran">
+                <i class="fas fa-desktop"></i>
+            </button>
+
+            <!-- More Options -->
+            <button id="btn-more"
+                class="w-12 h-12 rounded-full flex items-center justify-center bg-slate-700 hover:bg-slate-600 text-white transition-all"
+                data-tooltip="Plus d'options">
+                <i class="fas fa-ellipsis-v"></i>
+            </button>
+
+            <div class="w-px h-8 bg-white/10"></div>
+
+            <!-- Hangup -->
+            <button id="btn-leave"
+                class="w-14 h-12 rounded-2xl flex items-center justify-center bg-red-600 hover:bg-red-700 text-white transition-all shadow-lg shadow-red-600/20"
+                data-tooltip="Quitter l'appel">
+                <i class="fas fa-phone-slash text-lg"></i>
+            </button>
+
+            <div class="w-px h-8 bg-white/10 lg:block hidden"></div>
+
+            <!-- Info / Chat Toggles (Right side of bar) -->
+            <div class="flex items-center gap-2 lg:ml-2">
+                <button id="btn-info"
+                    class="w-10 h-10 rounded-full flex items-center justify-center text-slate-300 hover:bg-white/10 transition-all relative">
+                    <i class="fas fa-info-circle"></i>
+                </button>
+                <button id="btn-participants"
+                    class="w-10 h-10 rounded-full flex items-center justify-center text-slate-300 hover:bg-white/10 transition-all relative">
+                    <i class="fas fa-users"></i>
+                    <span id="badge-count"
+                        class="absolute top-0 right-0 bg-blue-600 text-[10px] font-bold px-1.5 py-0.5 rounded-full hidden">0</span>
+                </button>
+                <button id="btn-chat"
+                    class="w-10 h-10 rounded-full flex items-center justify-center text-slate-300 hover:bg-white/10 transition-all relative">
+                    <i class="fas fa-comment-alt"></i>
+                    <span id="badge-chat"
+                        class="absolute top-0 right-0 bg-red-500 w-2.5 h-2.5 rounded-full border-2 border-slate-900 hidden"></span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notification Container -->
+    <div id="toast-zone" class="fixed bottom-24 left-6 z-50 flex flex-col gap-2 pointer-events-none"></div>
+
+</div>
+
+<!-- Data passed to JS -->
+<script>
+    window.ROOM_ID = '{{ room.room_token }}';
+    window.USER_ID = '{{ current_user.id }}';
+    window.USER_NAME = '{{ (current_user.prenom if current_user.prenom else "Utilisateur") }} {{ (current_user.nom if current_user.nom else "") }}';
+    window.USER_INITIALS = '{{ (current_user.prenom|first|upper) if current_user.prenom else "?" }}{{ (current_user.nom|first|upper) if current_user.nom else "?" }}';
+</script>
+
+{% endblock %}
+
+{% block extra_js %}
+{{ super() }}
+<script src="https://cdn.socket.io/4.7.4/socket.io.min.js"></script>
+<script src="https://unpkg.com/simple-peer/simplepeer.min.js"></script>
+<script src="{{ url_for('static', filename='js/webrtc.js') }}"></script>
+{% endblock %}

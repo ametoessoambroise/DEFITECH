@@ -1,0 +1,324 @@
+{% extends "admin/base.html" %} {% block title %}Notifications globales |
+Administration DEFITECH{% endblock %} {% block content %}
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 text-black">
+  <div class="mb-6">
+    <div class="flex justify-between items-center">
+        <h1 class="text-2xl font-bold text-gray-900 mt-4">
+          Notifications globales
+        </h1>
+        <p class="text-sm text-gray-500 mt-1">
+          Gérez les messages affichés sur tout le site
+        </p>
+      </div>
+
+      <a
+        href="{{ url_for('admin_create_global_notification') }}"
+        class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium shadow-sm transition flex items-center"
+      >
+        <i class="fas fa-plus mr-2"></i>
+        Nouvelle notification
+      </a>
+    </div>
+  </div>
+  <!-- Statistiques -->
+  <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
+    <div class="bg-white overflow-hidden shadow rounded-lg">
+      <div class="p-5">
+        <div class="flex items-center">
+          <div class="flex-shrink-0">
+            <i class="fas fa-bell text-blue-500"></i>
+          </div>
+          <div class="ml-5 w-0 flex-1">
+            <dl>
+              <dt class="text-sm font-medium text-gray-500 truncate">
+                Actives
+              </dt>
+              <dd class="text-lg font-medium text-gray-900">
+                {{ notifications_actives|length }}
+              </dd>
+            </dl>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="bg-white overflow-hidden shadow rounded-lg">
+      <div class="p-5">
+        <div class="flex items-center">
+          <div class="flex-shrink-0">
+            <i class="fas fa-clock text-yellow-500"></i>
+          </div>
+          <div class="ml-5 w-0 flex-1">
+            <dl>
+              <dt class="text-sm font-medium text-gray-500 truncate">
+                Expirent bientôt
+              </dt>
+              <dd class="text-lg font-medium text-gray-900">
+                {{ notifications_bientot_expirees|length }}
+              </dd>
+            </dl>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="bg-white overflow-hidden shadow rounded-lg">
+      <div class="p-5">
+        <div class="flex items-center">
+          <div class="flex-shrink-0">
+            <i class="fas fa-exclamation-triangle text-red-500"></i>
+          </div>
+          <div class="ml-5 w-0 flex-1">
+            <dl>
+              <dt class="text-sm font-medium text-gray-500 truncate">
+                Critiques
+              </dt>
+              <dd class="text-lg font-medium text-gray-900">
+                {{ notifications_critiques|length }}
+              </dd>
+            </dl>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="bg-white overflow-hidden shadow rounded-lg">
+      <div class="p-5">
+        <div class="flex items-center">
+          <div class="flex-shrink-0">
+            <i class="fas fa-history text-gray-500"></i>
+          </div>
+          <div class="ml-5 w-0 flex-1">
+            <dl>
+              <dt class="text-sm font-medium text-gray-500 truncate">Total</dt>
+              <dd class="text-lg font-medium text-gray-900">
+                {{ notifications_total }}
+              </dd>
+            </dl>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Liste des notifications -->
+  <div class="bg-white shadow overflow-hidden sm:rounded-md">
+    {% if notifications %}
+    <ul class="divide-y divide-gray-200">
+      {% for notification in notifications %}
+      <li class="px-6 py-4" data-notification-id="{{ notification.id }}">
+        <div class="flex items-start justify-between">
+          <div class="flex-1">
+            <div class="flex items-center space-x-3">
+              <div class="flex-shrink-0">
+                {% if notification.type == 'info' %}
+                <i class="fas fa-info-circle text-blue-500"></i>
+                {% elif notification.type == 'success' %}
+                <i class="fas fa-check-circle text-green-500"></i>
+                {% elif notification.type == 'warning' %}
+                <i class="fas fa-exclamation-triangle text-yellow-500"></i>
+                {% elif notification.type == 'error' %}
+                <i class="fas fa-times-circle text-red-500"></i>
+                {% endif %}
+              </div>
+
+              <div class="flex-1 min-w-0">
+                <div class="flex items-center space-x-2">
+                  <h3 class="text-sm font-medium text-gray-900 truncate">
+                    {{ notification.titre }}
+                  </h3>
+
+                  {% if notification.priorite >= 3 %}
+                  <span
+                    class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium {% if notification.priorite == 3 %}bg-orange-100 text-orange-800{% else %}bg-red-100 text-red-800{% endif %}"
+                  >
+                    {% if notification.priorite == 3 %}Élevé{% else %}Critique{%
+                    endif %}
+                  </span>
+                  {% endif %} {% if not notification.est_active %}
+                  <span
+                    class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800"
+                  >
+                    Inactive
+                  </span>
+                  {% endif %} {% if notification.est_expiree %}
+                  <span
+                    class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800"
+                  >
+                    Expirée
+                  </span>
+                  {% endif %}
+                </div>
+
+                <p class="text-sm text-gray-600 mt-1">
+                  {{ notification.message }}
+                </p>
+
+                <div
+                  class="flex items-center space-x-4 mt-2 text-xs text-gray-500"
+                >
+                  <span>
+                    <i class="fas fa-user mr-1"></i>
+                    {{ notification.createur.nom }} {{
+                    notification.createur.prenom }}
+                  </span>
+                  <span>
+                    <i class="fas fa-calendar mr-1"></i>
+                    {{ notification.date_creation.strftime('%d/%m/%Y %H:%M') }}
+                  </span>
+                  {% if notification.date_expiration %}
+                  <span>
+                    <i class="fas fa-clock mr-1"></i>
+                    Expire: {{ notification.date_expiration.strftime('%d/%m/%Y
+                    %H:%M') }}
+                  </span>
+                  {% endif %}
+                  <span class="px-2 py-1 bg-gray-100 rounded-full">
+                    {{ notification.type|title }}
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="flex items-center space-x-2 ml-4">
+            {% if notification.est_active %}
+            <form
+              method="POST"
+              action="{{ url_for('admin_toggle_global_notification', notification_id=notification.id) }}"
+              onsubmit="return confirm('Êtes-vous sûr de vouloir désactiver cette notification ?');"
+            >
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <button
+                type="submit"
+                class="text-gray-400 hover:text-red-600 p-1"
+                title="Désactiver"
+              >
+                <i class="fas fa-pause"></i>
+              </button>
+            </form>
+            {% else %}
+            <form
+              method="POST"
+              action="{{ url_for('admin_toggle_global_notification', notification_id=notification.id) }}"
+            >
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <button
+                type="submit"
+                class="text-gray-400 hover:text-green-600 p-1"
+                title="Activer"
+              >
+                <i class="fas fa-play"></i>
+              </button>
+            </form>
+            {% endif %}
+
+            <form
+              method="POST"
+              action="{{ url_for('admin_delete_global_notification', notification_id=notification.id) }}"
+              onsubmit="return confirm('Êtes-vous sûr de vouloir supprimer cette notification ? Cette action est irréversible.');"
+            >
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <button
+                type="submit"
+                class="text-gray-400 hover:text-red-600 p-1"
+                title="Supprimer"
+              >
+                <i class="fas fa-trash"></i>
+              </button>
+            </form>
+
+            <button
+              onclick="showNotificationPreview({{ notification.id }})"
+              class="text-gray-400 hover:text-blue-600 p-1"
+              title="Aperçu"
+            >
+              <i class="fas fa-eye"></i>
+            </button>
+          </div>
+        </div>
+      </li>
+      {% endfor %}
+    </ul>
+    {% else %}
+    <div class="px-6 py-12 text-center">
+      <i class="fas fa-bell-slash text-gray-400 text-4xl mb-4"></i>
+      <h3 class="text-lg font-medium text-gray-900 mb-2">
+        Aucune notification
+      </h3>
+      <p class="text-gray-500 mb-4">
+        Vous n'avez créé aucune notification globale pour le moment.
+      </p>
+      <a
+        href="{{ url_for('admin_create_global_notification') }}"
+        class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium"
+      >
+        Créer votre première notification
+      </a>
+    </div>
+    {% endif %}
+  </div>
+</div>
+
+<!-- Modal d'aperçu -->
+<div
+  id="preview-modal"
+  class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
+>
+  <div class="bg-white rounded-lg max-w-2xl w-full max-h-96 overflow-y-auto">
+    <div class="p-6">
+      <div class="flex justify-between items-center mb-4">
+        <h3 class="text-lg font-semibold">Aperçu de la notification</h3>
+        <button
+          onclick="hideNotificationPreview()"
+          class="text-gray-400 hover:text-gray-600"
+        >
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+      <div id="preview-content"></div>
+    </div>
+  </div>
+</div>
+{% block extra_js %}
+<!-- Modal d'aperçu -->
+<script>
+  function showNotificationPreview(notificationId) {
+    // Simulation de l'affichage d'une notification
+    const modal = document.getElementById("preview-modal");
+    const content = document.getElementById("preview-content");
+
+    // Trouver la notification dans la liste
+    const notificationElement = document.querySelector(
+      `[data-notification-id="${notificationId}"]`
+    );
+    if (!notificationElement) {
+      // Créer un exemple d'aperçu
+      content.innerHTML = `
+            <div class="p-4 rounded-lg border bg-blue-50 border-blue-200 text-blue-800 border-l-4 border-l-blue-400">
+                <div class="flex items-start space-x-3">
+                    <div class="flex-shrink-0">
+                        <i class="fas fa-info-circle text-lg"></i>
+                    </div>
+                    <div class="flex-1">
+                        <h4 class="font-semibold text-sm">Exemple de notification</h4>
+                        <p class="text-sm mt-1">Ceci est un exemple d'aperçu de notification qui sera affichée en haut de chaque page du site.</p>
+                    </div>
+                    <div class="flex-shrink-0">
+                        <button class="text-gray-400 hover:text-gray-600">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+
+    modal.classList.remove("hidden");
+  }
+
+  function hideNotificationPreview() {
+    document.getElementById("preview-modal").classList.add("hidden");
+  }
+</script>
+{% endblock %} {% endblock %}

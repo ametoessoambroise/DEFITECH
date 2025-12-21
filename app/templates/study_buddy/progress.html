@@ -1,0 +1,213 @@
+{% extends "study_buddy/base.html" %}
+
+{% block title %}Ma Progression - StudyBuddy{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 max-w-7xl">
+    <!-- En-tête avec titre -->
+    <div class="mb-6 sm:mb-8">
+        <h1 class="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-800">Ma Progression</h1>
+        <p class="mt-2 text-sm sm:text-base text-gray-600">Suivez vos performances et atteignez vos objectifs</p>
+    </div>
+
+    <!-- Section des statistiques globales -->
+    <div class="bg-white rounded-lg shadow-md p-4 sm:p-6 mb-6 sm:mb-8">
+        <h2 class="text-lg sm:text-xl font-semibold text-gray-700 mb-4 sm:mb-6">Aperçu de la progression</h2>
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+            <!-- Quiz complétés -->
+            <div
+                class="bg-gradient-to-br from-blue-50 to-blue-100 p-4 sm:p-6 rounded-xl border border-blue-200 transition-transform hover:scale-105">
+                <div class="flex items-center justify-between mb-2">
+                    <h3 class="text-sm sm:text-base font-medium text-blue-800">Quiz complétés</h3>
+                    <svg class="w-6 h-6 sm:w-8 sm:h-8 text-blue-600" fill="none" stroke="currentColor"
+                        viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                </div>
+                <p class="text-3xl sm:text-4xl font-bold text-blue-600">{{ stats.quizzes_completed|default(0) }}</p>
+            </div>
+
+            <!-- Moyenne des scores -->
+            <div
+                class="bg-gradient-to-br from-green-50 to-green-100 p-4 sm:p-6 rounded-xl border border-green-200 transition-transform hover:scale-105">
+                <div class="flex items-center justify-between mb-2">
+                    <h3 class="text-sm sm:text-base font-medium text-green-800">Moyenne des scores</h3>
+                    <svg class="w-6 h-6 sm:w-8 sm:h-8 text-green-600" fill="none" stroke="currentColor"
+                        viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+                    </svg>
+                </div>
+                <p class="text-3xl sm:text-4xl font-bold text-green-600">{{
+                    "%0.1f"|format(stats.average_score|default(0)) }}%</p>
+            </div>
+
+            <!-- Cartes mémorisées -->
+            <div
+                class="bg-gradient-to-br from-purple-50 to-purple-100 p-4 sm:p-6 rounded-xl border border-purple-200 transition-transform hover:scale-105 sm:col-span-2 lg:col-span-1">
+                <div class="flex items-center justify-between mb-2">
+                    <h3 class="text-sm sm:text-base font-medium text-purple-800">Cartes mémorisées</h3>
+                    <svg class="w-6 h-6 sm:w-8 sm:h-8 text-purple-600" fill="none" stroke="currentColor"
+                        viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                    </svg>
+                </div>
+                <p class="text-3xl sm:text-4xl font-bold text-purple-600">{{ stats.flashcards_mastered|default(0) }}</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Section des quiz récents -->
+    <div class="bg-white rounded-lg shadow-md p-4 sm:p-6 mb-6 sm:mb-8">
+        <h2 class="text-lg sm:text-xl font-semibold text-gray-700 mb-4 sm:mb-6">Derniers quiz</h2>
+
+        <!-- Vue mobile (cards) -->
+        <div class="block lg:hidden space-y-3 sm:space-y-4">
+            {% for quiz in recent_quizzes %}
+            <div class="bg-gray-50 rounded-lg p-4 border border-gray-200 hover:shadow-md transition-shadow">
+                <div class="flex justify-between items-start mb-3">
+                    <div class="flex-1 min-w-0">
+                        <h3 class="text-base font-semibold text-gray-900 truncate">{{ quiz.name }}</h3>
+                        <p class="text-sm text-gray-500 truncate">{{ quiz.topic }}</p>
+                    </div>
+                    <span class="ml-2 px-2.5 py-1 text-xs font-semibold rounded-full whitespace-nowrap
+                        {% if quiz.score >= 70 %}bg-green-100 text-green-800
+                        {% elif quiz.score >= 50 %}bg-yellow-100 text-yellow-800
+                        {% else %}bg-red-100 text-red-800{% endif %}">
+                        {{ quiz.score }}%
+                    </span>
+                </div>
+                <div class="flex justify-between text-xs sm:text-sm text-gray-500">
+                    <span class="flex items-center">
+                        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                        </svg>
+                        {{ quiz.completed_at|datetimeformat('%d/%m/%Y') }}
+                    </span>
+                    <span class="flex items-center">
+                        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        {{ quiz.time_spent }} min
+                    </span>
+                </div>
+            </div>
+            {% else %}
+            <div class="text-center py-8 sm:py-12">
+                <svg class="mx-auto h-12 w-12 sm:h-16 sm:w-16 text-gray-400" fill="none" viewBox="0 0 24 24"
+                    stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1"
+                        d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+                <h3 class="mt-2 text-sm font-medium text-gray-900">Aucun quiz complété</h3>
+                <p class="mt-1 text-sm text-gray-500">Commencez votre apprentissage dès maintenant !</p>
+            </div>
+            {% endfor %}
+        </div>
+
+        <!-- Vue desktop (tableau) -->
+        <div class="hidden lg:block overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Quiz
+                        </th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date
+                        </th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Score
+                        </th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Temps
+                        </th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                    {% for quiz in recent_quizzes %}
+                    <tr class="hover:bg-gray-50 transition-colors">
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="text-sm font-medium text-gray-900">{{ quiz.name }}</div>
+                            <div class="text-sm text-gray-500">{{ quiz.topic }}</div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            {{ quiz.completed_at|datetimeformat('%d/%m/%Y %H:%M') }}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <span class="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full 
+                                {% if quiz.score >= 70 %}bg-green-100 text-green-800
+                                {% elif quiz.score >= 50 %}bg-yellow-100 text-yellow-800
+                                {% else %}bg-red-100 text-red-800{% endif %}">
+                                {{ quiz.score }}%
+                            </span>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            {{ quiz.time_spent }} min
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="4" class="px-6 py-12 text-center text-sm text-gray-500">
+                            Aucun quiz complété pour le moment.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Section des objectifs -->
+    <div class="bg-white rounded-lg shadow-md p-4 sm:p-6">
+        <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 mb-4 sm:mb-6">
+            <h2 class="text-lg sm:text-xl font-semibold text-gray-700">Mes objectifs</h2>
+            <button
+                class="w-full sm:w-auto px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors shadow-sm flex items-center justify-center">
+                <svg class="w-5 h-5 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                </svg>
+                Nouvel objectif
+            </button>
+        </div>
+
+        <div class="space-y-3 sm:space-y-4">
+            {% for goal in goals %}
+            <div
+                class="border-l-4 border-blue-500 bg-gradient-to-r from-blue-50 to-white p-4 sm:p-5 rounded-r-lg shadow-sm hover:shadow-md transition-shadow">
+                <div class="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-2 mb-2">
+                    <h3 class="text-base sm:text-lg font-medium text-gray-900">{{ goal.title }}</h3>
+                    <span class="text-sm font-semibold text-blue-600 whitespace-nowrap">{{ goal.progress }}%</span>
+                </div>
+                <p class="mt-1 text-sm text-gray-600 mb-3">{{ goal.description }}</p>
+                <div class="w-full bg-gray-200 rounded-full h-2.5 overflow-hidden">
+                    <div class="bg-gradient-to-r from-blue-500 to-blue-600 h-2.5 rounded-full transition-all duration-300"
+                        style="width: {{ goal.progress }}%"></div>
+                </div>
+            </div>
+            {% else %}
+            <div class="text-center py-8 sm:py-12">
+                <svg class="mx-auto h-12 w-12 sm:h-16 sm:w-16 text-gray-400" fill="none" viewBox="0 0 24 24"
+                    stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1"
+                        d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+                <h3 class="mt-2 text-sm sm:text-base font-medium text-gray-900">Aucun objectif défini</h3>
+                <p class="mt-1 text-sm text-gray-500 px-4">Commencez par définir vos objectifs d'apprentissage.</p>
+                <div class="mt-6">
+                    <button
+                        class="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-lg text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors">
+                        <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd"
+                                d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z"
+                                clip-rule="evenodd" />
+                        </svg>
+                        Nouvel objectif
+                    </button>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}

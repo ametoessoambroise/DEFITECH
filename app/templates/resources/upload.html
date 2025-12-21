@@ -1,0 +1,343 @@
+{% extends "base.html" %} {% block title %}Ajouter une ressource - DEFITECH{%
+endblock %} {% block content %}
+<div class="min-h-screen bg-gray-50 py-8">
+  <div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="bg-white shadow rounded-lg">
+      <!-- Header -->
+      <div class="px-6 py-4 border-b border-gray-200">
+        <div class="flex items-center justify-between">
+          <div>
+            <h1 class="text-2xl font-bold text-gray-900">
+              Ajouter une ressource
+            </h1>
+            <p class="mt-1 text-sm text-gray-600">
+              Partagez des documents avec vos étudiants
+            </p>
+          </div>
+          <a
+            href="{{ url_for('resources.index') }}"
+            class="text-gray-400 hover:text-gray-600"
+          >
+            <i class="fas fa-times text-xl"></i>
+          </a>
+        </div>
+      </div>
+
+      <!-- Formulaire -->
+      <form
+        method="POST"
+        enctype="multipart/form-data"
+        class="px-6 py-6 space-y-6"
+      >
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+
+        <!-- Titre -->
+        <div>
+          <label
+            for="titre"
+            class="block text-sm font-medium text-gray-700 mb-1"
+          >
+            Titre de la ressource <span class="text-red-500">*</span>
+          </label>
+          <input
+            type="text"
+            name="titre"
+            id="titre"
+            required
+            class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+            placeholder="Ex: Cours de Mathématiques - Chapitre 1"
+          />
+          <p class="mt-1 text-sm text-gray-500">
+            Donnez un titre descriptif à votre ressource
+          </p>
+        </div>
+
+        <!-- Description -->
+        <div>
+          <label
+            for="description"
+            class="block text-sm font-medium text-gray-700 mb-1"
+          >
+            Description
+          </label>
+          <textarea
+            name="description"
+            id="description"
+            rows="3"
+            class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+            placeholder="Décrivez brièvement le contenu de cette ressource..."
+          ></textarea>
+          <p class="mt-1 text-sm text-gray-500">
+            Description optionnelle pour aider les étudiants à comprendre le
+            contenu
+          </p>
+        </div>
+
+        <!-- Type de ressource et fichier -->
+        <div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
+          <!-- Type de ressource -->
+          <div>
+            <label
+              for="type_ressource"
+              class="block text-sm font-medium text-gray-700 mb-1"
+            >
+              Type de ressource <span class="text-red-500">*</span>
+            </label>
+            <select
+              name="type_ressource"
+              id="type_ressource"
+              required
+              class="block w-full px-3 py-2 border border-gray-300 text-black rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+            >
+              <option value="">Sélectionnez un type</option>
+              {% for type in resource_types %}
+              <option value="{{ type }}">{{ type|title }}</option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <!-- Fichier -->
+          <div>
+            <label
+              for="fichier"
+              class="block text-sm font-medium text-gray-700 mb-1"
+            >
+              Fichier <span class="text-red-500">*</span>
+            </label>
+            <div
+              class="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-md"
+            >
+              <div class="space-y-1 text-center">
+                <i
+                  class="fas fa-cloud-upload-alt text-gray-400 text-3xl mb-2"
+                ></i>
+                <div class="flex text-sm text-gray-600">
+                  <label
+                    for="fichier"
+                    class="relative cursor-pointer bg-white rounded-md font-medium text-blue-600 hover:text-blue-500 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-blue-500"
+                  >
+                    <span>Cliquez pour sélectionner</span>
+                    <input
+                      id="fichier"
+                      name="fichier"
+                      type="file"
+                      class="sr-only"
+                      required
+                      accept=".pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.txt,.zip,.rar,.7z,.jpg,.jpeg,.png"
+                    />
+                  </label>
+                  <p class="pl-1">ou glissez-déposez</p>
+                </div>
+                <p class="text-xs text-gray-500">
+                  PDF, DOC, PPT, XLS, TXT, ZIP jusqu'à 50MB
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Cible (filière et année) -->
+        <div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
+          <!-- Filière -->
+          <div>
+            <label
+              for="filiere"
+              class="block text-sm font-medium text-gray-700 mb-1"
+            >
+              Filière <span class="text-red-500">*</span>
+            </label>
+            <select
+              name="filiere"
+              id="filiere"
+              required
+              class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+            >
+              <option value="">Sélectionnez une filière</option>
+              {% for filiere in filieres %}
+              <option value="{{ filiere }}">{{ filiere }}</option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <!-- Année -->
+          <div>
+            <label
+              for="annee"
+              class="block text-sm font-medium text-gray-700 mb-1"
+            >
+              Année <span class="text-red-500">*</span>
+            </label>
+            <select
+              name="annee"
+              id="annee"
+              required
+              class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+            >
+              <option value="">Sélectionnez une année</option>
+              {% for annee in annees %}
+              <option value="{{ annee }}">{{ annee }}</option>
+              {% endfor %}
+            </select>
+          </div>
+        </div>
+
+        <!-- Matière (optionnel) -->
+        <div>
+          <label
+            for="matiere_id"
+            class="block text-sm font-medium text-gray-700 mb-1"
+          >
+            Matière (optionnel)
+          </label>
+          <select
+            name="matiere_id"
+            id="matiere_id"
+            class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+          >
+            <option value="">Toutes les matières</option>
+            {% for matiere in matieres %}
+            <option value="{{ matiere.id }}">{{ matiere.nom }}</option>
+            {% endfor %}
+          </select>
+          <p class="mt-1 text-sm text-gray-500">
+            Associez cette ressource à une matière spécifique si applicable
+          </p>
+        </div>
+
+        <!-- Informations sur les formats acceptés -->
+        <div class="bg-blue-50 border border-blue-200 rounded-md p-4">
+          <div class="flex">
+            <div class="flex-shrink-0">
+              <i class="fas fa-info-circle text-blue-400"></i>
+            </div>
+            <div class="ml-3">
+              <h3 class="text-sm font-medium text-blue-800">
+                Formats de fichiers acceptés
+              </h3>
+              <div class="mt-2 text-sm text-blue-700">
+                <p>Documents : PDF, DOC, DOCX, TXT</p>
+                <p>Présentations : PPT, PPTX</p>
+                <p>Tableurs : XLS, XLSX</p>
+                <p>Archives : ZIP, RAR, 7Z</p>
+                <p>Images : JPG, JPEG, PNG</p>
+                <p class="mt-2 font-medium">Taille maximale : 50 MB</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Boutons d'action -->
+        <div class="flex justify-end space-x-3 pt-6 border-t border-gray-200">
+          <a
+            href="{{ url_for('resources.index') }}"
+            class="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+          >
+            Annuler
+          </a>
+          <button
+            type="submit"
+            class="px-4 py-2 border border-transparent rounded-md text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+          >
+            <i class="fas fa-upload mr-2"></i>
+            Uploader la ressource
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Script pour la prévisualisation du fichier -->
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    const fileInput = document.getElementById("fichier");
+    const matiereSelect = document.getElementById("matiere_id");
+
+    // Mettre à jour les matières selon la filière sélectionnée
+    document.getElementById("filiere").addEventListener("change", function () {
+      const filiere = this.value;
+      // Réinitialiser la sélection de matière
+      matiereSelect.value = "";
+      // Ici on pourrait faire une requête AJAX pour filtrer les matières
+      // selon la filière sélectionnée
+    });
+
+    // Validation du fichier côté client
+    fileInput.addEventListener("change", function () {
+      const file = this.files[0];
+      if (file) {
+        const maxSize = 50 * 1024 * 1024; // 50MB
+        if (file.size > maxSize) {
+          alert(
+            "Le fichier est trop volumineux. Taille maximale autorisée : 50MB"
+          );
+          this.value = "";
+          return;
+        }
+
+        const allowedTypes = [
+          "application/pdf",
+          "application/msword",
+          "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+          "application/vnd.ms-powerpoint",
+          "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+          "application/vnd.ms-excel",
+          "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+          "text/plain",
+          "application/zip",
+          "application/x-rar-compressed",
+          "application/x-7z-compressed",
+          "image/jpeg",
+          "image/png",
+        ];
+
+        if (!allowedTypes.includes(file.type)) {
+          showNotification(
+            "Type de fichier non autorisé. Consultez la liste des formats acceptés.",
+            "erreur"
+          );
+          this.value = "";
+          return;
+        }
+      }
+    });
+    function showNotification(message, type = "info") {
+      const notification = document.createElement("div");
+
+      // Styles de base
+      notification.className =
+        "text-white p-4 rounded mb-4 fixed top-4 right-4 shadow-lg transition-opacity duration-500";
+
+      // Couleur selon le type
+      switch (type) {
+        case "success":
+          notification.classList.add("bg-green-500");
+          break;
+        case "erreur":
+          notification.classList.add("bg-red-500");
+          break;
+        case "warning":
+          notification.classList.add("bg-yellow-500", "text-black");
+          break;
+        case "info":
+          notification.classList.add("bg-blue-500", "text-black");
+          break;
+        default:
+          notification.classList.add("bg-blue-500");
+      }
+
+      // Message
+      notification.textContent = message;
+
+      // Ajout au DOM
+      document.body.appendChild(notification);
+
+      // Disparition douce
+      setTimeout(() => {
+        notification.style.opacity = "0";
+        setTimeout(() => notification.remove(), 500);
+      }, 3000);
+    }
+  });
+</script>
+{% endblock %}

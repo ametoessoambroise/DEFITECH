@@ -1,0 +1,116 @@
+{% extends "base.html" %}
+
+{% block title %}429 - Too Many Requests{% endblock %}
+
+{% block content %}
+<div class="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+    <div class="max-w-md w-full space-y-8">
+        <div class="text-center">
+            <div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-orange-100">
+                <i class="fas fa-tachometer-alt text-orange-600 text-xl"></i>
+            </div>
+            <h2 class="mt-6 text-3xl font-extrabold text-gray-900">429 - Too Many Requests</h2>
+            <p class="mt-2 text-sm text-gray-600">
+                Vous avez effectué trop de requêtes. Veuillez patienter.
+            </p>
+        </div>
+
+        {% if retry_after %}
+        <div class="mt-8 bg-orange-50 border border-orange-200 rounded-lg p-4">
+            <div class="flex">
+                <div class="flex-shrink-0">
+                    <i class="fas fa-hourglass-half text-orange-400"></i>
+                </div>
+                <div class="ml-3">
+                    <h3 class="text-sm font-medium text-orange-800">Temps d'attente</h3>
+                    <div class="mt-2 text-sm text-orange-700">
+                        Réessayez dans <strong>{{ retry_after }} secondes</strong>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <div class="mt-8 bg-white shadow rounded-lg p-6">
+            <h3 class="text-lg font-medium text-gray-900 mb-4">Limitation de débit</h3>
+            <ul class="text-sm text-gray-600 space-y-2">
+                <li>• Vous avez dépassé la limite de requêtes autorisées</li>
+                <li>• Le serveur limite le nombre d'actions pour prévenir les abus</li>
+                <li>• Cette protection maintient la performance du service</li>
+                <li>• La limite sera réinitialisée automatiquement</li>
+            </ul>
+
+            <div class="mt-6 pt-6 border-t border-gray-200">
+                <h4 class="text-sm font-medium text-gray-900 mb-2">Pourquoi cette limitation ?</h4>
+                <ul class="text-sm text-gray-600 space-y-1">
+                    <li>• Prévenir les attaques par force brute</li>
+                    <li>• Maintenir la disponibilité du service</li>
+                    <li>• Assurer une utilisation équitable des ressources</li>
+                    <li>• Protéger contre les robots malveillants</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Compte à rebours -->
+        <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+            <div class="text-center">
+                <div id="countdown" class="text-2xl font-bold text-blue-600">
+                    {% if retry_after %}
+                    {{ retry_after }}
+                    {% else %}
+                    60
+                    {% endif %}
+                </div>
+                <div class="text-sm text-blue-700 mt-1">secondes avant de pouvoir réessayer</div>
+            </div>
+        </div>
+
+        <div class="space-y-4">
+            <button id="retryButton" disabled
+                class="w-full bg-gray-400 text-white font-medium py-3 px-4 rounded-lg transition duration-200 cursor-not-allowed">
+                <i class="fas fa-redo mr-2"></i>
+                Réessayer (<span id="retryText">attente</span>)
+            </button>
+
+            <div class="flex space-x-4">
+                <a href="{{ url_for('main.index') }}"
+                    class="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg text-center transition duration-200">
+                    <i class="fas fa-home mr-2"></i>
+                    Accueil
+                </a>
+                <button onclick="history.back()"
+                    class="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-800 font-medium py-2 px-4 rounded-lg transition duration-200">
+                    <i class="fas fa-arrow-left mr-2"></i>
+                    Retour
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    let countdown = {{ retry_after or 60 }};
+    const countdownEl = document.getElementById('countdown');
+    const retryButton = document.getElementById('retryButton');
+    const retryText = document.getElementById('retryText');
+
+    const timer = setInterval(() => {
+        countdown--;
+        countdownEl.textContent = countdown;
+
+        if (countdown <= 0) {
+            clearInterval(timer);
+            countdownEl.textContent = '0';
+            retryButton.disabled = false;
+            retryButton.className = 'w-full bg-green-600 hover:bg-green-700 text-white font-medium py-3 px-4 rounded-lg transition duration-200';
+            retryText.textContent = 'prêt';
+        }
+    }, 1000);
+
+    retryButton.addEventListener('click', () => {
+        if (countdown <= 0) {
+            location.reload();
+        }
+    });
+</script>
+{% endblock %}

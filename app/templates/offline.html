@@ -1,0 +1,284 @@
+{% extends "base.html" %} {% block title %}Mode Hors Ligne | DEFITECH{% endblock
+%} {% block extra_head %}
+<style>
+  .offline-bg {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  }
+
+  .pulse-animation {
+    animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  }
+
+  @keyframes pulse {
+
+    0%,
+    100% {
+      opacity: 1;
+    }
+
+    50% {
+      opacity: 0.5;
+    }
+  }
+</style>
+{% endblock %} {% block content %}
+<div class="offline-bg min-h-screen flex items-center justify-center p-4">
+  <div class="bg-white rounded-lg shadow-2xl p-8 max-w-md w-full">
+    <!-- Icône avec animation -->
+    <div class="mb-6 text-center">
+      <div class="mx-auto w-20 h-20 bg-orange-100 rounded-full flex items-center justify-center pulse-animation">
+        <i class="fas fa-wifi text-3xl text-orange-600"></i>
+      </div>
+    </div>
+
+    <!-- Titre -->
+    <h1 class="text-2xl font-bold text-gray-900 mb-4 text-center">
+      Mode Hors Ligne
+    </h1>
+
+    <!-- Message -->
+    <p class="text-gray-600 mb-6 leading-relaxed text-center">
+      Il semble que vous soyez actuellement hors ligne. Certaines
+      fonctionnalités peuvent être limitées, mais vous pouvez toujours accéder
+      aux pages que vous avez visitées récemment.
+    </p>
+
+    <!-- Statut de connexion -->
+    <div id="connection-status" class="mb-6 p-3 rounded-lg bg-red-50 border border-red-200">
+      <div class="flex items-center justify-center text-red-700">
+        <i class="fas fa-circle text-xs mr-2"></i>
+        <span class="text-sm font-medium">Aucune connexion Internet</span>
+      </div>
+    </div>
+
+    <!-- Actions -->
+    <div class="space-y-3">
+      <button onclick="retryConnection()"
+        class="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-6 rounded-lg transition duration-200 flex items-center justify-center">
+        <i class="fas fa-redo mr-2"></i>
+        Réessayer
+      </button>
+
+      <button onclick="goToCachedPages()"
+        class="w-full bg-gray-200 hover:bg-gray-300 text-gray-800 font-medium py-3 px-6 rounded-lg transition duration-200 flex items-center justify-center">
+        <i class="fas fa-history mr-2"></i>
+        Pages Visitées
+      </button>
+
+      <button onclick="window.location.href='{{ url_for('main.index') }}'"
+        class="w-full bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium py-3 px-6 rounded-lg transition duration-200 flex items-center justify-center">
+        <i class="fas fa-home mr-2"></i>
+        Accueil
+      </button>
+    </div>
+
+    <!-- Informations sur le cache -->
+    <div class="mt-8 pt-6 border-t border-gray-200">
+      <div class="flex items-center justify-center text-sm text-gray-500">
+        <i class="fas fa-info-circle mr-2"></i>
+        <span>Page mise en cache automatiquement</span>
+      </div>
+    </div>
+
+    <!-- Conseils -->
+    <div class="mt-6 p-4 bg-blue-50 rounded-lg">
+      <p class="text-sm text-blue-800 font-medium mb-2">
+        <i class="fas fa-lightbulb mr-1"></i>Conseils :
+      </p>
+      <ul class="text-xs text-blue-700 space-y-1 ml-4">
+        <li>• Vérifiez votre connexion Wi-Fi ou données mobiles</li>
+        <li>• Essayez de vous rapprocher de votre routeur</li>
+        <li>• Redémarrez votre appareil si nécessaire</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<script>
+  // Vérifier la connexion et rediriger si elle est rétablie
+  function retryConnection() {
+    if (navigator.onLine) {
+      showMessage("Connexion rétablie !", "success");
+      setTimeout(() => {
+        window.location.reload();
+      }, 1000);
+    } else {
+      showMessage(
+        "Vous êtes toujours hors ligne. Veuillez vérifier votre connexion internet.",
+        "error"
+      );
+    }
+  }
+
+  // Afficher les pages en cache
+  function goToCachedPages() {
+    // Liste des pages importantes mises en cache
+    const cachedPages = [
+      {
+        name: "Mon Profil",
+        url: "{{ url_for('profile.index') }}",
+        icon: "fa-user",
+      },
+      {
+        name: "Communauté",
+        url: "{{ url_for('community.index') }}",
+        icon: "fa-users",
+      },
+      {
+        name: "Tableau de bord",
+        url: "{{ url_for('main.index') }}",
+        icon: "fa-chart-line",
+      },
+      {
+        name: "Connexion",
+        url: "{{ url_for('auth.login') }}",
+        icon: "fa-sign-in-alt",
+      },
+    ];
+
+    // Créer un menu de sélection
+    const modal = document.createElement("div");
+    modal.className =
+      "fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4";
+    modal.innerHTML = `
+            <div class="bg-white rounded-lg p-6 max-w-sm w-full mx-4 shadow-2xl">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-lg font-semibold text-gray-900">Pages disponibles hors ligne</h3>
+                    <button onclick="this.parentElement.parentElement.parentElement.remove()" 
+                            class="text-gray-400 hover:text-gray-600">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <div class="space-y-2 mb-4">
+                    ${cachedPages
+        .map(
+          (page) => `   
+                        <button onclick="window.location.href='${page.url}'"
+                                class="w-full text-left p-3 hover:bg-gray-100 rounded-lg border border-gray-200 transition duration-200 flex items-center">
+                            <i class="fas ${page.icon} text-blue-600 mr-3 w-5"></i>
+                            <span class="font-medium text-gray-800">${page.name}</span>
+                            <i class="fas fa-chevron-right ml-auto text-gray-400"></i>
+                        </button>
+                    `
+        )
+        .join("")}
+                </div>
+                <button onclick="this.parentElement.parentElement.remove()"
+                        class="w-full bg-gray-200 hover:bg-gray-300 py-2 px-4 rounded-lg font-medium transition duration-200">
+                    Fermer
+                </button>
+            </div>
+        `;
+    document.body.appendChild(modal);
+  }
+
+  // Afficher un message toast
+  function showMessage(message, type = "info") {
+    const colors = {
+      success: "bg-green-600",
+      error: "bg-red-600",
+      info: "bg-blue-600",
+    };
+
+    const toast = document.createElement("div");
+    toast.className = `fixed bottom-4 right-4 ${colors[type]} text-white p-4 rounded-lg shadow-lg z-50 max-w-sm transform transition-all duration-300`;
+    toast.style.opacity = "0";
+    toast.style.transform = "translateY(-20px)";
+
+    const icon =
+      type === "success"
+        ? "fa-check-circle"
+        : type === "error"
+          ? "fa-exclamation-circle"
+          : "fa-info-circle";
+
+    toast.innerHTML = `
+            <div class="flex items-start">
+                <i class="fas ${icon} mr-3 mt-0.5"></i>
+                <span>${message}</span>
+            </div>
+        `;
+    document.body.appendChild(toast);
+
+    // Animation d'entrée
+    setTimeout(() => {
+      toast.style.opacity = "1";
+      toast.style.transform = "translateY(0)";
+    }, 10);
+
+    // Animation de sortie
+    setTimeout(() => {
+      toast.style.opacity = "0";
+      toast.style.transform = "translateY(-20px)";
+      setTimeout(() => toast.remove(), 300);
+    }, 3000);
+  }
+
+  // Mettre à jour le statut de connexion
+  function updateConnectionStatus(isOnline) {
+    const statusDiv = document.getElementById("connection-status");
+    if (isOnline) {
+      statusDiv.className =
+        "mb-6 p-3 rounded-lg bg-green-50 border border-green-200";
+      statusDiv.innerHTML = `
+                <div class="flex items-center justify-center text-green-700">
+                    <i class="fas fa-circle text-xs mr-2"></i>
+                    <span class="text-sm font-medium">Connexion rétablie</span>
+                </div>
+            `;
+    } else {
+      statusDiv.className =
+        "mb-6 p-3 rounded-lg bg-red-50 border border-red-200";
+      statusDiv.innerHTML = `
+                <div class="flex items-center justify-center text-red-700">
+                    <i class="fas fa-circle text-xs mr-2"></i>
+                    <span class="text-sm font-medium">Aucune connexion Internet</span>
+                </div>
+            `;
+    }
+  }
+
+  // Écouter les changements de statut de connexion
+  window.addEventListener("online", function () {
+    updateConnectionStatus(true);
+    showMessage("Connexion rétablie ! Redirection en cours...", "success");
+    setTimeout(() => {
+      window.location.href = "/";
+    }, 2000);
+    setTimeout(() => {
+      window.location.reload();
+    }, 1500);
+  });
+
+  window.addEventListener("offline", function () {
+    updateConnectionStatus(false);
+    showMessage("Connexion perdue. Mode hors ligne activé.", "error");
+  });
+
+  // Vérifier la connexion au chargement
+  window.addEventListener("load", function () {
+    if (navigator.onLine) {
+      updateConnectionStatus(true);
+      setTimeout(() => {
+        showMessage(
+          'Vous êtes en ligne. Cliquez sur "Réessayer" pour recharger.',
+          "info"
+        );
+      }, 1000);
+    } else {
+      updateConnectionStatus(false);
+    }
+  });
+
+  // Vérifier périodiquement la connexion
+  setInterval(() => {
+    if (navigator.onLine) {
+      const statusDiv = document.getElementById("connection-status");
+      if (statusDiv && statusDiv.className.includes("red")) {
+        updateConnectionStatus(true);
+        showMessage("Connexion rétablie !", "success");
+      }
+    }
+  }, 5000);
+</script>
+{% endblock %}

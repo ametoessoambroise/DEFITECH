@@ -1,0 +1,417 @@
+{% extends "base.html" %}
+
+{% block title %}Boîte à suggestions - DEFITECH{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-indigo-50">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+
+    <!-- Hero Section -->
+    <div class="text-center mb-16">
+      <div
+        class="inline-flex items-center justify-center w-24 h-24 bg-gradient-to-br from-blue-500 via-blue-600 to-indigo-600 rounded-2xl shadow-2xl mb-8 transform hover:scale-105 transition-transform duration-300">
+        <i class="fas fa-lightbulb text-white text-4xl"></i>
+      </div>
+      <h1 class="md:text-5xl text-3xl font-bold text-gray-900 mb-6 tracking-tight">
+        Boîte à <span
+          class="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600">Suggestions</span>
+      </h1>
+      <p class="text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed mb-4">
+        Votre voix façonne l'avenir de DEFITECH. Partagez vos idées innovantes, signalez des améliorations ou proposez
+        de nouvelles fonctionnalités.
+      </p>
+      <p class="text-sm text-gray-500 max-w-2xl mx-auto">
+        Chaque suggestion est examinée attentivement par notre équipe. Ensemble, construisons une plateforme éducative
+        d'excellence.
+      </p>
+    </div>
+
+    <!-- Formulaire de suggestion -->
+    <div
+      class="bg-white rounded-3xl shadow-2xl border border-gray-100 overflow-hidden mb-16 max-w-4xl mx-auto transform hover:shadow-3xl transition-all duration-300">
+      <div class="bg-gradient-to-r from-blue-600 via-blue-700 to-indigo-700 px-8 py-8">
+        <div class="flex items-center justify-between">
+          <div>
+            <h2 class="md:text-3xl text-2xl font-bold text-white flex items-center mb-2">
+              <i class="fas fa-plus-circle mr-3"></i>
+              Partager une idée
+            </h2>
+            <p class="text-blue-100">
+              Votre contribution compte. Aidez-nous à créer la meilleure expérience d'apprentissage.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <form method="POST" class="p-8 space-y-8">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+
+        <!-- Guide rapide -->
+        <div class="bg-gradient-to-r from-blue-50 to-indigo-50 border-l-4 border-blue-500 rounded-xl p-6">
+          <h3 class="font-semibold text-gray-900 mb-3 flex items-center">
+            <i class="fas fa-info-circle text-blue-600 mr-2"></i>
+            Conseils pour une suggestion efficace
+          </h3>
+          <ul class="space-y-2 text-sm text-gray-700">
+            <li class="flex items-start">
+              <i class="fas fa-check text-green-500 mr-2 mt-1"></i>
+              <span>Soyez précis et descriptif dans votre proposition</span>
+            </li>
+            <li class="flex items-start">
+              <i class="fas fa-check text-green-500 mr-2 mt-1"></i>
+              <span>Expliquez le problème que votre idée résout</span>
+            </li>
+            <li class="flex items-start">
+              <i class="fas fa-check text-green-500 mr-2 mt-1"></i>
+              <span>Indiquez l'impact potentiel sur votre expérience d'apprentissage</span>
+            </li>
+          </ul>
+        </div>
+
+        <!-- Contenu de la suggestion -->
+        <div>
+          <label for="contenu" class="block text-base font-bold text-gray-900 mb-3">
+            Votre suggestion <span class="text-red-500">*</span>
+          </label>
+          <textarea id="contenu" name="contenu" rows="6"
+            class="w-full px-5 py-4 border-2 border-gray-300 text-gray-900 rounded-xl shadow-sm focus:outline-none focus:ring-4 focus:ring-blue-500/30 transition-all duration-200 resize-none text-base"
+            placeholder="Exemple : J'aimerais proposer l'ajout d'un mode sombre pour faciliter l'apprentissage en soirée. Cela réduirait la fatigue oculaire et améliorerait le confort des utilisateurs..."
+            required maxlength="1000"></textarea>
+          <div class="flex justify-between items-center mt-3">
+            <p class="text-sm text-gray-600 flex items-center">
+              <i class="fas fa-pencil-alt mr-2 text-blue-500"></i>
+              Entre 10 et 1000 caractères
+            </p>
+            <span class="text-sm font-medium text-gray-500 bg-gray-100 px-3 py-1 rounded-full"
+              id="char-count">0/1000</span>
+          </div>
+        </div>
+
+        <!-- Informations optionnelles -->
+        <div class="bg-gray-50 rounded-xl p-6 space-y-6">
+          <h3 class="font-semibold text-gray-900 flex items-center mb-4">
+            <i class="fas fa-user-circle text-gray-600 mr-2"></i>
+            Informations de contact (optionnel)
+          </h3>
+
+          <div class="grid md:grid-cols-2 gap-6">
+            <div>
+              <label for="auteur_anonyme" class="block text-sm font-semibold text-gray-700 mb-2">
+                Votre nom ou pseudonyme
+              </label>
+              <input type="text" id="auteur_anonyme" name="auteur_anonyme"
+                class="w-full px-4 py-3 border-2 border-gray-300 text-gray-900 rounded-xl shadow-sm focus:outline-none focus:ring-4 focus:ring-blue-500/30 focus:border-blue-500 transition-all duration-200"
+                placeholder="@smiler" maxlength="100">
+              <p class="text-xs text-gray-500 mt-2 flex items-start">
+                <i class="fas fa-lock text-gray-400 mr-2 mt-0.5"></i>
+                <span>Laissez vide pour une soumission totalement anonyme</span>
+              </p>
+            </div>
+
+            <div>
+              <label for="email_contact" class="block text-sm font-semibold text-gray-700 mb-2">
+                Adresse email
+              </label>
+              <input type="email" id="email_contact" name="email_contact"
+                class="w-full px-4 py-3 border-2 border-gray-300 text-gray-900 rounded-xl shadow-sm focus:outline-none focus:ring-4 focus:ring-blue-500/30 focus:border-blue-500 transition-all duration-200"
+                placeholder="smle1254@gmail.com" maxlength="120">
+              <p class="text-xs text-gray-500 mt-2 flex items-start">
+                <i class="fas fa-envelope text-gray-400 mr-2 mt-0.5"></i>
+                <span>Pour recevoir un retour sur votre suggestion</span>
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Bouton de soumission -->
+        <div class="flex items-center justify-between pt-6 border-t border-gray-200">
+          <div class="flex flex-col sm:flex-row sm:items-center gap-4 text-sm text-gray-600">
+            <div class="flex items-center">
+              <div class="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center mr-2">
+                <i class="fas fa-shield-alt text-green-600"></i>
+              </div>
+              <span class="font-medium">Sécurisé et confidentiel</span>
+            </div>
+            <div class="flex items-center">
+              <div class="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center mr-2">
+                <i class="fas fa-clock text-blue-600"></i>
+              </div>
+              <span class="font-medium">Réponse sous 48h</span>
+            </div>
+          </div>
+        </div>
+
+        <button type="submit"
+          class="flex items-center justify-center text-center w-full px-8 py-4 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-bold rounded-xl shadow-xl hover:from-blue-700 hover:to-indigo-700 focus:outline-none focus:ring-4 focus:ring-blue-500/50 transition-all duration-300 transform hover:scale-105 hover:shadow-2xl">
+          <i class="fas fa-paper-plane mr-2"></i>
+          Envoyer
+        </button>
+
+      </form>
+    </div>
+
+    <!-- Section statistiques -->
+    {% if suggestions_data %}
+    <div class="mb-12 max-w-4xl mx-auto">
+      <div class="bg-white rounded-2xl shadow-xl p-4 md:p-8 border border-gray-100">
+        <div class="grid grid-cols-4 gap-6">
+          <div class="text-center">
+            <div class="text-xl md:text-4xl font-bold text-blue-600 mb-2 flex justify-center items-center gap-2">
+              <i class="fas fa-comments mr-2 text-blue-600"></i>
+              {{ suggestions_data|length }}
+            </div>
+            <div class="text-sm text-gray-600 font-medium hidden md:block">Suggestions</div>
+          </div>
+          <div class="text-center border-x border-gray-200">
+            <div class="text-xl md:text-4xl font-bold text-green-600 mb-2 flex justify-center items-center gap-2">
+              <i class="fas fa-thumbs-up mr-2 text-green-600"></i>
+              {{ suggestions_data|sum(attribute='suggestion.votes_oui') }}
+            </div>
+            <div class="text-sm text-gray-600 font-medium hidden md:block">Votes positifs</div>
+          </div>
+          <div class="text-center">
+            <div class="text-xl md:text-4xl font-bold text-red-600 mb-2 flex justify-center items-center gap-2">
+              <i class="fas fa-thumbs-down mr-2 text-red-600"></i>
+              {{ suggestions_data|sum(attribute='suggestion.votes_non') }}
+            </div>
+            <div class="text-sm text-gray-600 font-medium hidden md:block">Votes négatifs</div>
+          </div>
+          <div class="text-center border-x border-gray-200">
+            <div class="text-xl md:text-4xl font-bold text-gray-600 mb-2 flex justify-center items-center gap-2">
+              <i class="fas fa-users mr-2 text-gray-600"></i>
+              {{ suggestions_data|sum(attribute='suggestion.total_votes') }}
+            </div>
+            <div class="text-sm text-gray-600 font-medium hidden md:block">Participations</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    {% endif %}
+
+    <!-- Liste des suggestions -->
+    {% if suggestions_data %}
+    <div class="space-y-8">
+      <div class="flex items-center justify-between max-w-4xl mx-auto">
+        <h2 class="md:text-3xl text-xl font-bold text-gray-900 flex items-center">
+          <i class="fas fa-comments mr-3 text-blue-600"></i>
+          Suggestions de la communauté
+        </h2>
+        <span
+          class="bg-gradient-to-r from-yellow-600 to-yellow-400 text-white text-sm font-bold px-4 py-2 rounded-full shadow-lg">
+          {{ suggestions_data|length }} idées
+        </span>
+      </div>
+
+      <div class="max-w-4xl mx-auto space-y-6">
+        {% for suggestion_data in suggestions_data %}
+        {% set suggestion = suggestion_data.suggestion %}
+        {% set reponses = suggestion_data.reponses %}
+
+        <div
+          class="bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1">
+          <!-- En-tête de la suggestion -->
+          <div class="px-8 py-6 bg-gradient-to-r from-gray-50 to-blue-50 border-b border-gray-200">
+            <div class="flex items-center justify-between flex-wrap gap-4">
+              <div class="flex items-center space-x-4">
+                {% if suggestion.user %}
+                <img
+                  src="{{ url_for('static', filename='uploads/profile_pics/' + (suggestion.user.photo_profil or 'default.png')) }}"
+                  alt="Profil" class="rounded-full shadow-lg w-14 h-14 ring-4 ring-white" />
+                {% else %}
+                <div
+                  class="w-14 h-14 bg-gradient-to-br from-gray-400 to-gray-500 rounded-full shadow-lg flex items-center justify-center ring-4 ring-white">
+                  <i class="fas fa-user-secret text-white text-xl"></i>
+                </div>
+                {% endif %}
+                <div>
+                  {% if suggestion.auteur_anonyme %}
+                  <p class="font-bold text-gray-900 text-lg">{{ suggestion.auteur_anonyme }}</p>
+                  {% else %}
+                  <p class="font-bold text-gray-900 text-lg">Incognito</p>
+                  {% endif %}
+                  <p class="text-sm text-gray-500 flex items-center mt-1">
+                    <i class="far fa-calendar-alt mr-2"></i>
+                    {{ suggestion.date_creation.strftime('%d/%m/%Y à %H:%M') }}
+                  </p>
+                </div>
+              </div>
+
+              <span
+                class="inline-flex items-center px-4 py-2 rounded-full text-sm font-bold shadow-md {% if suggestion.statut == 'ouverte' %}bg-green-500 text-white{% elif suggestion.statut == 'en_cours' %}bg-yellow-500 text-white{% elif suggestion.statut == 'fermee' %}bg-blue-500 text-white{% else %}bg-gray-500 text-white{% endif %}">
+                <i class="fas fa-circle mr-2 text-xs animate-pulse"></i>
+                {{ suggestion.statut|title }}
+              </span>
+            </div>
+          </div>
+
+          <!-- Contenu de la suggestion -->
+          <div class="px-8 py-6">
+            <p class="text-gray-700 leading-relaxed text-base">{{ suggestion.contenu }}</p>
+          </div>
+
+          <!-- Système de votes -->
+          <div class="px-8 py-6 bg-gradient-to-r from-gray-50 to-blue-50 border-t border-gray-200">
+            <div class="flex items-center justify-between flex-wrap gap-4">
+              <div class="flex items-center space-x-4">
+                <!-- Bouton Oui -->
+                <form method="POST" action="{{ url_for('vote_suggestion') }}" class="inline-block vote-form"
+                  data-suggestion-id="{{ suggestion.id }}">
+                  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+                  <input type="hidden" name="suggestion_id" value="{{ suggestion.id }}">
+                  <input type="hidden" name="vote_type" value="oui">
+                  <button type="submit"
+                    class="flex items-center space-x-3 px-6 py-3 rounded-xl font-bold transition-all duration-300 transform hover:scale-105 shadow-lg {% if suggestion.get_user_vote(current_user.id if current_user.is_authenticated else None, request.cookies.get('suggestion_session_id')) and suggestion.get_user_vote(current_user.id if current_user.is_authenticated else None, request.cookies.get('suggestion_session_id')).type_vote == 'oui' %}bg-gradient-to-r from-green-500 to-emerald-500 text-white{% else %}bg-white text-gray-700 border-2 border-gray-300 hover:border-green-500 hover:text-green-600{% endif %}"
+                    {% if suggestion.has_user_voted(current_user.id if current_user.is_authenticated else None,
+                    request.cookies.get('suggestion_session_id')) %}disabled{% endif %}>
+                    <i class="fas fa-thumbs-up text-xl"></i>
+                    <span class="text-lg">{{ suggestion.votes_oui }}</span>
+                  </button>
+                </form>
+
+                <!-- Bouton Non -->
+                <form method="POST" action="{{ url_for('vote_suggestion') }}" class="inline-block vote-form"
+                  data-suggestion-id="{{ suggestion.id }}">
+                  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+                  <input type="hidden" name="suggestion_id" value="{{ suggestion.id }}">
+                  <input type="hidden" name="vote_type" value="non">
+                  <button type="submit"
+                    class="flex items-center space-x-3 px-6 py-3 rounded-xl font-bold transition-all duration-300 transform hover:scale-105 shadow-lg {% if suggestion.get_user_vote(current_user.id if current_user.is_authenticated else None, request.cookies.get('suggestion_session_id')) and suggestion.get_user_vote(current_user.id if current_user.is_authenticated else None, request.cookies.get('suggestion_session_id')).type_vote == 'non' %}bg-gradient-to-r from-red-500 to-rose-500 text-white{% else %}bg-white text-gray-700 border-2 border-gray-300 hover:border-red-500 hover:text-red-600{% endif %}"
+                    {% if suggestion.has_user_voted(current_user.id if current_user.is_authenticated else None,
+                    request.cookies.get('suggestion_session_id')) %}disabled{% endif %}>
+                    <i class="fas fa-thumbs-down text-xl"></i>
+                    <span class="text-lg">{{ suggestion.votes_non }}</span>
+                  </button>
+                </form>
+              </div>
+
+              <div class="flex items-center space-x-2 text-gray-600 bg-white px-4 py-2 rounded-full shadow-md">
+                <i class="fas fa-users"></i>
+                <span class="font-bold">{{ suggestion.total_votes }}</span>
+                <span class="text-sm">vote{{ 's' if suggestion.total_votes != 1 else '' }}</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Réponses administratives -->
+          {% if reponses %}
+          <div class="px-8 py-6 bg-gradient-to-r from-red-50 to-rose-50 border-t border-red-200">
+            <div class="space-y-4">
+              {% for reponse in reponses %}
+              <div class="bg-gradient-to-r from-red-600 to-rose-600 text-white rounded-xl p-6 shadow-xl">
+                <div class="flex items-start space-x-4">
+                  <div class="flex-shrink-0">
+                    <div class="w-12 h-12 bg-red-700 rounded-full flex items-center justify-center shadow-lg">
+                      <i class="fas fa-user-shield text-xl"></i>
+                    </div>
+                  </div>
+                  <div class="flex-1">
+                    <div class="flex items-center space-x-3 mb-3">
+                      <span class="font-bold text-red-100">Réponse officielle DEFITECH</span>
+                      <span class="text-red-200 text-sm bg-red-700/30 px-3 py-1 rounded-full">
+                        <i class="far fa-clock mr-1"></i>
+                        {{ reponse.date_creation.strftime('%d/%m/%Y à %H:%M') }}
+                      </span>
+                    </div>
+                    <p class="text-red-50 leading-relaxed">{{ reponse.contenu }}</p>
+                  </div>
+                </div>
+              </div>
+              {% endfor %}
+            </div>
+          </div>
+          {% endif %}
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+
+    {% else %}
+    <!-- État vide -->
+    <div class="text-center py-20 max-w-2xl mx-auto">
+      <div
+        class="inline-flex items-center justify-center w-32 h-32 bg-gradient-to-br from-gray-100 to-gray-200 rounded-3xl mb-8 shadow-xl">
+        <i class="fas fa-comments text-gray-400 text-5xl"></i>
+      </div>
+      <h3 class="text-3xl font-bold text-gray-900 mb-4">
+        Soyez le premier à contribuer !
+      </h3>
+      <p class="text-gray-600 text-lg mb-8">
+        Aucune suggestion n'a encore été partagée. Lancez le mouvement et proposez votre première idée pour améliorer
+        DEFITECH.
+      </p>
+      <div class="flex items-center justify-center space-x-3 text-sm text-gray-500">
+        <div class="flex items-center">
+          <i class="fas fa-lightbulb text-yellow-500 mr-2"></i>
+          <span>Idées innovantes</span>
+        </div>
+        <span>•</span>
+        <div class="flex items-center">
+          <i class="fas fa-users text-blue-500 mr-2"></i>
+          <span>Impact communautaire</span>
+        </div>
+        <span>•</span>
+        <div class="flex items-center">
+          <i class="fas fa-chart-line text-green-500 mr-2"></i>
+          <span>Évolution continue</span>
+        </div>
+      </div>
+    </div>
+    {% endif %}
+  </div>
+</div>
+
+<!-- Script pour le compteur de caractères -->
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    const textarea = document.getElementById('contenu');
+    const charCount = document.getElementById('char-count');
+
+    if (textarea && charCount) {
+      function updateCharCount() {
+        const count = textarea.value.length;
+        charCount.textContent = count + '/1000';
+
+        if (count > 900) {
+          charCount.className = 'text-sm font-medium text-white bg-red-500 px-3 py-1 rounded-full';
+        } else if (count > 800) {
+          charCount.className = 'text-sm font-medium text-white bg-yellow-500 px-3 py-1 rounded-full';
+        } else {
+          charCount.className = 'text-sm font-medium text-gray-500 bg-gray-100 px-3 py-1 rounded-full';
+        }
+      }
+
+      textarea.addEventListener('input', updateCharCount);
+      updateCharCount();
+    }
+
+    // Gestion des votes avec feedback visuel
+    const voteForms = document.querySelectorAll('.vote-form');
+    voteForms.forEach(form => {
+      form.addEventListener('submit', function (e) {
+        e.preventDefault();
+
+        const formData = new FormData(this);
+        const button = this.querySelector('button');
+
+        button.disabled = true;
+        button.style.opacity = '0.6';
+
+        fetch(this.action, {
+          method: 'POST',
+          body: formData
+        })
+          .then(response => response.text())
+          .then(text => {
+            window.location.reload();
+          })
+          .catch(error => {
+            console.error('Erreur lors du vote:', error);
+            alert('Une erreur est survenue. Veuillez réessayer.');
+            button.disabled = false;
+            button.style.opacity = '1';
+          });
+      });
+    });
+  });
+</script>
+{% endblock %}

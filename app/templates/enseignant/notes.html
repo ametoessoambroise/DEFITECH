@@ -1,0 +1,429 @@
+{% extends "base.html" %}
+{% block title %}{{ current_user.nom }} {{ current_user.prenom }} | DEFITECH{% endblock %}
+{% block content %}
+<div class="min-h-screen bg-gray-50 py-6 sm:py-8">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <!-- Header -->
+    <div class="mb-6">
+      <h1 class="text-2xl sm:text-3xl font-bold text-gray-900">
+        Gestion des Notes
+      </h1>
+      <p class="mt-2 text-sm sm:text-base text-gray-600">
+        Saisissez et gérez les notes de vos étudiants
+      </p>
+    </div>
+
+    {% if matieres %}
+    <div class="bg-white rounded-lg shadow-sm border border-gray-200">
+      <!-- Formulaire de saisie -->
+      <div class="p-4 sm:p-6">
+        <input type="hidden" name="csrf_token" id="csrf_token" value="{{ csrf_token() }}">
+
+        <!-- Sélection de matière -->
+        <div class="mb-6">
+          <label for="matiere" class="block text-sm font-medium text-gray-700 mb-2">
+            Matière <span class="text-red-500">*</span>
+          </label>
+          <select id="matiere" name="matiere_id" required
+            class="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent bg-white"
+            onchange="loadStudents(this.value)">
+            <option value="">Sélectionner une matière</option>
+            {% for matiere in matieres %}
+            <option value="{{ matiere.id }}" data-credits="{{ matiere.credit }}">
+              {{ matiere.nom }} ({{ matiere.filiere.nom }})
+            </option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <!-- Paramètres de l'évaluation -->
+        <div class="bg-gray-50 rounded-lg p-4 sm:p-6 mb-6">
+          <h3 class="text-lg font-semibold text-gray-900 mb-4">
+            Paramètres de l'évaluation
+          </h3>
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div>
+              <label for="type_eval" class="block text-sm font-medium text-gray-700 mb-1.5">
+                Type d'évaluation <span class="text-red-500">*</span>
+              </label>
+              <select id="type_eval" name="type_eval" required
+                class="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent bg-white">
+                <option value="devoir">Devoir</option>
+                <option value="examen">Examen</option>
+                <option value="tp">Travaux Pratiques</option>
+              </select>
+            </div>
+
+            <div>
+              <label for="date_eval" class="block text-sm font-medium text-gray-700 mb-1.5">
+                Date d'évaluation <span class="text-red-500">*</span>
+              </label>
+              <input type="date" id="date_eval" name="date_evaluation" required
+                class="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent" />
+            </div>
+
+            <div>
+              <label for="credits" class="block text-sm font-medium text-gray-700 mb-1.5">
+                Crédits
+              </label>
+              <input type="number" id="credits" name="credits" min="1" step="1" value="6" readonly
+                class="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent bg-gray-50 cursor-not-allowed" />
+              <p class="text-xs text-gray-500 mt-1">Les crédits sont définis par matière</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Liste des étudiants -->
+        <div class="bg-white border border-gray-200 rounded-lg overflow-hidden mb-6">
+          <div class="px-4 sm:px-6 py-4 bg-gray-50 border-b border-gray-200">
+            <h4 class="text-base sm:text-lg font-semibold text-gray-900">
+              Liste des étudiants
+              <span id="student-count" class="text-sm font-normal text-gray-500 ml-2">
+                ({{ etudiants|length }} étudiant{% if etudiants|length > 1 %}s{% endif %})
+              </span>
+            </h4>
+          </div>
+
+          <div class="p-4 sm:p-6">
+            {% if etudiants %}
+            <div id="students-list" class="space-y-3">
+              {% for etudiant in etudiants %}
+              <div
+                class="flex flex-col sm:flex-row sm:items-center sm:justify-between p-4 bg-gray-50 hover:bg-gray-100 rounded-lg transition-colors border border-gray-200">
+                <div class="mb-3 sm:mb-0">
+                  <p class="font-semibold text-gray-900">
+                    {{ etudiant.nom }} {{ etudiant.prenom }}
+                  </p>
+                  <div class="flex flex-wrap gap-2 mt-1 text-sm text-gray-600">
+                    <span class="inline-flex items-center">
+                      <i class="fas fa-id-card text-gray-400 mr-1.5"></i>
+                      {{ etudiant.numero_etudiant }}
+                    </span>
+                    <span class="inline-flex items-center">
+                      <i class="fas fa-graduation-cap text-gray-400 mr-1.5"></i>
+                      {{ etudiant.filiere }}
+                    </span>
+                    <span class="inline-flex items-center">
+                      <i class="fas fa-calendar text-gray-400 mr-1.5"></i>
+                      Année {{ etudiant.annee }}
+                    </span>
+                  </div>
+                </div>
+
+                <div class="flex items-center space-x-3">
+                  <input type="hidden" class="etudiant-id" value="{{ etudiant.id }}" />
+                  <div class="flex items-center space-x-2">
+                    <input type="number"
+                      class="note-input w-24 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent text-center font-medium"
+                      min="0" max="20" step="0.25" placeholder="Note" data-etudiant-id="{{ etudiant.id }}" />
+                    <span class="text-sm font-medium text-gray-500 whitespace-nowrap">/20</span>
+                  </div>
+                  <button type="button" onclick="saveIndividualNote({{ etudiant.id }})"
+                    class="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 transition-colors font-medium text-sm whitespace-nowrap">
+                    <i class="fas fa-save mr-1.5"></i>
+                    <span class="hidden sm:inline">Enregistrer</span>
+                    <span class="sm:hidden">OK</span>
+                  </button>
+                </div>
+              </div>
+              {% endfor %}
+            </div>
+            {% else %}
+            <div class="text-center py-12">
+              <i class="fas fa-users text-5xl text-gray-300 mb-4"></i>
+              <h3 class="text-lg font-medium text-gray-900 mb-2">
+                Aucun étudiant trouvé
+              </h3>
+              <p class="text-gray-500 text-sm">
+                Aucun étudiant n'est inscrit dans vos filières et années d'enseignement.
+              </p>
+            </div>
+            {% endif %}
+          </div>
+        </div>
+
+        <!-- Boutons d'action -->
+        {% if etudiants %}
+        <div class="flex flex-col sm:flex-row justify-end space-y-2 sm:space-y-0 sm:space-x-3">
+          <button type="button" onclick="window.location.reload()"
+            class="w-full sm:w-auto px-6 py-2.5 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition-colors font-medium">
+            <i class="fas fa-redo mr-2"></i>Réinitialiser
+          </button>
+          <button type="button" onclick="saveAllNotes()"
+            class="w-full sm:w-auto px-6 py-2.5 bg-green-600 text-white rounded-lg hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition-colors font-medium">
+            <i class="fas fa-check-double mr-2"></i>Enregistrer toutes les notes
+          </button>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+
+    {% else %}
+    <!-- Message quand aucune matière n'est assignée -->
+    <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-8 sm:p-12">
+      <div class="text-center">
+        <div class="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-purple-100 mb-4">
+          <i class="fas fa-book text-3xl text-purple-600"></i>
+        </div>
+        <h3 class="text-xl font-semibold text-gray-900 mb-2">
+          Aucune matière assignée
+        </h3>
+        <p class="text-gray-600 mb-6 max-w-md mx-auto">
+          Vous n'avez pas encore de matières assignées pour saisir des notes.
+          Veuillez contacter l'administration.
+        </p>
+        <a href="{{ url_for('enseignant_dashboard') }}"
+          class="inline-flex items-center px-6 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 transition-colors font-medium">
+          <i class="fas fa-arrow-left mr-2"></i>Retour au tableau de bord
+        </a>
+      </div>
+    </div>
+    {% endif %}
+  </div>
+</div>
+
+<!-- Conteneur pour les données JavaScript -->
+<div id="notes-data" 
+     data-notes-existantes="{{ notes_existantes | tojson }}"
+     data-dates-evaluations="{{ dates_evaluations | tojson }}"
+     style="display: none;">
+</div>
+
+<script>
+  function loadStudents(matiereId) {
+    if (!matiereId) {
+      // Réinitialiser les crédits si aucune matière n'est sélectionnée
+      document.getElementById('credits').value = '6';
+      // Réinitialiser toutes les notes
+      document.querySelectorAll('.note-input').forEach(input => {
+        input.value = '';
+      });
+      return;
+    }
+    console.log("Matière sélectionnée:", matiereId);
+
+    // Mettre à jour les crédits depuis la matière sélectionnée
+    const matiereSelect = document.getElementById('matiere');
+    const selectedOption = matiereSelect.options[matiereSelect.selectedIndex];
+    const credits = selectedOption.getAttribute('data-credits');
+
+    if (credits) {
+      document.getElementById('credits').value = credits;
+    }
+
+    // Charger les notes existantes pour cette matière et ce type d'évaluation
+    loadExistingNotes(matiereId);
+  }
+
+  function loadExistingNotes(matiereId) {
+    const typeEval = document.getElementById('type_eval').value;
+
+    if (!matiereId || !typeEval) {
+      document.querySelectorAll('.note-input').forEach(input => {
+        input.value = '';
+      });
+      document.getElementById('date_eval').value = '';
+      return;
+    }
+
+    // Notes existantes passées depuis le backend
+    const dataContainer = document.getElementById('notes-data');
+    const notesExistantes = dataContainer ? JSON.parse(dataContainer.getAttribute('data-notes-existantes') || '{}') : {};
+    const datesEvaluations = dataContainer ? JSON.parse(dataContainer.getAttribute('data-dates-evaluations') || '{}') : {};
+
+    // Pré-remplir la date d'évaluation si elle existe
+    const dateKey = `${matiereId}_${typeEval}`;
+    if (datesEvaluations[dateKey]) {
+      document.getElementById('date_eval').value = datesEvaluations[dateKey];
+    } else {
+      // Réinitialiser la date si aucune n'existe
+      document.getElementById('date_eval').value = '';
+    }
+
+    document.querySelectorAll('.note-input').forEach(input => {
+      const etudiantId = input.getAttribute('data-etudiant-id');
+      const key = `${etudiantId}_${matiereId}_${typeEval}`;
+
+      if (notesExistantes[key]) {
+        input.value = notesExistantes[key];
+        input.style.backgroundColor = '#e8f5e8'; // Vert clair pour indiquer une note existante
+      } else {
+        input.value = '';
+        input.style.backgroundColor = '';
+      }
+    });
+  }
+
+  // Mettre à jour les notes quand le type d'évaluation change
+  document.addEventListener('DOMContentLoaded', function () {
+    const typeEvalSelect = document.getElementById('type_eval');
+    if (typeEvalSelect) {
+      typeEvalSelect.addEventListener('change', function () {
+        const matiereId = document.getElementById('matiere').value;
+        loadExistingNotes(matiereId);
+      });
+    }
+  });
+
+  // Validation des données communes
+  function validateCommonFields() {
+    const matiereId = document.getElementById('matiere').value;
+    const typeEval = document.getElementById('type_eval').value;
+    const dateEval = document.getElementById('date_eval').value;
+
+    if (!matiereId) {
+      alert("Veuillez sélectionner une matière.");
+      return null;
+    }
+
+    if (!typeEval) {
+      alert("Veuillez sélectionner un type d'évaluation.");
+      return null;
+    }
+
+    if (!dateEval) {
+      alert("Veuillez saisir une date d'évaluation.");
+      return null;
+    }
+
+    return {
+      matiere_id: matiereId,
+      type_eval: typeEval,
+      date_evaluation: dateEval,
+      credits: document.getElementById('credits').value
+    };
+  }
+
+  // Enregistrer une note individuelle
+  function saveIndividualNote(etudiantId) {
+    const commonData = validateCommonFields();
+    if (!commonData) return;
+
+    const noteInput = document.querySelector(`.note-input[data-etudiant-id="${etudiantId}"]`);
+    const noteValue = noteInput.value;
+
+    if (!noteValue || noteValue === '') {
+      alert("Veuillez saisir une note.");
+      return;
+    }
+
+    if (parseFloat(noteValue) < 0 || parseFloat(noteValue) > 20) {
+      alert("La note doit être entre 0 et 20.");
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append('csrf_token', document.getElementById('csrf_token').value);
+    formData.append('etudiant_id', etudiantId);
+    formData.append('matiere_id', commonData.matiere_id);
+    formData.append('type_eval', commonData.type_eval);
+    formData.append('note', noteValue);
+    formData.append('date_evaluation', commonData.date_evaluation);
+    formData.append('credits', commonData.credits);
+
+    fetch("{{ url_for('enseignant_notes') }}", {
+      method: "POST",
+      body: formData
+    })
+      .then(response => {
+        if (response.ok) {
+          alert("Note enregistrée avec succès !");
+          noteInput.style.borderColor = '#10b981'; // Vert
+          setTimeout(() => {
+            noteInput.style.borderColor = '';
+          }, 2000);
+        } else {
+          alert("Erreur lors de l'enregistrement de la note.");
+        }
+      })
+      .catch(error => {
+        console.error("Erreur:", error);
+        alert("Erreur lors de l'enregistrement de la note.");
+      });
+  }
+
+  // Enregistrer toutes les notes en batch
+  function saveAllNotes() {
+    const commonData = validateCommonFields();
+    if (!commonData) return;
+
+    const notes = [];
+    document.querySelectorAll('.note-input').forEach((input) => {
+      if (input.value && input.value !== '') {
+        const noteValue = parseFloat(input.value);
+        if (noteValue >= 0 && noteValue <= 20) {
+          notes.push({
+            etudiant_id: input.dataset.etudiantId,
+            note: noteValue
+          });
+        }
+      }
+    });
+
+    if (notes.length === 0) {
+      alert("Veuillez saisir au moins une note.");
+      return;
+    }
+
+    if (!confirm(`Enregistrer ${notes.length} note(s) ?`)) {
+      return;
+    }
+
+    // Envoyer chaque note individuellement
+    let successCount = 0;
+    let errorCount = 0;
+    const totalNotes = notes.length;
+
+    notes.forEach((noteData, index) => {
+      const formData = new FormData();
+      formData.append('csrf_token', document.getElementById('csrf_token').value);
+      formData.append('etudiant_id', noteData.etudiant_id);
+      formData.append('matiere_id', commonData.matiere_id);
+      formData.append('type_eval', commonData.type_eval);
+      formData.append('note', noteData.note);
+      formData.append('date_evaluation', commonData.date_evaluation);
+      formData.append('credits', commonData.credits);
+
+      fetch("{{ url_for('enseignant_notes') }}", {
+        method: "POST",
+        body: formData
+      })
+        .then(response => {
+          if (response.ok) {
+            successCount++;
+          } else {
+            errorCount++;
+          }
+
+          // Afficher le résultat après la dernière requête
+          if (successCount + errorCount === totalNotes) {
+            if (errorCount === 0) {
+              alert(`Toutes les notes ont été enregistrées avec succès ! (${successCount}/${totalNotes})`);
+              window.location.reload();
+            } else {
+              alert(`${successCount} note(s) enregistrée(s), ${errorCount} erreur(s).`);
+            }
+          }
+        })
+        .catch(error => {
+          console.error("Erreur:", error);
+          errorCount++;
+
+          if (successCount + errorCount === totalNotes) {
+            alert(`${successCount} note(s) enregistrée(s), ${errorCount} erreur(s).`);
+          }
+        });
+    });
+  }
+
+  // Auto-remplir la date du jour
+  document.addEventListener("DOMContentLoaded", function () {
+    const dateInput = document.getElementById("date_eval");
+    if (dateInput && !dateInput.value) {
+      const today = new Date().toISOString().split("T")[0];
+      dateInput.value = today;
+    }
+  });
+</script>
+
+{% endblock %}

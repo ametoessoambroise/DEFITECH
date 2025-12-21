@@ -1,0 +1,173 @@
+{% extends "admin/base.html" %} {% block title %}Gestion des filières{% endblock
+%} {% block content %}
+<div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+  <div class="flex justify-between items-center mb-6">
+    <h1 class="text-2xl font-bold">Gestion des filières</h1>
+    <a
+      href="{{ url_for('ajouter_filiere') }}"
+      class="bg-white/20-600 hover:bg-blue-500 border text-blue-500 hover:text-white px-4 py-2 rounded-lg transition duration-200 flex items-center"
+    >
+      <svg
+        class="w-5 h-5 mr-2"
+        fill="none"
+        stroke="currentColor"
+        viewBox="0 0 24 24"
+      >
+        <path
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2"
+          d="M12 6v6m0 0v6m0-6h6m-6 0H6"
+        ></path>
+      </svg>
+      Ajouter une filière
+    </a>
+  </div>
+  <div class="bg-white rounded-lg shadow overflow-hidden">
+    <table class="min-w-full divide-y divide-gray-200">
+      <thead class="bg-blue-500">
+        <tr>
+          <th
+            class="px-6 py-3 text-left text-xs font-semibold text-white uppercase tracking-wider"
+          >
+            Nom
+          </th>
+          <th
+            class="px-6 py-3 text-left text-xs font-semibold text-white uppercase tracking-wider"
+          >
+            Description
+          </th>
+          <th
+            class="px-6 py-3 text-left text-xs font-semibold text-white uppercase tracking-wider"
+          >
+            Type de formation
+          </th>
+          <th
+            class="px-6 py-3 text-left text-xs font-semibold text-white uppercase tracking-wider"
+          >
+            Actions
+          </th>
+        </tr>
+      </thead>
+      <tbody class="bg-white divide-y divide-gray-200">
+        {% for filiere in filieres %}
+        <tr class="hover:bg-blue-50 transition duration-150">
+          <td
+            class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900"
+          >
+            {{ filiere.nom }}
+          </td>
+          <td class="px-6 py-4 text-sm text-gray-500">
+            {% if filiere.description %} {{ filiere.description[:100] }}{% if
+            filiere.description|length > 100 %}...{% endif %} {% else %}
+            <span class="text-gray-400">Aucune description</span>
+            {% endif %}
+          </td>
+          <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+            <span
+              class="inline-flex px-2 py-1 text-xs font-semibold rounded-full {% if filiere.type_formation == 'LICENCE' %}bg-blue-100 text-blue-800{% elif filiere.type_formation == 'BTS' %}bg-green-100 text-green-800{% elif filiere.type_formation == 'MASTER' %}bg-red-100 text-red-800{% endif %}"
+            >
+              {{ filiere.type_formation }}
+            </span>
+          </td>
+          <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+            <div class="flex space-x-2">
+              <a
+                href="{{ url_for('modifier_filiere', filiere_id=filiere.id) }}"
+                class="text-indigo-600 hover:text-indigo-900 transition duration-150"
+              >
+                <svg
+                  class="w-5 h-5"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+                  ></path>
+                </svg>
+              </a>
+              <button
+                onclick="confirmerSuppression({{ filiere.id }}, '{{ filiere.nom }}')"
+                class="text-red-600 hover:text-red-900 transition duration-150"
+              >
+                <i class="fas fa-trash-alt"></i>
+              </button>
+            </div>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  {% if not filieres %}
+  <div class="text-center py-12">
+    <svg
+      class="mx-auto h-12 w-12 text-gray-400"
+      fill="none"
+      viewBox="0 0 24 24"
+      stroke="currentColor"
+    >
+      <path
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        stroke-width="2"
+        d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+      ></path>
+    </svg>
+    <h3 class="mt-2 text-sm font-medium text-gray-900">Aucune filière</h3>
+    <p class="mt-1 text-sm text-gray-500">Commencez par ajouter une filière.</p>
+    <div class="mt-6">
+      <a
+        href="{{ url_for('ajouter_filiere') }}"
+        class="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700"
+      >
+        <svg
+          class="w-5 h-5 mr-2"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M12 6v6m0 0v6m0-6h6m-6 0H6"
+          ></path>
+        </svg>
+        Ajouter une filière
+      </a>
+    </div>
+  </div>
+  {% endif %}
+</div>
+
+<!-- Formulaire de suppression caché -->
+<form id="deleteForm" method="POST" style="display: none">
+  <input
+    type="hidden"
+    name="csrf_token"
+    id="csrf_token"
+    value="{{ csrf_token() }}"
+  />
+  
+  </form>
+
+<script>
+  function confirmerSuppression(filiereId, nomFiliere) {
+    if (
+      confirm(
+        `Êtes-vous sûr de vouloir supprimer la filière "${nomFiliere}" ?\n\nCette action est irréversible.`
+      )
+    ) {
+      const form = document.getElementById("deleteForm");
+      form.action = `/admin/filiere/supprimer/${filiereId}`;
+      form.submit();
+    }
+  }
+</script>
+{% endblock %}

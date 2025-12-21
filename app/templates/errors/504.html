@@ -1,0 +1,117 @@
+{% extends "base.html" %}
+
+{% block title %}504 - Gateway Timeout{% endblock %}
+
+{% block content %}
+<div class="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+    <div class="max-w-md w-full space-y-8">
+        <div class="text-center">
+            <div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-purple-100">
+                <i class="fas fa-hourglass-end text-purple-600 text-xl"></i>
+            </div>
+            <h2 class="mt-6 text-3xl font-extrabold text-gray-900">504 - Gateway Timeout</h2>
+            <p class="mt-2 text-sm text-gray-600">
+                Le serveur n'a pas reçu de réponse à temps des services en amont.
+            </p>
+        </div>
+
+        <div class="mt-8 bg-white shadow rounded-lg p-6">
+            <h3 class="text-lg font-medium text-gray-900 mb-4">Timeout de la passerelle</h3>
+            <ul class="text-sm text-gray-600 space-y-2">
+                <li>• Un service backend a pris trop de temps à répondre</li>
+                <li>• La connexion entre serveurs a expiré</li>
+                <li>• Opération en cours plus longue que prévu</li>
+                <li>• Surcharge temporaire des services backend</li>
+            </ul>
+
+            <div class="mt-6 pt-6 border-t border-gray-200">
+                <h4 class="text-sm font-medium text-gray-900 mb-2">Flux de la requête</h4>
+                <div class="text-sm text-gray-600">
+                    <div class="space-y-2">
+                        <div class="flex items-center justify-between">
+                            <span>Client → Gateway</span>
+                            <i class="fas fa-check text-green-500"></i>
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <span>Gateway → Backend</span>
+                            <i class="fas fa-check text-green-500"></i>
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <span>Backend → Gateway</span>
+                            <i class="fas fa-times text-red-500"></i>
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <span>Gateway → Client</span>
+                            <i class="fas fa-exclamation-triangle text-yellow-500"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-purple-50 border border-purple-200 rounded-lg p-4">
+            <div class="flex">
+                <div class="flex-shrink-0">
+                    <i class="fas fa-clock text-purple-400"></i>
+                </div>
+                <div class="ml-3">
+                    <h3 class="text-sm font-medium text-purple-800">Information sur le timeout</h3>
+                    <div class="mt-2 text-sm text-purple-700">
+                        Le backend traite probablement une opération complexe (gros calcul, traitement de fichier,
+                        etc.).
+                        Cette situation est souvent temporaire.
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+            <div class="flex">
+                <div class="flex-shrink-0">
+                    <i class="fas fa-lightbulb text-blue-400"></i>
+                </div>
+                <div class="ml-3">
+                    <h3 class="text-sm font-medium text-blue-800">Conseil</h3>
+                    <div class="mt-2 text-sm text-blue-700">
+                        Si vous étiez en train d'uploader un fichier ou d'effectuer une opération complexe,
+                        réessayez avec un fichier plus petit ou pendant les heures de faible trafic.
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="space-y-4">
+            <button onclick="location.reload()"
+                class="w-full bg-purple-600 hover:bg-purple-700 text-white font-medium py-3 px-4 rounded-lg transition duration-200">
+                <i class="fas fa-redo mr-2"></i>
+                Réessayer
+            </button>
+
+            <div class="flex space-x-4">
+                <a href="{{ url_for('main.index') }}"
+                    class="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg text-center transition duration-200">
+                    <i class="fas fa-home mr-2"></i>
+                    Accueil
+                </a>
+                <a href="/offline"
+                    class="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-800 font-medium py-2 px-4 rounded-lg text-center transition duration-200">
+                    <i class="fas fa-wifi-slash mr-2"></i>
+                    Mode hors ligne
+                </a>
+            </div>
+        </div>
+
+        <div class="text-center text-sm text-gray-500">
+            <p>Les opérations complexes peuvent prendre plus de temps que prévu.</p>
+            <p class="mt-1">Merci de votre patience.</p>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Auto-refresh toutes les 60 secondes pour les timeouts
+    setTimeout(() => {
+        location.reload();
+    }, 60000);
+</script>
+{% endblock %}

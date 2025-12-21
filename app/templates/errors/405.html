@@ -1,0 +1,95 @@
+{% extends "base.html" %}
+
+{% block title %}405 - Method Not Allowed{% endblock %}
+
+{% block content %}
+<div class="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+    <div class="max-w-md w-full space-y-8">
+        <div class="text-center">
+            <div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-purple-100">
+                <i class="fas fa-code text-purple-600 text-xl"></i>
+            </div>
+            <h2 class="mt-6 text-3xl font-extrabold text-gray-900">405 - Method Not Allowed</h2>
+            <p class="mt-2 text-sm text-gray-600">
+                La méthode HTTP utilisée n'est pas autorisée pour cette ressource.
+            </p>
+        </div>
+
+        {% if method %}
+        <div class="mt-8 bg-purple-50 border border-purple-200 rounded-lg p-4">
+            <div class="flex">
+                <div class="flex-shrink-0">
+                    <i class="fas fa-info-circle text-purple-400"></i>
+                </div>
+                <div class="ml-3">
+                    <h3 class="text-sm font-medium text-purple-800">Méthode utilisée</h3>
+                    <div class="mt-2 text-sm text-purple-700">
+                        <span class="font-mono bg-purple-100 px-2 py-1 rounded">{{ method }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <div class="mt-8 bg-white shadow rounded-lg p-6">
+            <h3 class="text-lg font-medium text-gray-900 mb-4">Explication technique</h3>
+            <ul class="text-sm text-gray-600 space-y-2">
+                <li>• La méthode HTTP {{ method or 'utilisée' }} n'est pas supportée</li>
+                <li>• Cette page n'accepte que certaines méthodes spécifiques</li>
+                <li>• L'endpoint attend une requête différente</li>
+                <li>• Les méthodes autorisées sont limitées pour des raisons de sécurité</li>
+            </ul>
+
+            <div class="mt-6 pt-6 border-t border-gray-200">
+                <h4 class="text-sm font-medium text-gray-900 mb-2">Méthodes HTTP courantes</h4>
+                <div class="grid grid-cols-2 gap-2 text-sm">
+                    <div class="flex items-center">
+                        <span class="font-mono bg-gray-100 px-2 py-1 rounded">GET</span>
+                        <span class="ml-2 text-gray-600">Lire</span>
+                    </div>
+                    <div class="flex items-center">
+                        <span class="font-mono bg-gray-100 px-2 py-1 rounded">POST</span>
+                        <span class="ml-2 text-gray-600">Créer</span>
+                    </div>
+                    <div class="flex items-center">
+                        <span class="font-mono bg-gray-100 px-2 py-1 rounded">PUT</span>
+                        <span class="ml-2 text-gray-600">Mettre à jour</span>
+                    </div>
+                    <div class="flex items-center">
+                        <span class="font-mono bg-gray-100 px-2 py-1 rounded">DELETE</span>
+                        <span class="ml-2 text-gray-600">Supprimer</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+            <div class="flex">
+                <div class="flex-shrink-0">
+                    <i class="fas fa-lightbulb text-yellow-400"></i>
+                </div>
+                <div class="ml-3">
+                    <h3 class="text-sm font-medium text-yellow-800">Conseil</h3>
+                    <div class="mt-2 text-sm text-yellow-700">
+                        Cette erreur est généralement technique et provient d'un problème avec l'application.
+                        Contactez le support si elle persiste.
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="flex space-x-4">
+            <a href="{{ url_for('main.index') }}"
+                class="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg text-center transition duration-200">
+                <i class="fas fa-home mr-2"></i>
+                Accueil
+            </a>
+            <button onclick="history.back()"
+                class="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-800 font-medium py-2 px-4 rounded-lg transition duration-200">
+                <i class="fas fa-arrow-left mr-2"></i>
+                Page précédente
+            </button>
+        </div>
+    </div>
+</div>
+{% endblock %}

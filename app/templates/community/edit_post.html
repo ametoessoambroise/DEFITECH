@@ -1,0 +1,223 @@
+{% extends "community/base.html" %}
+
+{% block title %}{{ 'Modifier' if post else 'Nouvelle' }} publication - {{ filiere.nom }}{% endblock %}
+
+{% block community_content %}
+<div class="max-w-4xl mx-auto">
+    <div class="mb-6">
+        <h1 class="text-2xl font-bold text-gray-900 mt-2">
+            {{ 'Modifier la publication' if post else 'Nouvelle publication' }}
+        </h1>
+        <p class="text-sm text-gray-500 mt-1">
+            {{ filiere.nom }} • {{ filiere.type_formation }}
+        </p>
+    </div>
+    
+    <div class="bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden">
+        <form method="post" enctype="multipart/form-data" class="p-6">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="mb-4 p-4 rounded-md {% if category == 'success' %}bg-green-100 text-green-700{% else %}bg-red-100 text-red-700{% endif %}">
+                            {{ message }}
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+            
+            <div class="space-y-6">
+                <!-- Titre -->
+                <div>
+                    <label for="titre" class="block text-sm font-medium text-gray-700 mb-1">
+                        Titre <span class="text-red-500">*</span>
+                    </label>
+                    <input type="text" id="titre" name="titre" required
+                           class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                           value="{{ post.titre if post else '' }}"
+                           placeholder="Donnez un titre clair à votre publication">
+                </div>
+                
+                <!-- Contenu -->
+                <div>
+                    <label for="contenu" class="block text-sm font-medium text-gray-700 mb-1">
+                        Contenu <span class="text-red-500">*</span>
+                    </label>
+                    <textarea id="contenu" name="contenu" rows="10" required
+                              class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                              placeholder="Décrivez votre publication en détail...">{{ post.contenu if post else '' }}</textarea>
+                    <p class="mt-1 text-xs text-gray-500">
+                        Le formatage Markdown est supporté. Utilisez # pour les titres, **gras**, *italique*, etc.
+                    </p>
+                </div>
+                
+                <!-- Pièces jointes -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">
+                        Pièces jointes
+                    </label>
+                    
+                    <!-- Liste des pièces jointes existantes -->
+                    {% if post and post.pieces_jointes %}
+                    <div class="mb-3 p-3 bg-gray-50 rounded-md border border-gray-200">
+                        <h4 class="text-sm font-medium text-gray-700 mb-2">Fichiers joints</h4>
+                        <ul class="space-y-2">
+                            {% for piece in post.pieces_jointes %}
+                            <li class="flex items-center justify-between bg-white p-2 rounded border border-gray-200">
+                                <div class="flex items-center">
+                                    {% if piece.type_fichier == 'image' %}
+                                    <i class="far fa-image text-blue-500 mr-2"></i>
+                                    {% else %}
+                                    <i class="far fa-file-alt text-gray-500 mr-2"></i>
+                                    {% endif %}
+                                    <span class="text-sm text-gray-700 truncate max-w-xs">{{ piece.nom_fichier }}</span>
+                                </div>
+                                <a href="{{ url_for('community.download_attachment', attachment_id=piece.id) }}" 
+                                   class="text-blue-600 hover:text-blue-800 text-sm"
+                                   download>
+                                    <i class="fas fa-download"></i>
+                                </a>
+                            </li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                    {% endif %}
+                    
+                    <!-- Téléversement de nouveaux fichiers -->
+                    <div class="mt-2 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-md">
+                        <div class="space-y-1 text-center">
+                            <svg class="mx-auto h-12 w-12 text-gray-400" stroke="currentColor" fill="none" viewBox="0 0 48 48" aria-hidden="true">
+                                <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                            </svg>
+                            <div class="flex text-sm text-gray-600">
+                                <label for="pieces_jointes" class="relative cursor-pointer bg-white rounded-md font-medium text-blue-600 hover:text-blue-500 focus-within:outline-none">
+                                    <span>Téléverser des fichiers</span>
+                                    <input id="pieces_jointes" name="pieces_jointes" type="file" class="sr-only" multiple>
+                                </label>
+                                <p class="pl-1">ou glissez-déposez</p>
+                            </div>
+                            <p class="text-xs text-gray-500">
+                                PNG, JPG, PDF, DOCX, XLSX jusqu'à 10MB
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Options avancées -->
+                <div x-data="{ showAdvanced: false }" class="border-t border-gray-200 pt-4 mt-4">
+                    <button type="button" 
+                            @click="showAdvanced = !showAdvanced"
+                            class="text-sm font-medium text-blue-600 hover:text-blue-500 focus:outline-none">
+                        <span x-show="!showAdvanced">
+                            <i class="fas fa-plus-circle mr-1"></i> Options avancées
+                        </span>
+                        <span x-show="showAdvanced">
+                            <i class="fas fa-minus-circle mr-1"></i> Masquer les options
+                        </span>
+                    </button>
+                    
+                    <div x-show="showAdvanced" class="mt-3 space-y-3 pl-2 border-l-2 border-gray-200">
+                        <div class="flex items-start">
+                            <div class="flex items-center h-5">
+                                <input id="est_public" name="est_public" type="checkbox" 
+                                       class="focus:ring-blue-500 h-4 w-4 text-blue-600 border-gray-300 rounded"
+                                       {% if post is none or post.est_public %}checked{% endif %}>
+                            </div>
+                            <div class="ml-3 text-sm">
+                                <label for="est_public" class="font-medium text-gray-700">Publier immédiatement</label>
+                                <p class="text-gray-500">Si désactivé, la publication sera enregistrée comme brouillon</p>
+                            </div>
+                        </div>
+                        
+                        {% if current_user.role in ['admin', 'enseignant'] %}
+                        <div class="flex items-start">
+                            <div class="flex items-center h-5">
+                                <input id="est_epingle" name="est_epingle" type="checkbox"
+                                       class="focus:ring-blue-500 h-4 w-4 text-blue-600 border-gray-300 rounded"
+                                       {% if post and post.est_epingle %}checked{% endif %}>
+                            </div>
+                            <div class="ml-3 text-sm">
+                                <label for="est_epingle" class="font-medium text-gray-700">Épingler cette publication</label>
+                                <p class="text-gray-500">Les publications épinglées restent en haut de la liste</p>
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <!-- Boutons d'action -->
+                <div class="pt-5 border-t border-gray-200">
+                    <div class="flex justify-end space-x-3">
+                        <a href="{% if post %}{{ url_for('community.view_post', post_id=post.id) }}{% else %}{{ url_for('community.filiale', filiere_id=filiere.id) }}{% endif %}" 
+                           class="bg-white py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                            Annuler
+                        </a>
+                        <button type="submit" name="action" value="save_draft"
+                                class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-gray-600 hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500">
+                            <i class="far fa-save mr-2"></i> Enregistrer le brouillon
+                        </button>
+                        <button type="submit" name="action" value="publish"
+                                class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                            <i class="far fa-paper-plane mr-2"></i>
+                            {{ 'Mettre à jour' if post else 'Publier' }}
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Gestion du glisser-déposer de fichiers
+document.addEventListener('DOMContentLoaded', function() {
+    const dropArea = document.querySelector('.border-dashed');
+    const fileInput = document.getElementById('pieces_jointes');
+    
+    if (dropArea && fileInput) {
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+            dropArea.addEventListener(eventName, preventDefaults, false);
+        });
+        
+        function preventDefaults(e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+        
+        ['dragenter', 'dragover'].forEach(eventName => {
+            dropArea.addEventListener(eventName, highlight, false);
+        });
+        
+        ['dragleave', 'drop'].forEach(eventName => {
+            dropArea.addEventListener(eventName, unhighlight, false);
+        });
+        
+        function highlight() {
+            dropArea.classList.add('border-blue-500', 'bg-blue-50');
+        }
+        
+        function unhighlight() {
+            dropArea.classList.remove('border-blue-500', 'bg-blue-50');
+        }
+        
+        dropArea.addEventListener('drop', handleDrop, false);
+        
+        function handleDrop(e) {
+            const dt = e.dataTransfer;
+            const files = dt.files;
+            fileInput.files = files;
+        }
+    }
+    
+    // Aperçu Markdown en direct
+    const contenuTextarea = document.getElementById('contenu');
+    if (contenuTextarea) {
+        contenuTextarea.addEventListener('input', function() {
+            // Vous pourriez ajouter un aperçu Markdown en direct ici
+        });
+    }
+});
+</script>
+{% endblock %}

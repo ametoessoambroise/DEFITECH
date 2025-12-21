@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="fr" class="dark">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Chat - DEFITECH</title>
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            slate: { 850: '#151e2e', 900: '#0f172a' }
+          }
+        }
+      }
+    }
+  </script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap');
+
+    body {
+      font-family: 'Inter', sans-serif;
+    }
+
+    .glass-panel {
+      background: rgba(30, 41, 59, 0.7);
+      backdrop-filter: blur(12px);
+      border-right: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    .active-user {
+      background: rgba(59, 130, 246, 0.15);
+      border-left: 3px solid #3b82f6;
+    }
+
+    .chat-scroll::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    .chat-scroll::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    .chat-scroll::-webkit-scrollbar-thumb {
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 3px;
+    }
+
+    .msg-bubble {
+      max-width: 75%;
+      padding: 10px 14px;
+      border-radius: 12px;
+      animation: fadeIn 0.3s ease;
+    }
+
+    .msg-sent {
+      background: #2563eb;
+      color: white;
+      margin-left: auto;
+      border-bottom-right-radius: 2px;
+    }
+
+    .msg-received {
+      background: #334155;
+      color: #f1f5f9;
+      border-bottom-left-radius: 2px;
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(5px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+  </style>
+</head>
+
+<body class="bg-slate-900 h-screen flex text-slate-100 overflow-hidden">
+
+  <!-- Sidebar (Conversation List) -->
+  <aside class="w-80 glass-panel flex flex-col z-20">
+    <!-- Header -->
+    <div class="h-16 flex items-center justify-between px-4 border-b border-white/5">
+      <h1 class="font-bold text-lg flex items-center gap-2">
+        <i class="fas fa-shield-alt text-blue-500"></i> Admin Chat
+      </h1>
+      <span id="total-badge" class="bg-blue-600 text-xs font-bold px-2 py-0.5 rounded-full">0</span>
+    </div>
+
+    <!-- Search -->
+    <div class="p-3">
+      <div class="relative">
+        <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-500"></i>
+        <input id="search-input" type="text" placeholder="Rechercher..."
+          class="w-full bg-slate-800 rounded-lg pl-9 pr-3 py-2 text-sm text-slate-200 focus:outline-none focus:ring-1 focus:ring-blue-500 placeholder-slate-500">
+      </div>
+    </div>
+
+    <!-- List -->
+    <div id="conversation-list" class="flex-1 overflow-y-auto chat-scroll space-y-1 p-2">
+      <!-- Items injected via JS -->
+    </div>
+
+    <!-- Bottom User Info -->
+    <div class="p-4 border-t border-white/5 flex items-center gap-3">
+      <img
+        src="{{ url_for('static', filename='uploads/profile_pics/' + current_user.photo_profil) if current_user.photo_profil else '' }}"
+        class="w-8 h-8 rounded-full bg-slate-700 object-cover"
+        onerror="this.src='https://ui-avatars.com/api/?name=Admin&background=random'">
+      <div class="flex-1 min-w-0">
+        <p class="text-sm font-medium truncate">{{ current_user.prenom }} {{ current_user.nom }}</p>
+        <p class="text-xs text-slate-400">En ligne</p>
+      </div>
+      <a href="/" class="text-slate-400 hover:text-white"><i class="fas fa-sign-out-alt"></i></a>
+    </div>
+  </aside>
+
+  <!-- Main Chat Area -->
+  <main class="flex-1 flex flex-col relative bg-slate-900/50">
+
+    <!-- Empty State -->
+    <div id="no-chat-selected" class="absolute inset-0 flex flex-col items-center justify-center text-slate-500">
+      <i class="fas fa-inbox text-5xl mb-4 opacity-50"></i>
+      <p>Sélectionnez une conversation</p>
+    </div>
+
+    <!-- Active Chat Header -->
+    <header id="chat-header"
+      class="h-16 border-b border-white/5 flex items-center justify-between px-6 hidden bg-slate-900/80 backdrop-blur-sm z-10">
+      <div class="flex items-center gap-3">
+        <img id="header-avatar" src="" class="w-10 h-10 rounded-full bg-slate-700 object-cover">
+        <div>
+          <h2 id="header-name" class="font-semibold text-white">Utilisateur</h2>
+          <p id="header-role" class="text-xs text-slate-400 capitalize">Role</p>
+        </div>
+      </div>
+      <div class="flex gap-2">
+        <button class="w-8 h-8 flex items-center justify-center rounded-full hover:bg-white/5 text-slate-400"
+          title="Marquer comme lu">
+          <i class="fas fa-check-double"></i>
+        </button>
+      </div>
+    </header>
+
+    <!-- Messages -->
+    <div id="messages-container" class="flex-1 overflow-y-auto chat-scroll p-6 space-y-4 hidden pb-20">
+      <!-- Bubbles injected here -->
+    </div>
+
+    <!-- Input -->
+    <div id="input-area" class="p-4 border-t border-white/5 bg-slate-900/90 hidden absolute bottom-0 left-0 right-0">
+      <form id="reply-form" class="flex gap-2">
+        <input id="reply-input" type="text" placeholder="Répondre..." autocomplete="off"
+          class="flex-1 bg-slate-800 rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-1 focus:ring-blue-500">
+        <button type="submit"
+          class="bg-blue-600 hover:bg-blue-500 text-white px-6 rounded-lg font-medium transition-colors">
+          Envoyer
+        </button>
+      </form>
+    </div>
+
+  </main>
+
+  <!-- Socket.IO -->
+  <script src="https://cdn.socket.io/4.7.4/socket.io.min.js"></script>
+  <script>
+    // State
+    const STATE = {
+      adminId: {{ current_user.id }},
+    activeUserId: null,
+      conversations: [] // Array of { user: {...}, last_message: {...}, unread_count: 0 }
+        };
+
+    const DOM = {
+      list: document.getElementById('conversation-list'),
+      searchInput: document.getElementById('search-input'),
+      noChat: document.getElementById('no-chat-selected'),
+      header: document.getElementById('chat-header'),
+      headerName: document.getElementById('header-name'),
+      headerAvatar: document.getElementById('header-avatar'),
+      headerRole: document.getElementById('header-role'),
+      msgContainer: document.getElementById('messages-container'),
+      inputArea: document.getElementById('input-area'),
+      form: document.getElementById('reply-form'),
+      input: document.getElementById('reply-input'),
+      totalBadge: document.getElementById('total-badge')
+    };
+
+    const socket = io();
+
+    // Init
+    document.addEventListener('DOMContentLoaded', () => {
+      fetchConversations();
+      setupSocket();
+    });
+
+    // ================= EVENTS =================
+    DOM.searchInput.addEventListener('input', (e) => {
+      renderList(e.target.value);
+    });
+
+    DOM.form.addEventListener('submit', (e) => {
+      e.preventDefault();
+      sendMessage();
+    });
+
+    function setupSocket() {
+      socket.on('receive_message', (data) => {
+        // Determine if this is for the currently open chat
+        if (STATE.activeUserId && (data.sender_id == STATE.activeUserId || data.receiver_id == STATE.activeUserId)) {
+          appendMessage(data);
+          markAsRead(STATE.activeUserId); // Auto-read if open
+        } else {
+          playNotification();
+        }
+        // Refresh list to update snippets/unread counts
+        fetchConversations();
+      });
+
+      socket.on('message_sent', (data) => {
+        // If we sent it, append it
+        if (STATE.activeUserId === data.receiver_id) {
+          appendMessage(data);
+          fetchConversations();
+        }
+      });
+    }
+
+    // ================= LOGIC =================
+    async function fetchConversations() {
+      try {
+        const res = await fetch('/chat/api/conversations');
+        const data = await res.json();
+        if (data.success) {
+          STATE.conversations = data.conversations.sort((a, b) => new Date(b.last_message.timestamp) - new Date(a.last_message.timestamp));
+          renderList(DOM.searchInput.value);
+        }
+      } catch (e) {
+        console.error('Failed to load conversations', e);
+      }
+    }
+
+    function renderList(filterText = '') {
+      DOM.list.innerHTML = '';
+      let totalUnread = 0;
+
+      const filtered = STATE.conversations.filter(c =>
+        c.user.nom.toLowerCase().includes(filterText.toLowerCase()) ||
+        c.user.prenom.toLowerCase().includes(filterText.toLowerCase())
+      );
+
+      filtered.forEach(c => {
+        const isActive = STATE.activeUserId === c.user.id;
+        totalUnread += c.unread_count || 0;
+
+        const div = document.createElement('div');
+        div.className = `p-3 rounded-xl cursor-pointer hover:bg-white/5 transition-colors flex items-center gap-3 ${isActive ? 'active-user' : ''}`;
+        div.onclick = () => selectUser(c.user.id);
+
+        const time = new Date(c.last_message.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        const snippet = (c.last_message.is_from_me ? 'You: ' : '') + c.last_message.content;
+
+        div.innerHTML = `
+                    <div class="relative">
+                        <img src="${c.user.photo_profil ? '/static/uploads/profile_pics/' + c.user.photo_profil : 'https://ui-avatars.com/api/?name=' + c.user.prenom}" 
+                             class="w-10 h-10 rounded-full object-cover bg-slate-700">
+                        ${c.unread_count > 0 ? `<div class="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full text-[10px] flex items-center justify-center font-bold text-white border border-slate-900">${c.unread_count}</div>` : ''}
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <div class="flex justify-between items-start">
+                            <h4 class="font-medium text-sm truncate text-white">${c.user.prenom} ${c.user.nom}</h4>
+                            <span class="text-[10px] text-slate-500">${time}</span>
+                        </div>
+                        <p class="text-xs text-slate-400 truncate ${c.unread_count > 0 ? 'font-semibold text-slate-200' : ''}">
+                            ${escapeHtml(snippet)}
+                        </p>
+                    </div>
+                `;
+        DOM.list.appendChild(div);
+      });
+
+      DOM.totalBadge.innerText = totalUnread;
+      DOM.totalBadge.style.display = totalUnread > 0 ? 'block' : 'none';
+    }
+
+    async function selectUser(userId) {
+      STATE.activeUserId = userId;
+
+      // Find user details
+      const conv = STATE.conversations.find(c => c.user.id === userId);
+      if (!conv) return;
+
+      // Update UI Stae
+      DOM.noChat.classList.add('hidden');
+      DOM.header.classList.remove('hidden');
+      DOM.msgContainer.classList.remove('hidden');
+      DOM.inputArea.classList.remove('hidden');
+
+      DOM.headerName.innerText = `${conv.user.prenom} ${conv.user.nom}`;
+      DOM.headerRole.innerText = conv.user.role || 'Utilisateur';
+      DOM.headerAvatar.src = conv.user.photo_profil ? `/static/uploads/profile_pics/${conv.user.photo_profil}` : `https://ui-avatars.com/api/?name=${conv.user.prenom}`;
+
+      // Re-render list to show active state
+      renderList(DOM.searchInput.value);
+
+      // Fetch History
+      await loadTranscripts(userId);
+
+      // Focus Input
+      DOM.input.focus();
+
+      // Mark read
+      markAsRead(userId);
+    }
+
+    async function loadTranscripts(userId) {
+      DOM.msgContainer.innerHTML = '';
+      try {
+        const res = await fetch(`/chat/api/history?with=${userId}`);
+        const data = await res.json();
+        if (data.success) {
+          data.messages.forEach(appendMessage);
+          DOM.msgContainer.scrollTop = DOM.msgContainer.scrollHeight;
+        }
+      } catch (e) {
+        console.error('Err loading history', e);
+      }
+    }
+
+    function appendMessage(msg) {
+      const isMe = msg.sender_id === STATE.adminId;
+      const div = document.createElement('div');
+      div.className = `flex ${isMe ? 'justify-end' : 'justify-start'}`;
+
+      div.innerHTML = `
+                <div class="msg-bubble ${isMe ? 'msg-sent' : 'msg-received'}">
+                    <p class="text-sm whitespace-pre-wrap">${escapeHtml(msg.content)}</p>
+                    <p class="text-[10px] mt-1 opacity-60 text-right">${new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
+                </div>
+            `;
+      DOM.msgContainer.appendChild(div);
+      DOM.msgContainer.scrollTop = DOM.msgContainer.scrollHeight;
+    }
+
+    function sendMessage() {
+      const txt = DOM.input.value.trim();
+      if (!txt || !STATE.activeUserId) return;
+
+      socket.emit('send_message', {
+        receiver_id: STATE.activeUserId,
+        content: txt
+      });
+      DOM.input.value = '';
+    }
+
+    function markAsRead(userId) {
+      socket.emit('mark_as_read', { conversation_with: userId });
+      // Optimistically clear unread in local state
+      const c = STATE.conversations.find(cv => cv.user.id === userId);
+      if (c) c.unread_count = 0;
+      renderList(DOM.searchInput.value);
+    }
+
+    function escapeHtml(text) {
+      const n = document.createElement('div');
+      n.textContent = text;
+      return n.innerHTML;
+    }
+
+    function playNotification() {
+      // Beep
+    }
+  </script>
+</body>
+
+</html>

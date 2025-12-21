@@ -1,0 +1,621 @@
+{% extends 'admin/base.html' %} {% block title %}Gestion des Matières{% endblock
+%} {% block head %} {{ super() }}
+<style>
+  /* Animations personnalisées */
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+      transform: translateY(-10px);
+    }
+
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes slideIn {
+    from {
+      opacity: 0;
+      transform: scale(0.95);
+    }
+
+    to {
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
+
+  .animate-fadeIn {
+    animation: fadeIn 0.3s ease-out;
+  }
+
+  .animate-slideIn {
+    animation: slideIn 0.2s ease-out;
+  }
+
+  /* Styles personnalisés pour les inputs */
+  .input-field {
+    margin-top: 0.25rem;
+    display: block;
+    width: 100%;
+    border-radius: 0.5rem;
+    border: 1px solid #d1d5db;
+    box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+    transition: all 0.2s ease-in-out;
+  }
+
+  .input-field:focus {
+    border-color: #6366f1;
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(199, 210, 254, 0.6);
+    transform: translateY(-1px);
+  }
+
+  .table-row-hover {
+    transition: all 0.2s ease;
+  }
+
+  .table-row-hover:hover {
+    background-color: #f9fafb;
+    transform: translateX(4px);
+    box-shadow: -4px 0 0 0 #4f46e5;
+  }
+
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    padding-left: 0.75rem;
+    padding-right: 0.75rem;
+    padding-top: 0.25rem;
+    padding-bottom: 0.25rem;
+    border-radius: 9999px;
+    font-size: 0.75rem;
+    font-weight: 500;
+  }
+
+  .btn-action {
+    transition: all 0.2s ease-in-out;
+    transform: translateZ(0);
+  }
+
+  .btn-action:hover {
+    transform: translateY(-2px);
+  }
+
+  .btn-action:active {
+    transform: translateY(0);
+  }
+
+  .modal-overlay {
+    backdrop-filter: blur(4px);
+    transition: all 0.3s ease;
+  }
+
+  .alert-success {
+    position: fixed;
+    top: 1rem;
+    right: 1rem;
+    background-color: #22c55e;
+    color: #ffffff;
+    padding-left: 1.5rem;
+    padding-right: 1.5rem;
+    padding-top: 0.75rem;
+    padding-bottom: 0.75rem;
+    border-radius: 0.5rem;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1),
+      0 4px 6px -4px rgba(0, 0, 0, 0.1);
+    animation: slideIn 0.3s ease-out;
+    z-index: 9999;
+  }
+
+  .icon-wrapper {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.5rem;
+    height: 2.5rem;
+    border-radius: 50%;
+    transition: all 0.2s ease-in-out;
+  }
+
+  .icon-wrapper:hover {
+    transform: rotate(5deg) scale(1.1);
+  }
+</style>
+{% endblock %} {% block content %}
+<div class="container mx-auto px-4 py-8 animate-fadeIn">
+  <!-- En-tête avec gradient -->
+  <div class="bg-gradient-to-r from-indigo-600 to-purple-600 rounded-2xl shadow-xl p-8 mb-8 text-white">
+    <div class="flex justify-between items-center">
+      <div>
+        <h1 class="text-3xl font-bold mb-2">Gestion des Matières</h1>
+        <p class="text-indigo-100">
+          Gérez les matières, filières et enseignants
+        </p>
+      </div>
+      <button onclick="openAddModal()"
+        class="bg-white text-indigo-600 hover:bg-indigo-50 font-bold py-3 px-6 rounded-xl flex items-center shadow-lg btn-action">
+        <i class="fas fa-plus mr-2"></i> Ajouter une matière
+      </button>
+    </div>
+  </div>
+
+  <!-- Barre de recherche -->
+  <div class="bg-white rounded-xl shadow-md p-4 mb-6">
+    <div class="relative">
+      <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+        <i class="fas fa-search text-gray-400"></i>
+      </div>
+      <input type="text" id="searchInput" onkeyup="searchTable()"
+        placeholder="Rechercher une matière, filière ou enseignant..."
+        class="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all duration-200" />
+    </div>
+  </div>
+
+  <!-- Tableau des matières -->
+  <div class="bg-white rounded-xl shadow-lg overflow-hidden">
+    <div class="overflow-x-auto">
+      <table class="min-w-full divide-y divide-gray-200">
+        <thead class="bg-gradient-to-r from-gray-50 to-gray-100">
+          <tr>
+            <th class="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
+              <i class="fas fa-hashtag mr-2 text-indigo-500"></i>ID
+            </th>
+            <th class="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
+              <i class="fas fa-book mr-2 text-indigo-500"></i>Nom de la matière
+            </th>
+            <th class="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
+              <i class="fas fa-graduation-cap mr-2 text-indigo-500"></i>Filière
+            </th>
+            <th class="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
+              <i class="fas fa-star mr-2 text-indigo-500"></i>Crédits
+            </th>
+            <th class="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
+              <i class="fas fa-chalkboard-teacher mr-2 text-indigo-500"></i>Enseignant
+            </th>
+            <th class="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
+              <i class="fas fa-cog mr-2 text-indigo-500"></i>Actions
+            </th>
+          </tr>
+        </thead>
+        <tbody class="bg-white divide-y divide-gray-200" id="matieres-table-body">
+          {% for matiere in matieres %}
+          <tr id="matiere-{{ matiere.id }}" class="table-row-hover">
+            <td class="px-6 py-4 whitespace-nowrap">
+              <span class="badge bg-indigo-100 text-indigo-800 rounded-full p-2">#{{ matiere.id }}</span>
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap">
+              <div class="flex items-center">
+                <div class="icon-wrapper bg-blue-100 text-blue-600 mr-3 rounded-full p-2">
+                  <i class="fas fa-book text-sm"></i>
+                </div>
+                <span class="text-sm font-semibold text-gray-900">{{ matiere.nom }}</span>
+              </div>
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap">
+              <span class="badge bg-purple-100 text-purple-800 rounded-full p-2">
+                <i class="fas fa-graduation-cap mr-1"></i>{{ matiere.filiere.nom
+                }}
+              </span>
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap">
+              <span class="badge bg-yellow-100 text-yellow-800 rounded-full p-2">
+                <i class="fas fa-star mr-1"></i>{{ matiere.credit }}
+              </span>
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap">
+              <div class="flex items-center">
+                <div class="icon-wrapper bg-green-100 text-green-600 mr-3 rounded-full p-2">
+                  <i class="fas fa-user text-sm"></i>
+                </div>
+                <div>
+                  <div class="text-sm font-medium text-gray-900">
+                    {{ matiere.enseignant.user.nom }} {{
+                    matiere.enseignant.user.prenom }}
+                  </div>
+                </div>
+              </div>
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+              <button data-matiere-id="{{ matiere.id }}" data-matiere-nom="{{ matiere.nom }}"
+                data-filiere-id="{{ matiere.filiere_id }}" data-enseignant-id="{{ matiere.enseignant_id }}"
+                data-matiere-credit="{{ matiere.credit }}"
+                class="edit-matiere-btn inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-lg text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 mr-2 btn-action">
+                <i class="fas fa-edit mr-1"></i> Modifier
+              </button>
+              <button data-matiere-id="{{ matiere.id }}" data-matiere-nom="{{ matiere.nom }}"
+                class="delete-matiere-btn inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-lg text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 btn-action">
+                <i class="fas fa-trash mr-1"></i> Supprimer
+              </button>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    {% if not matieres %}
+    <div class="text-center py-12">
+      <i class="fas fa-inbox text-6xl text-gray-300 mb-4"></i>
+      <p class="text-gray-500 text-lg">Aucune matière enregistrée</p>
+      <button onclick="openAddModal()" class="mt-4 text-indigo-600 hover:text-indigo-700 font-medium">
+        Ajouter la première matière
+      </button>
+    </div>
+    {% endif %}
+  </div>
+</div>
+
+<!-- Modal Ajout/Modification -->
+<div id="matiereModal"
+  class="fixed inset-0 bg-gray-900 bg-opacity-50 modal-overlay overflow-y-auto h-full w-full hidden z-50">
+  <div class="relative top-20 mx-auto p-0 border-0 w-full max-w-2xl animate-slideIn">
+    <div class="bg-white rounded-2xl shadow-2xl overflow-hidden">
+      <div class="bg-gradient-to-r from-indigo-600 to-purple-600 px-6 py-5">
+        <div class="flex justify-between items-center">
+          <div class="flex items-center text-white">
+            <div class="icon-wrapper bg-white bg-opacity-20 mr-3">
+              <i id="modalIcon" class="fas fa-plus"></i>
+            </div>
+            <h3 class="text-xl font-bold" id="modalTitle">
+              Ajouter une matière
+            </h3>
+          </div>
+          <button onclick="closeModal()" class="text-white hover:text-gray-200 transition-colors duration-200">
+            <i class="fas fa-times text-xl"></i>
+          </button>
+        </div>
+      </div>
+
+      <form id="matiereForm" onsubmit="return handleSubmit(event)" class="p-6">
+        <input type="hidden" name="csrf_token" id="csrf_token" value="{{ csrf_token() }}" />
+        <input type="hidden" id="matiereId" name="id" />
+
+        <div class="space-y-5">
+          <div>
+            <label for="nom" class="block text-sm font-semibold text-gray-700 mb-2">
+              <i class="fas fa-book text-indigo-500 mr-2"></i>Nom de la matière
+            </label>
+            <input type="text" id="nom" name="nom" required placeholder="Ex: Mathématiques, Physique..."
+              class="input-field rounded-lg p-2 text-black border focus:ring-blue-500 focus:ring-2 outline-none" />
+          </div>
+
+          <div>
+            <label for="credits" class="block text-sm font-semibold text-gray-700 mb-2">
+              <i class="fas fa-star text-indigo-500 mr-2"></i>Crédits
+            </label>
+            <input type="number" id="credits" name="credits" min="1" max="20" value="6" required
+              placeholder="Nombre de crédits (ex: 6)"
+              class="input-field rounded-lg p-2 text-black border focus:ring-blue-500 focus:ring-2 outline-none" />
+          </div>
+
+          <div>
+            <label for="filiere_id" class="block text-sm font-semibold text-gray-700 mb-2">
+              <i class="fas fa-graduation-cap text-indigo-500 mr-2"></i>Filière
+            </label>
+            <select id="filiere_id" name="filiere_id" required
+              class="input-field rounded-lg p-2 text-black border focus:ring-blue-500 focus:ring-2 outline-none">
+              <option value="">Sélectionner une filière</option>
+              {% for filiere in filieres %}
+              <option value="{{ filiere.id }}">{{ filiere.nom }}</option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div>
+            <label for="enseignant_id" class="block text-sm font-semibold text-gray-700 mb-2">
+              <i class="fas fa-chalkboard-teacher text-indigo-500 mr-2"></i>Enseignant
+            </label>
+            <select id="enseignant_id" name="enseignant_id" required
+              class="input-field rounded-lg p-2 text-black border focus:ring-blue-500 focus:ring-2 outline-none">
+              <option value="">Sélectionner un enseignant</option>
+              {% for enseignant in enseignants %}
+              <option value="{{ enseignant.id }}">
+                {{ enseignant.user.nom }} {{ enseignant.user.prenom }}
+              </option>
+              {% endfor %}
+            </select>
+          </div>
+        </div>
+
+        <div class="flex justify-end space-x-3 mt-8 pt-6 border-t border-gray-200">
+          <button type="button" onclick="closeModal()"
+            class="px-6 py-2.5 border border-gray-300 rounded-lg shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-all duration-200 btn-action">
+            <i class="fas fa-times mr-2"></i>Annuler
+          </button>
+          <button type="submit"
+            class="px-6 py-2.5 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-all duration-200 btn-action">
+            <i class="fas fa-save mr-2"></i>Enregistrer
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Modal de confirmation de suppression -->
+<div id="deleteModal"
+  class="fixed inset-0 bg-gray-900 bg-opacity-50 modal-overlay overflow-y-auto h-full w-full hidden z-50">
+  <div class="relative top-20 mx-auto p-0 border-0 w-full max-w-md animate-slideIn">
+    <div class="bg-white rounded-2xl shadow-2xl overflow-hidden">
+      <div class="p-6">
+        <div class="text-center">
+          <div class="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-red-100 mb-4">
+            <i class="fas fa-exclamation-triangle text-red-600 text-2xl"></i>
+          </div>
+          <h3 class="text-xl font-bold text-gray-900 mb-2">
+            Confirmer la suppression
+          </h3>
+          <div class="mt-3 px-4 py-3 bg-red-50 rounded-lg">
+            <p class="text-sm text-gray-700">
+              Êtes-vous sûr de vouloir supprimer la matière
+              <span class="font-bold text-red-600" id="deleteMatiereName"></span>
+              ?
+            </p>
+            <p class="text-xs text-gray-500 mt-2">
+              <i class="fas fa-info-circle mr-1"></i>Cette action est
+              irréversible
+            </p>
+          </div>
+          <div class="flex justify-center space-x-3 mt-6">
+            <button onclick="closeDeleteModal()"
+              class="px-6 py-2.5 bg-gray-200 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-400 transition-all duration-200 btn-action">
+              <i class="fas fa-times mr-2"></i>Annuler
+            </button>
+            <button id="confirmDeleteBtn"
+              class="px-6 py-2.5 bg-red-600 text-white text-sm font-medium rounded-lg hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 transition-all duration-200 btn-action">
+              <i class="fas fa-trash mr-2"></i>Supprimer
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  let currentMatiereId = null;
+  let modal, deleteModal, matiereForm;
+
+  function showSuccessAlert(message) {
+    const alert = document.createElement("div");
+    alert.className = "alert-success";
+    alert.innerHTML = `
+      <div class="flex items-center">
+        <i class="fas fa-check-circle mr-2"></i>
+        <span>${message}</span>
+      </div>
+    `;
+    document.body.appendChild(alert);
+    setTimeout(() => {
+      alert.style.animation = "fadeIn 0.3s ease-out reverse";
+      setTimeout(() => alert.remove(), 300);
+    }, 3000);
+  }
+
+  function openAddModal() {
+    document.getElementById("modalTitle").textContent = "Ajouter une matière";
+    document.getElementById("modalIcon").className = "fas fa-plus";
+    matiereForm.reset();
+    document.getElementById("matiereId").value = "";
+    modal.classList.remove("hidden");
+    setTimeout(() => document.getElementById("nom").focus(), 100);
+  }
+
+  function openEditModal(id, nom, filiereId, enseignantId, credits) {
+    document.getElementById("modalTitle").textContent = "Modifier la matière";
+    document.getElementById("modalIcon").className = "fas fa-edit";
+    document.getElementById("matiereId").value = id;
+    document.getElementById("nom").value = nom;
+    document.getElementById("credits").value = credits;
+    document.getElementById("filiere_id").value = filiereId;
+    document.getElementById("enseignant_id").value = enseignantId;
+    modal.classList.remove("hidden");
+    setTimeout(() => document.getElementById("nom").focus(), 100);
+  }
+
+  function closeModal() {
+    modal.classList.add("hidden");
+  }
+
+  function confirmDelete(id, nom) {
+    currentMatiereId = id;
+    document.getElementById("deleteMatiereName").textContent = nom;
+    deleteModal.classList.remove("hidden");
+  }
+
+  function closeDeleteModal() {
+    deleteModal.classList.add("hidden");
+    currentMatiereId = null;
+  }
+
+  async function handleSubmit(event) {
+    event.preventDefault();
+    console.log("Début de la soumission du formulaire");
+
+    const submitBtn = event.target.querySelector('button[type="submit"]');
+    const originalText = submitBtn.innerHTML;
+    submitBtn.innerHTML =
+      '<i class="fas fa-spinner fa-spin mr-2"></i>Enregistrement...';
+    submitBtn.disabled = true;
+
+    const csrfToken = document.getElementById("csrf_token").value;
+    const formData = {
+      id: document.getElementById("matiereId").value,
+      nom: document.getElementById("nom").value,
+      filiere_id: document.getElementById("filiere_id").value,
+      enseignant_id: document.getElementById("enseignant_id").value,
+      csrf_token: csrfToken,
+    };
+
+    console.log("Données du formulaire:", formData);
+
+    const method = formData.id ? "PUT" : "POST";
+    const url = "/admin/manage-matiere";
+
+    try {
+      console.log("Envoi de la requête...");
+      const response = await fetch(url, {
+        method: method,
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+          "X-CSRFToken": csrfToken,
+        },
+        body: JSON.stringify(formData),
+      });
+
+      console.log("Réponse reçue, statut:", response.status);
+
+      const responseText = await response.text();
+      console.log("Réponse brute:", responseText);
+
+      let data;
+      try {
+        data = JSON.parse(responseText);
+      } catch (e) {
+        console.error("Erreur lors du parsing JSON:", e);
+        throw new Error(
+          "La réponse du serveur n'est pas au format JSON valide"
+        );
+      }
+
+      if (!response.ok) {
+        console.error("Erreur serveur:", data);
+        throw new Error(data.message || `Erreur HTTP: ${response.status}`);
+      }
+
+      if (data.success) {
+        closeModal();
+        showSuccessAlert(
+          formData.id
+            ? "Matière modifiée avec succès"
+            : "Matière ajoutée avec succès"
+        );
+        setTimeout(() => location.reload(), 1000);
+      } else {
+        throw new Error(data.message || "Une erreur inconnue est survenue");
+      }
+    } catch (error) {
+      console.error("Erreur complète:", error);
+      alert("Erreur: " + error.message);
+      submitBtn.innerHTML = originalText;
+      submitBtn.disabled = false;
+    }
+  }
+
+  async function handleDelete() {
+    if (!currentMatiereId) return;
+
+    const deleteBtn = document.getElementById("confirmDeleteBtn");
+    const originalText = deleteBtn.innerHTML;
+    deleteBtn.innerHTML =
+      '<i class="fas fa-spinner fa-spin mr-2"></i>Suppression...';
+    deleteBtn.disabled = true;
+
+    const csrfToken = document.getElementById("csrf_token").value;
+
+    try {
+      const response = await fetch("/admin/manage-matiere", {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+          "X-CSRFToken": csrfToken,
+        },
+        body: JSON.stringify({
+          id: currentMatiereId,
+          csrf_token: csrfToken,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        const row = document.getElementById(`matiere-${currentMatiereId}`);
+        if (row) {
+          row.style.animation = "fadeIn 0.3s ease-out reverse";
+          setTimeout(() => row.remove(), 300);
+        }
+        closeDeleteModal();
+        showSuccessAlert("Matière supprimée avec succès");
+      } else {
+        alert("Erreur: " + data.message);
+        deleteBtn.innerHTML = originalText;
+        deleteBtn.disabled = false;
+      }
+    } catch (error) {
+      console.error("Erreur:", error);
+      alert("Une erreur est survenue lors de la suppression");
+      deleteBtn.innerHTML = originalText;
+      deleteBtn.disabled = false;
+    }
+  }
+
+  function searchTable() {
+    const input = document.getElementById("searchInput");
+    const filter = input.value.toLowerCase();
+    const tbody = document.getElementById("matieres-table-body");
+    const rows = tbody.getElementsByTagName("tr");
+
+    for (let i = 0; i < rows.length; i++) {
+      const cells = rows[i].getElementsByTagName("td");
+      let found = false;
+
+      for (let j = 0; j < cells.length - 1; j++) {
+        const cellText = cells[j].textContent || cells[j].innerText;
+        if (cellText.toLowerCase().indexOf(filter) > -1) {
+          found = true;
+          break;
+        }
+      }
+
+      rows[i].style.display = found ? "" : "none";
+    }
+  }
+
+  document.addEventListener("DOMContentLoaded", function () {
+    modal = document.getElementById("matiereModal");
+    deleteModal = document.getElementById("deleteModal");
+    matiereForm = document.getElementById("matiereForm");
+
+    const deleteBtn = document.getElementById("confirmDeleteBtn");
+    if (deleteBtn) {
+      deleteBtn.addEventListener("click", handleDelete);
+    }
+
+    // Ajouter les écouteurs pour les boutons d'édition et suppression
+    document.querySelectorAll('.edit-matiere-btn').forEach(btn => {
+      btn.addEventListener('click', function () {
+        const id = this.getAttribute('data-matiere-id');
+        const nom = this.getAttribute('data-matiere-nom');
+        const filiereId = this.getAttribute('data-filiere-id');
+        const enseignantId = this.getAttribute('data-enseignant-id');
+        const credit = this.getAttribute('data-matiere-credit');
+        openEditModal(parseInt(id), nom, parseInt(filiereId), parseInt(enseignantId), parseInt(credit));
+      });
+    });
+
+    document.querySelectorAll('.delete-matiere-btn').forEach(btn => {
+      btn.addEventListener('click', function () {
+        const id = this.getAttribute('data-matiere-id');
+        const nom = this.getAttribute('data-matiere-nom');
+        confirmDelete(parseInt(id), nom);
+      });
+    });
+
+    window.onclick = function (event) {
+      if (event.target === modal) closeModal();
+      if (event.target === deleteModal) closeDeleteModal();
+    };
+
+    document.addEventListener("keydown", function (event) {
+      if (event.key === "Escape") {
+        if (!modal.classList.contains("hidden")) closeModal();
+        if (!deleteModal.classList.contains("hidden")) closeDeleteModal();
+      }
+    });
+  });
+</script>
+{% endblock %}

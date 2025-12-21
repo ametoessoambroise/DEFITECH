@@ -1,0 +1,230 @@
+{% extends "base.html" %} {% block title %}{{ current_user.nom }} {{
+current_user.prenom }} - DEFITECH{% endblock %} {% block content %}
+<style>
+  @keyframes fade-in {
+    from {
+      opacity: 0;
+      transform: translateY(-10px);
+    }
+
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .animate-fade-in {
+    animation: fade-in 0.4s;
+    transition: opacity 0.4s;
+  }
+</style>
+
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex-grow">
+  <!-- Statistiques -->
+  <div class="grid grid-cols-2 md:grid-cols-4 gap-6 mb-8">
+    <div class="bg-white rounded-lg shadow p-6">
+      <div class="flex items-center">
+        <div class="p-3 rounded-full bg-purple-100 text-purple-600">
+          <i class="fas fa-book text-2xl"></i>
+        </div>
+        <div class="ml-4">
+          <p class="text-sm font-medium text-gray-600 hidden md:block">
+            Matières enseignées
+          </p>
+          <p class="text-2xl font-semibold text-gray-900">
+            {{ matieres|length }}
+          </p>
+        </div>
+      </div>
+    </div>
+    <div class="bg-white rounded-lg shadow p-6">
+      <div class="flex items-center">
+        <div class="p-3 rounded-full bg-green-100 text-green-600">
+          <i class="fas fa-user-graduate text-2xl"></i>
+        </div>
+        <div class="ml-4">
+          <p class="text-sm font-medium text-gray-600 hidden md:block">
+            Étudiants
+          </p>
+          <p class="text-2xl font-semibold text-gray-900">
+            {{ etudiants_count }}
+          </p>
+        </div>
+      </div>
+    </div>
+    <a href="{{ url_for('enseignant_cours_aujourdhui') }}"
+      class="bg-white rounded-lg shadow p-6 block hover:bg-blue-50 transition">
+      <div class="flex items-center">
+        <div class="p-3 rounded-full bg-blue-100 text-blue-600">
+          <i class="fas fa-calendar-check text-2xl"></i>
+        </div>
+        <div class="ml-4">
+          <p class="text-sm font-medium text-gray-600 hidden md:block">
+            Cours aujourd'hui
+          </p>
+          <p class="text-2xl font-semibold text-gray-900">
+            {{ cours_aujourdhui_count }}
+          </p>
+        </div>
+      </div>
+    </a>
+
+    <a href="{{ url_for('enseignant_devoirs_a_corriger') }}"
+      class="bg-white rounded-lg shadow p-6 block hover:bg-yellow-50 transition">
+      <div class="flex items-center">
+        <div class="p-3 rounded-full bg-yellow-100 text-yellow-600">
+          <i class="fas fa-tasks text-2xl"></i>
+        </div>
+        <div class="ml-4">
+          <p class="text-sm font-medium text-gray-600 hidden md:block">
+            Devoirs à corriger
+          </p>
+          <p class="text-2xl font-semibold text-gray-900">
+            {{ devoirs_a_corriger }}
+          </p>
+        </div>
+      </div>
+    </a>
+  </div>
+
+  <!-- Actions rapides -->
+  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+    <div class="bg-white rounded-lg shadow p-6">
+      <h3 class="text-lg font-semibold text-gray-900 mb-4">Actions rapides</h3>
+      <div class="space-y-3">
+        <a href="{{ url_for('enseignant_notes') }}"
+          class="flex items-center p-3 bg-purple-50 rounded-lg hover:bg-purple-100 transition-colors">
+          <i class="fas fa-star text-purple-600 mr-3"></i>
+          <span class="text-purple-900">Gérer les notes</span>
+        </a>
+        <a href="{{ url_for('enseignant_devoirs') }}"
+          class="flex items-center p-3 bg-purple-50 rounded-lg hover:bg-purple-100 transition-colors">
+          <i class="fas fa-star text-purple-600 mr-3"></i>
+          <span class="text-purple-900">Assigner un devoir</span>
+        </a>
+
+        <a href="{{ url_for('manage_etudiants') }}"
+          class="flex items-center p-3 bg-purple-50 rounded-lg hover:bg-purple-100 transition-colors">
+          <i class="fas fa-user-graduate text-purple-600 mr-3"></i>
+          <span class="text-purple-900">Gestion des étudiants</span>
+        </a>
+        <a href="{{ url_for('community.index') }}"
+          class="flex items-center p-3 bg-rose-50 rounded-lg hover:bg-rose-100 transition-colors">
+          <i class="fas fa-users text-rose-600 mr-3"></i>
+          <span class="text-rose-900">Communauté</span>
+        </a>
+        <!-- <a href="{{ url_for('enseignant_presence') }}"
+          class="flex items-center p-3 bg-green-50 rounded-lg hover:bg-green-100 transition-colors">
+          <i class="fas fa-calendar-check text-green-600 mr-3"></i>
+          <span class="text-green-900">Présence/Absence</span>
+        </a> -->
+        <a href="{{ url_for('enseignant_emploi_temps') }}"
+          class="flex items-center p-3 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors">
+          <i class="fas fa-clock text-blue-600 mr-3"></i>
+          <span class="text-blue-900">Emploi du temps</span>
+        </a>
+        <a href="{{ url_for('resources.index') }}"
+          class="flex items-center p-3 bg-green-50 rounded-lg hover:bg-green-100 transition-colors">
+          <i class="fas fa-book text-green-600 mr-3"></i>
+          <span class="text-green-900">Ressources numériques</span>
+        </a>
+        <a href="{{ url_for('resources.my_resources') }}"
+          class="flex items-center p-3 bg-indigo-50 rounded-lg hover:bg-indigo-100 transition-colors">
+          <i class="fas fa-folder text-indigo-600 mr-3"></i>
+          <span class="text-indigo-900">Mes ressources</span>
+        </a>
+      </div>
+    </div>
+
+    <div class="bg-white rounded-lg shadow p-6">
+      <h3 class="text-lg font-semibold text-gray-900 mb-4">
+        Matières enseignées
+      </h3>
+      {% if matieres %}
+      <div class="space-y-3">
+        {% for matiere in matieres %}
+        <div class="p-3 bg-gray-50 rounded-lg">
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="font-medium text-gray-900">{{ matiere.nom }}</p>
+              <p class="text-sm text-gray-600">
+                Filière: {{ matiere.filiere.nom }}
+              </p>
+            </div>
+            <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-purple-100 text-purple-800">
+              Actif
+            </span>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+      {% else %}
+      <div class="text-center py-8">
+        <i class="fas fa-book text-4xl text-gray-300 mb-4"></i>
+        <p class="text-gray-500">Aucune matière assignée</p>
+      </div>
+      {% endif %}
+    </div>
+
+    <div class="bg-white rounded-lg shadow p-6">
+      <h3 class="text-lg font-semibold text-gray-900 mb-4">
+        Notifications récentes
+      </h3>
+      <div class="space-y-3">
+        {% if notifications %} {% for notif in notifications %}
+        <div
+          class="p-3 rounded-lg {% if notif.type == 'success' %}bg-green-50 {% elif notif.type == 'warning' %}bg-yellow-50 {% elif notif.type == 'error' %}bg-red-50 {% else %}bg-blue-50{% endif %}">
+          <p
+            class="text-sm font-medium {% if notif.type == 'success' %}text-green-900 {% elif notif.type == 'warning' %}text-yellow-900 {% elif notif.type == 'error' %}text-red-900 {% else %}text-blue-900{% endif %}">
+            {{ notif.message }}
+          </p>
+          <p
+            class="text-xs {% if notif.type == 'success' %}text-green-600 {% elif notif.type == 'warning' %}text-yellow-600 {% elif notif.type == 'error' %}text-red-600 {% else %}text-blue-600{% endif %}">
+            {{ notif.date_created.strftime('%d/%m/%Y %H:%M') }}
+          </p>
+        </div>
+        {% endfor %} {% else %}
+        <div class="text-center py-8">
+          <i class="fas fa-bell text-4xl text-gray-300 mb-4"></i>
+          <p class="text-gray-500">Aucune notification récente</p>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <!-- Emploi du temps du jour -->
+  <div class="bg-white rounded-lg shadow">
+    <div class="px-6 py-4 border-b border-gray-200">
+      <h3 class="text-lg font-semibold text-gray-900">
+        Emploi du temps - Aujourd'hui
+      </h3>
+    </div>
+    <div class="p-6">
+      {% if cours_aujourdhui and cours_aujourdhui|length > 0 %}
+      <ul class="divide-y divide-gray-200">
+        {% for cours in cours_aujourdhui %}
+        <li class="py-3 flex flex-col md:flex-row md:justify-between md:items-center gap-2">
+          <div class="flex items-center gap-2">
+            <i class="fas fa-clock text-blue-600 text-sm"></i>
+            <span class="text-sm font-medium text-gray-900">
+              {{ cours.heure_debut.strftime('%H:%M') }} - {{ cours.heure_fin.strftime('%H:%M') }}
+            </span>
+          </div>
+          <div class="flex items-center gap-2">
+            <i class="fas fa-door-open text-gray-500 text-sm"></i>
+            <span class="text-sm text-gray-700">{{ cours.salle }}</span>
+          </div>
+        </li>
+        {% endfor %}
+      </ul>
+      {% else %}
+      <div class="text-center py-8">
+        <i class="fas fa-calendar-day text-4xl text-gray-300 mb-4"></i>
+        <p class="text-gray-500">Aucun cours programmé aujourd'hui</p>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}

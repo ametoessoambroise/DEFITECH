@@ -1,0 +1,125 @@
+# ==============================
+#   CONFIGURATION DU MODÈLE DEFAI
+#   Basé sur Gemma 2B (Google)
+# ==============================
+
+model_info:
+  name: "Gemma 2B"
+  version: "2.0"
+  publisher: "Google"
+  license: "Gemma License"
+  huggingface_id: "google/gemma-2b"
+  description: "Modèle finement ajusté pour la plateforme universitaire DEFITECH."
+
+architecture:
+  hidden_size: 2048
+  num_attention_heads: 8
+  num_hidden_layers: 18
+  intermediate_size: 16384
+  vocab_size: 256000
+  max_position_embeddings: 8192
+  rotary_embedding: true
+  attention_type: "multi-head"
+  layer_norm: "rmsnorm"
+
+tokenizer:
+  name: "google/gemma-2b"
+  pad_token: "<pad>"
+  eos_token: "<eos>"
+  bos_token: "<bos>"
+  unk_token: "<unk>"
+  padding_side: "left"
+  truncation_side: "right"
+
+# Configuration spécifique à DefAI
+defai_config:
+  domain: "university_management"
+  language: "french"
+
+  capabilities:
+    analytics:
+      - "analyze_user_routes"
+      - "detect_errors"
+      - "generate_route_patterns"
+      - "predict_student_behavior"
+
+    database:
+      - "query_database"
+      - "summarize_tables"
+      - "explain_schema"
+      - "generate_sql_queries"
+      - "detect_db_anomalies"
+
+    assistant_roles:
+      - "assist_administrators"
+      - "help_teachers"
+      - "guide_students"
+      - "explain_platform_features"
+
+  personality:
+    tone: "professional"
+    helpfulness: "maximum"
+    clarity: "high"
+    context_awareness: true
+    avoid_hallucinations: true
+
+# Paramètres de génération
+generation:
+  temperature: 0.7
+  top_p: 0.9
+  top_k: 50
+  max_new_tokens: 512
+  do_sample: true
+  repetition_penalty: 1.1
+  use_beam_search: false
+
+# Paramètres d'entraînement (utile pour train.py)
+training:
+  lora:
+    enabled: true
+    r: 64
+    alpha: 32
+    dropout: 0.05
+
+  optimizer: "adamw"
+  learning_rate: 2e-5
+  epochs: 4
+  batch_size: 2
+  gradient_accumulation_steps: 8
+  max_sequence_length: 4096
+  warmup_ratio: 0.1
+  weight_decay: 0.01
+  fp16: true
+  cpu_offloading: true
+
+# Performance & contraintes matériel
+performance:
+  target_latency_ms: 1800
+  target_throughput: "10 requests/sec"
+  memory_usage_limit: "4GB"
+  cpu_only: true # Assure compatibilité CPU
+
+# Déploiement
+deployment:
+  api:
+    protocol: "REST"
+    host: "0.0.0.0"
+    port: 8080
+
+  security:
+    auth_required: true
+    jwt_enabled: true
+    rate_limit: "100/minute"
+
+  caching:
+    enabled: true
+    ttl_seconds: 45
+
+  monitoring:
+    enabled: true
+    collect_metrics: true
+    metrics:
+      - "latency"
+      - "memory"
+      - "token_usage"
+      - "user_route_patterns"

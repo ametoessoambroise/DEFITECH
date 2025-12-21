@@ -1,0 +1,230 @@
+{% extends "community/base.html" %}
+
+{% block community_content %}
+<div class="mb-6 flex justify-between items-center">
+    <h1 class="text-2xl font-bold text-gray-800">
+        {% if filiere %}
+            {{ filiere.nom }} - Discussions
+        {% else %}
+            Communauté
+        {% endif %}
+    </h1>
+    
+    {% if current_user.is_authenticated %}
+    <a href="{{ url_for('community.create_post', filiere_id=filiere.id) if filiere else '#' }}" 
+       class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors {% if not filiere %}opacity-50 cursor-not-allowed{% endif %}"
+       {% if not filiere %}title="Sélectionnez d'abord une filière"{% endif %}>
+        Nouvelle publication
+    </a>
+    {% endif %}
+</div>
+
+{% if filiere %}
+    <!-- Filtres et tris -->
+    <div class="bg-white rounded-lg shadow-sm p-4 mb-6">
+        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+            <div class="flex-1 w-full">
+                <form action="" method="get" class="flex gap-2 text-gray-600">
+                    <input type="text" name="q" placeholder="Rechercher..." 
+                           class="flex-1 px-4 py-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent hover:bg-gray-100 outline-none transition-all duration-300"
+                           value="{{ request.args.get('q', '') }}">
+                    <button type="submit" class="bg-gray-200 hover:bg-blue-600 hover:text-white px-4 py-2 rounded-md transition-all duration-300">
+                        <i class="fas fa-search"></i>
+                    </button>
+                </form>
+            </div>
+            <div class="flex items-center space-x-2 text-sm">
+                <span class="text-gray-600">Trier par :</span>
+                <a href="?sort=newest" class="px-3 py-1 rounded {% if request.args.get('sort') != 'popular' %}bg-blue-100 text-blue-700{% endif %} transition-all duration-300">
+                    Plus récent
+                </a>
+                <a href="?sort=popular" class="px-3 py-1 rounded text-gray-600 border boder-blue-10 hover:bg-gray-400 hover:border-transparent hover:text-white {% if request.args.get('sort') == 'popular' %}bg-blue-100 text-blue-700{% endif %} transition-all duration-300">
+                    Populaire
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Liste des publications -->
+    <div class="space-y-4">
+        {% if posts.items | length > 0 %}
+            {% for post in posts.items %}
+            <article class="bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden hover:shadow-md transition-shadow">
+                {% if post.est_epingle %}
+                <div class="bg-blue-50 border-b border-blue-100 px-4 py-2 text-sm text-blue-700 flex items-center">
+                    <i class="fas fa-thumbtack mr-2"></i>
+                    <span>Épinglé</span>
+                </div>
+                {% endif %}
+                
+                <div class="p-4">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <h2 class="text-xl font-semibold text-gray-800 hover:text-blue-600">
+                                <a href="{{ url_for('community.view_post', post_id=post.id) }}">{{ post.titre }}</a>
+                            </h2>
+                            <div class="flex items-center mt-1 text-sm text-gray-500">
+                                <span>Par </span>
+                                <a href="#" class="ml-1 font-medium text-gray-700 hover:text-blue-600">
+                                    {{ post.auteur.nom }} {{ post.auteur.prenom }}
+                                </a>
+                                <span class="mx-2">·</span>
+                                <span>{{ post.date_creation | datetimeformat('%d/%m/%Y %H:%M') }}</span>
+                                {% if post.date_modification > post.date_creation %}
+                                <span class="mx-2">·</span>
+                                <span class="text-xs text-gray-400">modifié</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        {% if current_user.is_authenticated and (current_user.id == post.auteur_id or current_user.role in ['admin', 'enseignant']) %}
+                        <div class="relative group">
+                            <button class="p-1 rounded-full hover:bg-gray-100">
+                                <i class="fas fa-ellipsis-v text-gray-400"></i>
+                            </button>
+                            <div class="hidden group-hover:block absolute right-0 mt-1 w-48 bg-white rounded-md shadow-lg py-1 z-10">
+                                <a href="{{ url_for('community.edit_post', post_id=post.id) }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                                    <i class="far fa-edit mr-2"></i> Modifier
+                                </a>
+                                <form action="{{ url_for('community.delete_post', post_id=post.id) }}" method="post" class="block">
+                                    <button type="submit" class="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100" 
+                                            onclick="return confirm('Êtes-vous sûr de vouloir supprimer cette publication ?')">
+                                        <i class="far fa-trash-alt mr-2"></i> Supprimer
+                                    </button>
+                                </form>
+                                {% if current_user.role in ['admin', 'enseignant'] %}
+                                <form action="{{ url_for('community.toggle_pin', post_id=post.id) }}" method="post" class="block">
+                                    <button type="submit" class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                                        {% if post.est_epingle %}
+                                            <i class="fas fa-thumbtack mr-2"></i> Désépingler
+                                        {% else %}
+                                            <i class="far fa-thumbtack mr-2"></i> Épingler
+                                        {% endif %}
+                                    </button>
+                                </form>
+                                {% endif %}
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="mt-3 text-gray-700">
+                        {{ post.contenu | truncate(300) | safe }}
+                        {% if post.contenu | length > 300 %}
+                        <a href="{{ url_for('community.view_post', post_id=post.id) }}" class="text-blue-600 hover:underline">Lire la suite</a>
+                        {% endif %}
+                    </div>
+                    
+                    <!-- Pièces jointes -->
+                    {% if post.pieces_jointes %}
+                    <div class="mt-3 flex flex-wrap gap-2">
+                        {% for piece in post.pieces_jointes %}
+                        <a href="{{ url_for('community.download_attachment', attachment_id=piece.id) }}" 
+                           class="inline-flex items-center px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-sm hover:bg-gray-200">
+                            {% if piece.type_fichier == 'image' %}
+                                <i class="far fa-image mr-1"></i>
+                            {% else %}
+                                <i class="far fa-file-alt mr-1"></i>
+                            {% endif %}
+                            {{ piece.nom_fichier | truncate(20) }}
+                        </a>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                    
+                    <!-- Métadonnées -->
+                    <div class="mt-4 pt-3 border-t flex justify-between items-center text-sm text-gray-500">
+                        <div class="flex items-center space-x-4">
+                            <span class="flex items-center">
+                                <i class="far fa-comment-alt mr-1"></i>
+                                {{ post.commentaires | length }} commentaire{% if post.commentaires | length > 1 %}s{% endif %}
+                            </span>
+                            <span class="flex items-center">
+                                <i class="far fa-eye mr-1"></i>
+                                {{ post.vues or 0 }} vues
+                            </span>
+                        </div>
+                        <a href="{{ url_for('community.view_post', post_id=post.id) }}" class="text-blue-600 hover:underline">
+                            Voir la discussion
+                        </a>
+                    </div>
+                </div>
+            </article>
+            {% endfor %}
+            
+            <!-- Pagination -->
+            {% if posts.pages > 1 %}
+            <div class="mt-6 flex justify-center">
+                <nav class="inline-flex rounded-md shadow-sm">
+                    {% if posts.has_prev %}
+                    <a href="{{ url_for('community.filiale', filiere_id=filiere.id, page=posts.prev_num, **request.args) }}" 
+                       class="px-3 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50">
+                        Précédent
+                    </a>
+                    {% else %}
+                    <span class="px-3 py-2 rounded-l-md border border-gray-300 bg-gray-100 text-sm text-gray-400">
+                        Précédent
+                    </span>
+                    {% endif %}
+                    
+                    {% for page_num in posts.iter_pages(left_edge=1, right_edge=1, left_current=2, right_current=3) %}
+                        {% if page_num %}
+                            {% if page_num != posts.page %}
+                            <a href="{{ url_for('community.filiale', filiere_id=filiere.id, page=page_num, **request.args) }}" 
+                               class="px-3 py-2 border-t border-b border-gray-300 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50">
+                                {{ page_num }}
+                            </a>
+                            {% else %}
+                            <span class="px-3 py-2 border-t border-b border-blue-500 bg-blue-50 text-sm font-medium text-blue-600">
+                                {{ page_num }}
+                            </span>
+                            {% endif %}
+                        {% else %}
+                            <span class="px-3 py-2 border-t border-b border-gray-300 bg-white text-sm text-gray-500">...</span>
+                        {% endif %}
+                    {% endfor %}
+                    
+                    {% if posts.has_next %}
+                    <a href="{{ url_for('community.filiale', filiere_id=filiere.id, page=posts.next_num, **request.args) }}" 
+                       class="px-3 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50">
+                        Suivant
+                    </a>
+                    {% else %}
+                    <span class="px-3 py-2 rounded-r-md border border-gray-300 bg-gray-100 text-sm text-gray-400">
+                        Suivant
+                    </span>
+                    {% endif %}
+                </nav>
+            </div>
+            {% endif %}
+            
+        {% else %}
+            <div class="bg-white rounded-lg shadow-sm p-8 text-center">
+                <div class="mx-auto w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4">
+                    <i class="far fa-comment-dots text-2xl text-gray-400"></i>
+                </div>
+                <h3 class="text-lg font-medium text-gray-900 mb-1">Aucune publication</h3>
+                <p class="text-gray-500 mb-4">Soyez le premier à lancer une discussion dans cette filière.</p>
+                {% if current_user.is_authenticated %}
+                <a href="{{ url_for('community.create_post', filiere_id=filiere.id) }}" 
+                   class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                    <i class="fas fa-plus mr-2"></i>
+                    Créer une publication
+                </a>
+                {% else %}
+                <p class="text-sm text-gray-500">Connectez-vous pour créer une publication.</p>
+                {% endif %}
+            </div>
+        {% endif %}
+    </div>
+    
+{% else %}
+    <div class="bg-white rounded-lg shadow-sm p-8 text-center">
+        <div class="mx-auto w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4">
+            <i class="fas fa-users text-2xl text-gray-400"></i>
+        </div>
+        <h3 class="text-lg font-medium text-gray-900 mb-1">Sélectionnez une filière</h3>
+        <p class="text-black">Choisissez une filière dans le menu de gauche pour voir les discussions.</p>
+    </div>
+{% endif %}
+{% endblock %}

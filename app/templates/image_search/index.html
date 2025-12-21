@@ -1,0 +1,405 @@
+{% extends "base.html" %}
+
+{% block title %}Seeker AI - Recherche et Génération d'Images par IA{% endblock %}
+
+{% block extra_css %}
+<script>
+  tailwind.config = {
+    darkMode: 'class',
+    theme: {
+      extend: {
+        colors: {
+          primary: {
+            50: '#eef2ff',
+            100: '#e0e7ff',
+            200: '#c7d2fe',
+            300: '#a5b4fc',
+            400: '#818cf8',
+            500: '#6366f1',
+            600: '#4f46e5',
+            700: '#4338ca',
+            800: '#3730a3',
+            900: '#312e81',
+          }
+        },
+        animation: {
+          'fade-in': 'fadeIn 0.5s ease-in-out',
+          'slide-up': 'slideUp 0.5s ease-out',
+          'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+        },
+        keyframes: {
+          fadeIn: {
+            '0%': { opacity: '0', transform: 'translateY(10px)' },
+            '100%': { opacity: '1', transform: 'translateY(0)' },
+          },
+          slideUp: {
+            '0%': { opacity: '0', transform: 'translateY(20px)' },
+            '100%': { opacity: '1', transform: 'translateY(0)' },
+          }
+        }
+      }
+    }
+  }
+</script>
+<style>
+  @keyframes spin {
+    0% {
+      transform: rotate(0deg);
+    }
+
+    100% {
+      transform: rotate(360deg);
+    }
+  }
+
+  .loader {
+    border: 4px solid #f3f3f3;
+    border-top: 4px solid #6366f1;
+    border-radius: 50%;
+    width: 48px;
+    height: 48px;
+    animation: spin 1s linear infinite;
+  }
+
+  .modal-backdrop {
+    backdrop-filter: blur(8px);
+  }
+
+  .image-card-hover {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .image-card-hover:hover {
+    transform: translateY(-8px);
+  }
+
+  /* Masquer scrollbar */
+  body::-webkit-scrollbar {
+    display: none;
+  }
+
+  body {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div
+  class="min-h-screen bg-gradient-to-br from-slate-50 to-indigo-50/50 dark:from-slate-900 dark:to-slate-800 transition-colors duration-300">
+
+  <!-- Main Container -->
+  <div class="w-full max-w-[1440px] mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-8">
+
+    <!-- Header Section -->
+    <header class="text-center mb-6 sm:mb-10 relative z-10">
+      <div
+        class="inline-flex items-center justify-center p-1.5 mb-4 rounded-full bg-white/50 dark:bg-slate-800/50 backdrop-blur-sm border border-slate-200 dark:border-slate-700 shadow-sm animate-fade-in">
+        <span
+          class="px-3 py-1 text-xs font-semibold text-primary-600 dark:text-primary-400 uppercase tracking-wider">v4.0
+          Beta</span>
+      </div>
+
+      <h1
+        class="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-slate-900 dark:text-white mb-3 tracking-tight flex items-center justify-center gap-3 flex-wrap">
+        <div class="relative group">
+          <div
+            class="absolute -inset-1 bg-gradient-to-r from-primary-600 to-indigo-600 rounded-full blur opacity-25 group-hover:opacity-50 transition duration-1000 group-hover:duration-200">
+          </div>
+          <img src="{{ url_for('static', filename='assets/seeker.png') }}" alt="Seeker AI Logo"
+            class="relative w-20 h-20 sm:w-30 sm:h-30 rounded-full shadow-lg transform group-hover:scale-110 transition-transform duration-300">
+        </div>
+        <span
+          class="bg-clip-text text-transparent bg-gradient-to-r from-primary-600 to-indigo-600 dark:from-primary-400 dark:to-indigo-400">Seeker
+          AI</span>
+      </h1>
+
+      <p
+        class="text-sm sm:text-base lg:text-lg text-slate-600 dark:text-slate-400 font-medium max-w-xl mx-auto px-4 leading-relaxed">
+        Explorez l'infini créatif avec notre moteur de recherche et de génération d'images propulsé par l'IA.
+      </p>
+    </header>
+
+    <!-- Navigation Tabs (Sticky on Mobile) -->
+    <div class="sticky top-2 z-40 mx-auto max-w-fit mb-6 sm:mb-8 transition-all duration-300">
+      <div
+        class="flex flex-wrap justify-center items-center gap-1.5 p-1.5 bg-white/80 dark:bg-slate-800/80 backdrop-blur-md rounded-2xl shadow-lg shadow-slate-200/50 dark:shadow-slate-900/50 border border-slate-100 dark:border-slate-700">
+        <button
+          class="tab-btn flex-1 sm:flex-none py-2.5 px-4 rounded-xl text-sm font-semibold transition-all duration-200 flex items-center justify-center gap-2 bg-primary-600 text-white shadow-md shadow-primary-600/20"
+          data-tab="search">
+          <i class="fas fa-search"></i>
+          <span class="hidden xs:inline">Recherche</span>
+        </button>
+        <button
+          class="tab-btn flex-1 sm:flex-none py-2.5 px-4 rounded-xl text-sm font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 transition-all duration-200 flex items-center justify-center gap-2"
+          data-tab="generate">
+          <i class="fas fa-magic"></i>
+          <span class="hidden xs:inline">Génération</span>
+        </button>
+        <button
+          class="tab-btn flex-1 sm:flex-none py-2.5 px-4 rounded-xl text-sm font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 transition-all duration-200 flex items-center justify-center gap-2"
+          data-tab="analyze">
+          <i class="fas fa-camera-retro"></i>
+          <span class="hidden xs:inline">Analyse</span>
+        </button>
+
+        <div class="w-px h-6 bg-slate-200 dark:bg-slate-700 mx-1"></div>
+
+        <button id="dark"
+          class="p-2.5 rounded-xl text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 transition-all duration-200"
+          aria-label="Toggle Dark Mode">
+          <i class="fas fa-moon dark:hidden"></i>
+          <i class="fas fa-sun hidden dark:inline text-amber-400"></i>
+        </button>
+      </div>
+    </div>
+
+    <!-- Content Area -->
+    <main class="w-full mx-auto relative min-h-[500px]">
+
+      <!-- SEARCH TAB -->
+      <div id="search-tab" class="tab-content w-full animate-fade-in">
+        <div class="max-w-4xl mx-auto mb-8">
+
+          <!-- Search Bar -->
+          <div class="relative group z-30 mb-4">
+            <div
+              class="absolute -inset-0.5 bg-gradient-to-r from-primary-500 to-indigo-500 rounded-2xl opacity-30 group-hover:opacity-75 blur transition duration-300">
+            </div>
+            <div
+              class="relative flex flex-col sm:flex-row gap-2 sm:gap-0 bg-white dark:bg-slate-800 rounded-xl p-2 sm:p-1.5 shadow-xl">
+              <div class="flex-1 flex items-center px-4 overflow-hidden">
+                <i class="fas fa-search text-slate-400 mr-3"></i>
+                <input type="text" id="searchImageInput" placeholder="Ex: Paysage futuriste cyberpunk..."
+                  class="w-full py-3 bg-transparent border-none text-slate-900 dark:text-white placeholder-slate-400 focus:ring-0 text-base font-medium outline-none">
+              </div>
+
+              <!-- Filters (Mobile collapsible or inline) -->
+              <div class="flex gap-2 sm:border-l sm:border-slate-200 sm:dark:border-slate-700 sm:pl-2">
+                <select id="searchType"
+                  class="bg-slate-50 dark:bg-slate-700/50 text-slate-700 dark:text-slate-200 text-sm font-medium rounded-lg px-3 py-2 border-none focus:ring-0 cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors outline-none h-11 sm:h-auto">
+                  <option value="photos">Photos</option>
+                  <option value="illustrations">Illustrations</option>
+                  <option value="art">Art</option>
+                </select>
+                <select id="colorFilter"
+                  class="w-12 sm:w-auto bg-slate-50 dark:bg-slate-700/50 text-slate-700 dark:text-slate-200 text-sm font-medium rounded-lg px-3 py-2 border-none focus:ring-0 cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors outline-none h-11 sm:h-auto"
+                  aria-label="Couleur">
+                  <option value="">🌈</option>
+                  <option value="black_and_white">N&B</option>
+                  <option value="black">⚫</option>
+                  <option value="white">⚪</option>
+                  <option value="yellow">🟡</option>
+                  <option value="red">🔴</option>
+                  <option value="blue">🔵</option>
+                  <option value="green">🟢</option>
+                </select>
+              </div>
+
+              <button id="searchImageButton"
+                class="w-full sm:w-auto mt-2 sm:mt-0 px-6 py-3 bg-primary-600 hover:bg-primary-700 text-white rounded-lg font-bold shadow-lg shadow-primary-600/30 transition-all active:scale-95 flex items-center justify-center gap-2 whitespace-nowrap">
+                <span>Aller</span>
+                <i class="fas fa-arrow-right text-xs"></i>
+              </button>
+            </div>
+          </div>
+
+          <!-- Quick Tags -->
+          <div class="flex flex-wrap justify-center gap-2 mb-8">
+            <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider py-1.5">Populaire:</span>
+            {% for tag in ['Nature', 'Architecture', 'Portrait', 'Abstrait', 'Tech'] %}
+            <button
+              class="suggestion-tag px-3 py-1 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-full text-xs font-medium text-slate-600 dark:text-slate-300 hover:border-primary-500 hover:text-primary-600 dark:hover:text-primary-400 transition-colors shadow-sm">
+              {{ tag }}
+            </button>
+            {% endfor %}
+          </div>
+
+          <!-- Loading State -->
+          <div id="searchLoader" class="hidden my-12 text-center">
+            <div class="inline-block relative w-16 h-16">
+              <div
+                class="absolute top-0 left-0 w-full h-full border-4 border-slate-200 dark:border-slate-700 rounded-full">
+              </div>
+              <div
+                class="absolute top-0 left-0 w-full h-full border-4 border-primary-600 rounded-full border-t-transparent animate-spin">
+              </div>
+            </div>
+            <p class="mt-4 text-slate-500 dark:text-slate-400 animate-pulse font-medium">Recherche en cours...</p>
+          </div>
+
+          <!-- Results Grid -->
+          <div id="imageContainer"
+            class="columns-1 xs:columns-2 md:columns-3 lg:columns-4 gap-4 space-y-4 mb-8 mx-auto">
+            <!-- Images injected via JS with Masonry-like layout -->
+          </div>
+
+          <!-- Load More -->
+          <div class="text-center">
+            <button id="loadMoreBtn"
+              class="hidden group relative px-8 py-3 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 font-semibold rounded-full shadow-lg hover:shadow-xl transition-all hover:-translate-y-0.5 border border-slate-200 dark:border-slate-700 overflow-hidden">
+              <div
+                class="absolute inset-0 bg-gradient-to-r from-primary-500/10 to-indigo-500/10 opacity-0 group-hover:opacity-100 transition-opacity">
+              </div>
+              <span class="relative flex items-center gap-2">
+                <i class="fas fa-plus"></i> Charger plus
+                <i class="fas fa-spinner fa-spin hidden" id="loadMoreSpinner"></i>
+              </span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- GENERATE TAB (Optimized Form) -->
+      <div id="generate-tab" class="tab-content hidden max-w-4xl mx-auto">
+        <div
+          class="bg-white dark:bg-slate-800 rounded-2xl shadow-xl overflow-hidden border border-slate-100 dark:border-slate-700">
+          <div class="p-1 h-1 bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-500"></div>
+          <div class="p-6 sm:p-8">
+            <label class="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">Votre vision</label>
+            <textarea id="aiPrompt"
+              placeholder="Un astronaute méditant sur Mars au coucher de soleil, style synthwave..."
+              class="w-full h-32 px-4 py-3 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 focus:border-purple-500 focus:ring-4 focus:ring-purple-500/10 text-slate-900 dark:text-white placeholder-slate-400 outline-none transition-all resize-none"></textarea>
+
+            <div class="mt-4 flex flex-col sm:flex-row gap-4 items-center">
+              <div class="w-full sm:w-1/3">
+                <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Style</label>
+                <div class="relative">
+                  <select id="aiStyle"
+                    class="w-full appearance-none pl-4 pr-10 py-3 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 font-medium focus:border-purple-500 outline-none">
+                    <option value="realistic">📸 Photoréaliste</option>
+                    <option value="artistic">🎨 Artistique</option>
+                    <option value="cyberpunk">🦾 Cyberpunk</option>
+                    <option value="anime">🎎 Anime</option>
+                    <option value="3d">🧊 3D Render</option>
+                  </select>
+                  <i
+                    class="fas fa-chevron-down absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none"></i>
+                </div>
+              </div>
+
+              <button id="generateImageBtn"
+                class="flex-1 w-full py-3.5 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white rounded-xl font-bold shadow-lg shadow-purple-600/30 transition-all hover:scale-[1.02] flex items-center justify-center gap-2 mt-5">
+                <i class="fas fa-wand-magic-sparkles"></i>
+                <span>Créer l'image</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div id="generateLoader" class="hidden my-12 flex justify-center">
+          <div class="loader-dots flex space-x-2">
+            <div class="w-4 h-4 bg-purple-500 rounded-full animate-bounce"></div>
+            <div class="w-4 h-4 bg-purple-500 rounded-full animate-bounce delay-100"></div>
+            <div class="w-4 h-4 bg-purple-500 rounded-full animate-bounce delay-200"></div>
+          </div>
+        </div>
+
+        <div id="generatedImages" class="mt-8 grid gap-6">
+          <!-- Results here -->
+        </div>
+      </div>
+
+      <!-- ANALYZE TAB -->
+      <div id="analyze-tab" class="tab-content hidden max-w-3xl mx-auto">
+        <div id="dropZone"
+          class="group relative flex flex-col items-center justify-center min-h-[300px] border-3 border-dashed border-slate-300 dark:border-slate-600 rounded-3xl bg-slate-50 dark:bg-slate-800/50 hover:bg-slate-100 dark:hover:bg-slate-800 hover:border-primary-500 dark:hover:border-primary-500 transition-all duration-300 cursor-pointer overflow-hidden">
+          <input type="file" id="fileInput" accept="image/*" class="hidden" />
+
+          <div class="relative z-10 text-center p-8 transition-transform duration-300 group-hover:-translate-y-2">
+            <div
+              class="w-20 h-20 mx-auto mb-6 bg-white dark:bg-slate-700 rounded-full shadow-md flex items-center justify-center group-hover:scale-110 transition-transform">
+              <i class="fas fa-cloud-upload-alt text-3xl text-primary-500"></i>
+            </div>
+            <h3 class="text-xl font-bold text-slate-800 dark:text-white mb-2">Analysez une image</h3>
+            <p class="text-slate-500 dark:text-slate-400 mb-6">Glissez votre fichier ici ou cliquez pour parcourir</p>
+            <button type="button" id="browseBtn"
+              class="px-6 py-2 bg-primary-600 text-white rounded-lg font-medium shadow hover:bg-primary-700">Sélectionner</button>
+          </div>
+
+          <!-- Preview Overlay -->
+          <div id="previewContainer" class="hidden absolute inset-0 bg-white dark:bg-slate-900 z-20 flex flex-col">
+            <div class="relative flex-1 p-4 flex items-center justify-center bg-checkerboard">
+              <img id="previewImage" src="" class="max-w-full max-h-full object-contain shadow-2xl rounded-lg" />
+              <button onclick="resetAnalysis()"
+                class="absolute top-4 right-4 p-2 bg-white/90 text-red-500 rounded-full shadow-lg hover:bg-red-50"><i
+                  class="fas fa-times"></i></button>
+            </div>
+            <div class="p-4 border-t border-slate-200 dark:border-slate-800 flex justify-center">
+              <button id="analyzeBtn"
+                class="w-full max-w-md py-3 bg-primary-600 hover:bg-primary-700 text-white rounded-xl font-bold shadow-lg transition-transform hover:-translate-y-1">
+                <i class="fas fa-microchip mr-2"></i> Lancer l'analyse IA
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div id="analysisResults" class="hidden mt-8 animate-slide-up">
+          <div
+            class="bg-white dark:bg-slate-800 rounded-2xl shadow-xl border border-slate-100 dark:border-slate-700 p-6">
+            <h4 class="text-lg font-bold text-slate-800 dark:text-white mb-4 flex items-center"><i
+                class="fas fa-magic text-primary-500 mr-2"></i> Résultats détectés</h4>
+            <div id="analysisTags" class="flex flex-wrap gap-2"></div>
+          </div>
+        </div>
+      </div>
+
+    </main>
+  </div>
+</div>
+
+<!-- Modal -->
+<div id="imageModal" class="fixed inset-0 z-50 hidden items-center justify-center p-4 modal-backdrop bg-black/80">
+  <div
+    class="relative bg-white dark:bg-gray-800 rounded-2xl shadow-2xl max-w-6xl w-full max-h-[90vh] overflow-hidden animate-fade-in">
+    <button
+      class="absolute top-4 right-4 z-10 w-10 h-10 flex items-center justify-center bg-white/90 dark:bg-gray-800/90 text-gray-800 dark:text-gray-200 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition-all duration-300 shadow-lg backdrop-blur-sm"
+      id="closeModal">
+      <i class="fas fa-times text-xl"></i>
+    </button>
+
+    <div class="grid md:grid-cols-2 gap-0 max-h-[90vh] overflow-auto">
+      <!-- Image -->
+      <div class="bg-gray-100 dark:bg-gray-900 flex items-center justify-center p-4 sm:p-8">
+        <img id="modalImage" src="" alt="Image"
+          class="max-w-full max-h-[60vh] md:max-h-full w-auto h-auto object-contain rounded-lg shadow-lg" />
+      </div>
+
+      <!-- Info -->
+      <div class="p-6 sm:p-8 flex flex-col">
+        <h3 id="modalTitle" class="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white mb-3 line-clamp-3"></h3>
+        <p id="modalDescription" class="text-gray-600 dark:text-gray-300 mb-6 flex-1 line-clamp-4"></p>
+
+        <div class="flex flex-col sm:flex-row gap-3 pt-6 border-t border-gray-200 dark:border-gray-700">
+          <button id="downloadBtn"
+            class="flex-1 px-6 py-3 bg-primary-600 hover:bg-primary-700 text-white rounded-xl font-semibold flex items-center justify-center gap-2 transition-all duration-300 hover:shadow-lg hover:shadow-primary-600/30 hover:-translate-y-0.5">
+            <i class="fas fa-download"></i>
+            <span>Télécharger</span>
+          </button>
+          <button id="shareBtn"
+            class="flex-1 px-6 py-3 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-800 dark:text-gray-200 rounded-xl font-semibold flex items-center justify-center gap-2 transition-all duration-300">
+            <i class="fas fa-share-alt"></i>
+            <span>Partager</span>
+          </button>
+        </div>
+
+        <button id="generateSimilarBtn"
+          class="w-full mt-3 px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white rounded-xl font-semibold flex items-center justify-center gap-2 transition-all duration-300 hover:shadow-lg hover:shadow-purple-600/30">
+          <i class="fas fa-magic"></i>
+          <span>Générer une image similaire</span>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Toast Container -->
+<div id="toastContainer" class="fixed bottom-4 right-4 z-50 space-y-2"></div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+<script src="{{ url_for('static', filename='image_search/script.js') }}"></script>
+{% endblock %}

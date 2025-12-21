@@ -1,0 +1,275 @@
+{% extends "study_buddy/base.html" %}
+
+{% block title %}Téléverser un document - Study Buddy{% endblock %}
+
+{% block content %}
+<div class="md:flex md:items-center md:justify-between">
+    <div class="flex-1 min-w-0">
+        <h2 class="text-2xl font-bold leading-7 text-gray-900 sm:text-3xl sm:truncate">
+            Téléverser un document
+        </h2>
+        <p class="mt-1 text-sm text-gray-500">
+            Téléchargez vos documents pour générer automatiquement des résumés, des quiz et des cartes mémoires.
+        </p>
+    </div>
+    <div class="mt-4 flex md:mt-0 md:ml-4">
+        <a href="{{ url_for('study_buddy.index') }}"
+            class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+            <i class="fas fa-arrow-left mr-2 -ml-1 h-4 w-4"></i>
+            Retour
+        </a>
+    </div>
+</div>
+
+<div class="mt-8 bg-white shadow overflow-hidden sm:rounded-lg">
+    <div class="px-4 py-5 sm:p-6">
+        <div class="max-w-3xl mx-auto">
+            <div class="text-center">
+                <svg class="mx-auto h-16 w-16 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                    xmlns="http://www.w3.org/2000/svg">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1"
+                        d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12">
+                    </path>
+                </svg>
+                <h3 class="mt-2 text-lg font-medium text-gray-900">Ajouter des documents</h3>
+                <p class="mt-1 text-sm text-gray-500">
+                    Glissez-déposez vos fichiers ici, ou cliquez pour les sélectionner.
+                </p>
+                <p class="mt-1 text-xs text-gray-500">
+                    Formats supportés : PDF, DOCX, TXT, PPTX, MD (taille max : 10MB)
+                </p>
+                <div class="mt-6">
+                    <form id="upload-form" action="{{ url_for('study_buddy.upload_document') }}" method="POST"
+                        enctype="multipart/form-data" class="space-y-6">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <div
+                            class="flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-md">
+                            <div class="space-y-1 text-center">
+                                <div class="flex text-sm text-gray-600">
+                                    <label for="file-upload"
+                                        class="relative cursor-pointer bg-white rounded-md font-medium text-blue-600 hover:text-blue-500 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-blue-500">
+                                        <span>Téléverser un fichier</span>
+                                        <input id="file-upload" name="file" type="file" class="sr-only"
+                                            accept=".pdf,.docx,.txt,.pptx,.md" multiple>
+                                    </label>
+                                    <p class="pl-1">ou glissez-déposez</p>
+                                </div>
+                                <p class="text-xs text-gray-500" id="file-name">
+                                    Aucun fichier sélectionné
+                                </p>
+                            </div>
+                        </div>
+
+                        <div class="bg-blue-50 border-l-4 border-blue-400 p-4 rounded-md">
+                            <div class="flex">
+                                <div class="flex-shrink-0">
+                                    <i class="fas fa-info-circle text-blue-400"></i>
+                                </div>
+                                <div class="ml-3
+                                    <p class=" text-sm text-blue-700">
+                                    Astuce : Pour de meilleurs résultats, téléchargez des documents bien structurés avec
+                                    du texte clair et des titres explicites.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="space-y-4">
+                            <div>
+                                <label for="title" class="block text-sm font-medium text-gray-700">Titre du
+                                    document</label>
+                                <div class="mt-1">
+                                    <input type="text" name="title" id="title"
+                                        class="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md"
+                                        placeholder="Ex: Introduction à l'IA">
+                                </div>
+                                <p class="mt-1 text-xs text-gray-500">Si non spécifié, le nom du fichier sera utilisé
+                                    comme titre.</p>
+                            </div>
+
+                            <div>
+                                <label for="subject" class="block text-sm font-medium text-gray-700">Matière /
+                                    Domaine</label>
+                                <div class="mt-1">
+                                    <input type="text" name="subject" id="subject"
+                                        class="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md"
+                                        placeholder="Ex: Intelligence Artificielle">
+                                </div>
+                            </div>
+
+                            <div>
+                                <label for="description" class="block text-sm font-medium text-gray-700">Description
+                                    (optionnel)</label>
+                                <div class="mt-1">
+                                    <textarea id="description" name="description" rows="3"
+                                        class="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md"
+                                        placeholder="Ajoutez une description ou des notes sur ce document"></textarea>
+                                </div>
+                            </div>
+
+                            <div class="flex items-start">
+                                <div class="flex items-center h-5">
+                                    <input id="generate_quiz" name="generate_quiz" type="checkbox"
+                                        class="focus:ring-blue-500 h-4 w-4 text-blue-600 border-gray-300 rounded"
+                                        checked>
+                                </div>
+                                <div class="ml-3 text-sm">
+                                    <label for="generate_quiz" class="font-medium text-gray-700">Générer automatiquement
+                                        un quiz</label>
+                                    <p class="text-gray-500">Crée automatiquement des questions de révision basées sur
+                                        le contenu du document.</p>
+                                </div>
+                            </div>
+
+                            <div class="flex items-start">
+                                <div class="flex items-center h-5">
+                                    <input id="generate_flashcards" name="generate_flashcards" type="checkbox"
+                                        class="focus:ring-blue-500 h-4 w-4 text-blue-600 border-gray-300 rounded"
+                                        checked>
+                                </div>
+                                <div class="ml-3 text-sm">
+                                    <label for="generate_flashcards" class="font-medium text-gray-700">Générer des
+                                        cartes mémoires</label>
+                                    <p class="text-gray-500">Crée automatiquement des cartes mémoires à partir des
+                                        concepts clés du document.</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="flex justify-end pt-5">
+                            <button type="button"
+                                class="bg-white py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                                Annuler
+                            </button>
+                            <button type="submit"
+                                class="ml-3 inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                                <i class="fas fa-upload mr-2"></i>
+                                Téléverser le document
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Liste des documents récents -->
+<div class="mt-8">
+    <h3 class="text-lg font-medium text-gray-900">Derniers documents téléversés</h3>
+    {% if recent_documents %}
+    <div class="mt-4 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+        {% for doc in recent_documents[:3] %}
+        <div class="bg-white overflow-hidden shadow rounded-lg">
+            <div class="p-5">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0 bg-blue-500 rounded-md p-3">
+                        <i class="text-white fas fa-file-alt text-xl"></i>
+                    </div>
+                    <div class="ml-5 w-0 flex-1">
+                        <dl>
+                            <dt class="text-sm font-medium text-gray-500 truncate">
+                                {{ doc.type|default('Document', true) }}
+                            </dt>
+                            <dd>
+                                <div class="text-lg font-medium text-gray-900">
+                                    <a href="{{ url_for('study_buddy.document_detail', document_id=doc.id) }}"
+                                        class="hover:text-blue-600">
+                                        {{ doc.title }}
+                                    </a>
+                                </div>
+                            </dd>
+                        </dl>
+                    </div>
+                </div>
+            </div>
+            <div class="bg-gray-50 px-5 py-3">
+                <div class="text-sm">
+                    <span class="text-gray-500">Ajouté le {{ doc.created_at|datetimeformat('%d/%m/%Y') }}</span>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="mt-4 text-center py-12 bg-white shadow rounded-lg">
+        <i class="mx-auto h-12 w-12 text-gray-400 fas fa-file-import"></i>
+        <p class="mt-1 text-sm text-gray-500">Aucun document téléversé récemment.</p>
+    </div>
+    {% endif %}
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Gestion de l'affichage du nom du fichier sélectionné
+    document.getElementById('file-upload').addEventListener('change', function (e) {
+        const fileName = document.getElementById('file-name');
+        if (this.files.length > 0) {
+            if (this.files.length === 1) {
+                fileName.textContent = this.files[0].name;
+            } else {
+                fileName.textContent = `${this.files.length} fichiers sélectionnés`;
+            }
+
+            // Mettre à jour le champ de titre avec le nom du fichier (sans l'extension)
+            if (!document.getElementById('title').value) {
+                const titleInput = document.getElementById('title');
+                const fullName = this.files[0].name;
+                const nameWithoutExt = fullName.lastIndexOf('.') > 0
+                    ? fullName.substring(0, fullName.lastIndexOf('.'))
+                    : fullName;
+                titleInput.value = nameWithoutExt;
+            }
+        } else {
+            fileName.textContent = 'Aucun fichier sélectionné';
+        }
+    });
+
+    // Gestion du glisser-déposer
+    const dropArea = document.querySelector('.border-dashed');
+
+    ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+        dropArea.addEventListener(eventName, preventDefaults, false);
+    });
+
+    function preventDefaults(e) {
+        e.preventDefault();
+        e.stopPropagation();
+    }
+
+    ['dragenter', 'dragover'].forEach(eventName => {
+        dropArea.addEventListener(eventName, highlight, false);
+    });
+
+    ['dragleave', 'drop'].forEach(eventName => {
+        dropArea.addEventListener(eventName, unhighlight, false);
+    });
+
+    function highlight() {
+        dropArea.classList.add('border-blue-500', 'bg-blue-50');
+    }
+
+    function unhighlight() {
+        dropArea.classList.remove('border-blue-500', 'bg-blue-50');
+    }
+
+    // Gestion du dépôt de fichier
+    dropArea.addEventListener('drop', handleDrop, false);
+
+    function handleDrop(e) {
+        const dt = e.dataTransfer;
+        const files = dt.files;
+
+        if (files.length) {
+            const fileInput = document.getElementById('file-upload');
+            fileInput.files = files;
+
+            // Déclencher l'événement change manuellement
+            const event = new Event('change');
+            fileInput.dispatchEvent(event);
+        }
+    }
+</script>
+{% endblock %}

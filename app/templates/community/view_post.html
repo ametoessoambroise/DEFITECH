@@ -1,0 +1,369 @@
+{% extends "community/base.html" %} {% block community_content %}
+<div class="mb-6">
+  <!-- Post principal -->
+  <article
+    class="bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden mb-6"
+  >
+    {% if post.est_epingle %}
+    <div
+      class="bg-blue-50 border-b border-blue-100 px-4 py-2 text-sm text-blue-700 flex items-center"
+    >
+      <i class="fas fa-thumbtack mr-2"></i>
+      <span>Épinglé</span>
+    </div>
+    {% endif %}
+
+    <div class="p-6">
+      <!-- En-tête du post -->
+      <div class="flex justify-between items-start mb-4">
+        <div>
+          <h1 class="text-2xl font-bold text-gray-900 mb-2">
+            {{ post.titre }}
+          </h1>
+          <div class="flex items-center text-sm text-gray-500">
+            <div
+              class="h-8 w-8 rounded-full bg-gray-200 flex items-center justify-center text-gray-500 font-medium mr-2"
+            >
+              {% if post.auteur %}
+              <img
+                src="{{ url_for('static', filename='uploads/profile_pics/' + post.auteur.photo_profil) }}"
+                alt="Profil"
+                class="rounded-full shadow-md"
+              />
+              {% else %}
+              <div class="h-8 w-8 rounded-full bg-gray-200 flex items-center justify-center text-gray-500 font-medium">
+                <i class="fas fa-user"></i>
+              </div>
+              {% endif %}
+            </div>
+            <div>
+              {% if post.auteur %}
+              <a href="#" class="font-medium text-gray-700 hover:text-blue-600">
+                {{ post.auteur.prenom }} {{ post.auteur.nom }}
+              </a>
+              {% else %}
+              <span class="font-medium text-gray-700">Anonyme</span>
+              {% endif %}
+              <div class="text-xs">
+                <span
+                  >Publié le {{ post.date_creation | datetimeformat('%d/%m/%Y à
+                  %H:%M') }}</span
+                >
+                {% if post.date_modification and post.date_modification >
+                post.date_creation %}
+                <span class="text-gray-400 ml-2"
+                  >• modifié le {{ post.date_modification |
+                  datetimeformat('%d/%m/%Y à %H:%M') }}</span
+                >
+                {% endif %}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {% if current_user.is_authenticated and post.auteur and (current_user.id == post.auteur_id or current_user.role in ['admin', 'enseignant']) %}
+        <div class="relative group">
+          <button class="p-1 rounded-full hover:bg-gray-100">
+            <i class="fas fa-ellipsis-v text-gray-400"></i>
+          </button>
+          <div
+            class="hidden group-hover:block absolute right-0 mt-1 w-48 bg-white rounded-md shadow-lg py-1 z-10"
+          >
+            <a
+              href="{{ url_for('community.edit_post', post_id=post.id) }}"
+              class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+            >
+              <i class="far fa-edit mr-2"></i> Modifier
+            </a>
+            <form
+              action="{{ url_for('community.delete_post', post_id=post.id) }}"
+              method="post"
+              class="block"
+            >
+              <input
+                type="hidden"
+                name="csrf_token"
+                value="{{ csrf_token() }}"
+              />
+              <button
+                type="submit"
+                class="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100"
+                onclick="return confirm('Êtes-vous sûr de vouloir supprimer cette publication ?')"
+              >
+                <i class="far fa-trash-alt mr-2"></i> Supprimer
+              </button>
+            </form>
+            {% if current_user.role in ['admin', 'enseignant'] %}
+            <form
+              action="{{ url_for('community.toggle_pin', post_id=post.id) }}"
+              method="post"
+              class="block"
+            >
+              <input
+                type="hidden"
+                name="csrf_token"
+                value="{{ csrf_token() }}"
+              />
+              <button
+                type="submit"
+                class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+              >
+                {% if post.est_epingle %}
+                <i class="fas fa-thumbtack mr-2"></i> Désépingler {% else %}
+                <i class="far fa-thumbtack mr-2"></i> Épingler {% endif %}
+              </button>
+            </form>
+            {% endif %}
+          </div>
+        </div>
+        {% endif %}
+      </div>
+
+      <!-- Contenu du post -->
+      <div class="prose max-w-none mt-6 mb-6">{{ post.contenu | safe }}</div>
+
+      <!-- Pièces jointes -->
+      {% if post.pieces_jointes %}
+      <div class="mt-6 pt-4 border-t">
+        <h3 class="text-sm font-medium text-gray-700 mb-3">Pièces jointes</h3>
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+          {% for piece in post.pieces_jointes %}
+          <a
+            href="{{ url_for('community.download_attachment', attachment_id=piece.id) }}"
+            class="flex items-center p-3 border rounded-md hover:bg-gray-50 transition-colors"
+          >
+            <div class="flex-shrink-0">
+              {% if piece.type_fichier == 'image' %}
+              <div
+                class="h-10 w-10 rounded bg-blue-100 text-blue-600 flex items-center justify-center"
+              >
+                <i class="far fa-image"></i>
+              </div>
+              {% elif piece.type_fichier == 'video' %}
+              <div
+                class="h-10 w-10 rounded bg-red-100 text-red-600 flex items-center justify-center"
+              >
+                <i class="far fa-video"></i>
+              </div>
+              {% elif piece.type_fichier == 'audio' %}
+              <div
+                class="h-10 w-10 rounded bg-green-100 text-green-600 flex items-center justify-center"
+              >
+                <i class="far fa-music"></i>
+              </div>
+              {% else %}
+              <div
+                class="h-10 w-10 rounded bg-gray-100 text-gray-600 flex items-center justify-center"
+              >
+                <i class="far fa-file-alt"></i>
+              </div>
+              {% endif %}
+            </div>
+            <div class="ml-3 min-w-0">
+              <p class="text-sm font-medium text-gray-900 truncate">
+                {{ piece.nom_fichier }}
+              </p>
+              <p class="text-xs text-gray-500">
+                {{ piece.date_upload | datetimeformat('%d/%m/%Y') }}
+              </p>
+            </div>
+          </a>
+          {% endfor %}
+        </div>
+      </div>
+      {% endif %}
+
+      <!-- Métadonnées -->
+      <div
+        class="mt-6 pt-4 border-t flex items-center justify-between text-sm text-gray-500"
+      >
+        <div class="flex items-center space-x-4">
+          <span class="flex items-center">
+            <i class="far fa-comment-alt mr-1"></i>
+            {{ post.commentaires | length }} commentaire{% if post.commentaires
+            | length > 1 %}s{% endif %}
+          </span>
+          <span class="flex items-center">
+            <i class="far fa-eye mr-1"></i>
+            {{ post.vues or 0 }} vues
+          </span>
+        </div>
+        {% if current_user.role in ['admin', 'enseignant'] %}
+        <form
+          action="{{ url_for('community.toggle_pin', post_id=post.id) }}"
+          method="post"
+        >
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+          <button
+            type="submit"
+            class="text-sm text-gray-600 hover:text-blue-600 flex items-center"
+          >
+            {% if post.est_epingle %}
+            <i class="fas fa-thumbtack mr-1"></i> Désépingler {% else %}
+            <i class="far fa-thumbtack mr-1"></i> Épingler {% endif %}
+          </button>
+        </form>
+        {% endif %}
+      </div>
+    </div>
+  </article>
+
+  <!-- Section commentaires -->
+  <div
+    class="bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden"
+  >
+    <div class="px-6 py-4 border-b">
+      <h2 class="text-lg font-medium text-gray-900">
+        Commentaires {% if commentaires %}
+        <span class="text-sm font-normal text-gray-500"
+          >({{ commentaires | length }})</span
+        >
+        {% endif %}
+      </h2>
+    </div>
+
+    <!-- Formulaire de commentaire -->
+    {% if current_user.is_authenticated %}
+    <div class="p-6 border-b">
+      <form
+        action="{{ url_for('community.add_comment', post_id=post.id) }}"
+        method="post"
+      >
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+        <div class="flex items-start space-x-3">
+          <div class="flex-shrink-0">
+            <img
+              src="{{ url_for('static', filename='uploads/profile_pics/' + current_user.photo_profil) }}"
+              alt="Profil"
+              class="rounded-full shadow-md w-10 h-10"
+            />
+          </div>
+          <div class="flex-1">
+            <label for="contenu" class="sr-only">Votre commentaire</label>
+            <textarea
+              id="contenu"
+              name="contenu"
+              rows="3"
+              class="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border border-gray-300 rounded-md p-3"
+              placeholder="Écrivez votre commentaire..."
+              required
+            ></textarea>
+            <div class="mt-2 flex justify-end">
+              <button
+                type="submit"
+                class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+              >
+                <i class="far fa-paper-plane mr-2"></i> Publier
+              </button>
+            </div>
+          </div>
+        </div>
+      </form>
+    </div>
+    {% else %}
+    <div class="p-6 text-center text-gray-500">
+      <p>
+        Veuillez vous
+        <a
+          href="{{ url_for('auth.login') }}"
+          class="text-blue-600 hover:text-blue-800"
+          >connecter</a
+        >
+        pour laisser un commentaire.
+      </p>
+    </div>
+    {% endif %}
+
+    <!-- Liste des commentaires -->
+    {% if commentaires %}
+    <div class="divide-y divide-gray-200">
+      {% for commentaire in commentaires %}
+      <div
+        id="comment-{{ commentaire.id }}"
+        class="p-6 hover:bg-gray-50 transition-colors"
+      >
+        <div class="flex items-start space-x-3">
+          <div class="flex-shrink-0">
+            <div
+              class="h-10 w-10 rounded-full bg-gray-200 flex items-center justify-center text-gray-500 font-medium"
+            >
+              {% if commentaire.auteur %}
+              <img
+                src="{{ url_for('static', filename='uploads/profile_pics/' + current_user.photo_profil) }}"
+                alt="Profil"
+                class="rounded-full shadow-md"
+              />
+              {% else %}
+              <span
+                class="h-10 w-10 rounded-full bg-gray-200 flex items-center justify-center text-gray-500 font-medium"
+                ><i class="fas fa-user"></i
+              ></span>
+              {% endif %}
+            </div>
+          </div>
+          <div class="flex-1 min-w-0">
+            <div class="flex items-center justify-between">
+              <div>
+                <p class="text-sm font-medium text-gray-900">
+                  {% if commentaire.auteur %} {{ commentaire.auteur.prenom }} {{
+                  commentaire.auteur.nom }} {% else %} Anonyme {% endif %}
+                </p>
+                <p class="text-xs text-gray-500">
+                  {{ commentaire.date_creation | datetimeformat('%d/%m/%Y à
+                  %H:%M') }} {% if commentaire.date_modification and
+                  commentaire.date_modification > commentaire.date_creation %}
+                  <span class="text-gray-400">• modifié</span>
+                  {% endif %}
+                </p>
+              </div>
+              {% if current_user.is_authenticated and (current_user.id ==
+              commentaire.auteur_id or current_user.role in ['admin',
+              'enseignant']) %}
+              <div class="relative group">
+                <button class="p-1 rounded-full hover:bg-gray-100">
+                  <i class="fas fa-ellipsis-v text-gray-400"></i>
+                </button>
+                <div
+                  class="hidden group-hover:block absolute right-0 mt-1 w-40 bg-white rounded-md shadow-lg py-1 z-10"
+                >
+                  <form
+                    action="{{ url_for('community.delete_comment', comment_id=commentaire.id) }}"
+                    method="post"
+                    class="block"
+                  >
+                    <input
+                      type="hidden"
+                      name="csrf_token"
+                      value="{{ csrf_token() }}"
+                    />
+                    <button
+                      type="submit"
+                      class="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100"
+                      onclick="return confirm('Êtes-vous sûr de vouloir supprimer ce commentaire ?')"
+                    >
+                      <i class="far fa-trash-alt mr-2"></i> Supprimer
+                    </button>
+                  </form>
+                </div>
+              </div>
+              {% endif %}
+            </div>
+            <div class="mt-2 text-sm text-gray-700">
+              {{ commentaire.contenu | nl2br | safe }}
+            </div>
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    {% else %}
+    <div class="p-8 text-center text-gray-500">
+      <div class="mx-auto w-12 h-12 text-gray-300 mb-3">
+        <i class="far fa-comment-dots text-4xl"></i>
+      </div>
+      <p>Aucun commentaire pour le moment. Soyez le premier à réagir !</p>
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

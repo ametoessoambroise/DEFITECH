@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+
+{% block title %}403 - Forbidden{% endblock %}
+
+{% block content %}
+<div class="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+    <div class="max-w-md w-full space-y-8">
+        <div class="text-center">
+            <div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100">
+                <i class="fas fa-ban text-red-600 text-xl"></i>
+            </div>
+            <h2 class="mt-6 text-3xl font-extrabold text-gray-900">403 - Forbidden</h2>
+            <p class="mt-2 text-sm text-gray-600">
+                Vous n'avez pas la permission d'accéder à cette ressource.
+            </p>
+        </div>
+
+        <div class="mt-8 bg-white shadow rounded-lg p-6">
+            <h3 class="text-lg font-medium text-gray-900 mb-4">Accès refusé</h3>
+            <ul class="text-sm text-gray-600 space-y-2">
+                <li>• Votre compte n'a pas les droits suffisants</li>
+                <li>• Cette ressource est protégée</li>
+                <li>• Vous tentez d'accéder à une zone restreinte</li>
+                <li>• L'administrateur a limité l'accès</li>
+            </ul>
+
+            <div class="mt-6 pt-6 border-t border-gray-200">
+                <h4 class="text-sm font-medium text-gray-900 mb-2">Solutions possibles</h4>
+                <ul class="text-sm text-gray-600 space-y-1">
+                    <li>• Contactez l'administrateur du système</li>
+                    <li>• Vérifiez que vous utilisez le bon compte</li>
+                    <li>• Demandez les permissions nécessaires</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+            <div class="flex">
+                <div class="flex-shrink-0">
+                    <i class="fas fa-exclamation-triangle text-yellow-400"></i>
+                </div>
+                <div class="ml-3">
+                    <h3 class="text-sm font-medium text-yellow-800">Note de sécurité</h3>
+                    <div class="mt-2 text-sm text-yellow-700">
+                        Toutes les tentatives d'accès sont enregistrées pour des raisons de sécurité.
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="flex space-x-4">
+            <a href="{{ url_for('main.index') }}"
+                class="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg text-center transition duration-200">
+                <i class="fas fa-home mr-2"></i>
+                Retour à l'accueil
+            </a>
+            <button onclick="history.back()"
+                class="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-800 font-medium py-2 px-4 rounded-lg transition duration-200">
+                <i class="fas fa-arrow-left mr-2"></i>
+                Page précédente
+            </button>
+        </div>
+    </div>
+</div>
+{% endblock %}

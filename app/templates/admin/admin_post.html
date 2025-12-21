@@ -1,0 +1,341 @@
+{% extends "admin/base.html" %} {% block title %}Créer une notification globale
+| Administration DEFITECH{% endblock %} {% block content %}
+<div class="max-w-4xl mx-auto">
+  <div class="mb-6">
+    <nav class="flex" aria-label="Breadcrumb">
+      <ol class="flex items-center space-x-4">
+        <li>
+          <div>
+            <a href="{{ url_for('admin.dashboard') }}" class="text-gray-500 hover:text-gray-700">
+              <i class="fas fa-tachometer-alt"></i>
+              Dashboard
+            </a>
+          </div>
+        </li>
+        <li>
+          <div class="flex items-center">
+            <i class="fas fa-chevron-right text-gray-400 text-sm"></i>
+            <a href="{{ url_for('admin_global_notifications') }}" class="ml-4 text-gray-500 hover:text-gray-700">
+              Notifications globales
+            </a>
+          </div>
+        </li>
+        <li>
+          <div class="flex items-center">
+            <i class="fas fa-chevron-right text-gray-400 text-sm"></i>
+            <span class="ml-4 text-gray-500">Créer une notification</span>
+          </div>
+        </li>
+      </ol>
+    </nav>
+
+    <h1 class="text-2xl font-bold text-gray-900 mt-4">
+      Créer une notification globale
+    </h1>
+    <p class="text-sm text-gray-500 mt-1">
+      Envoyez un message qui sera affiché en haut de toutes les pages du site
+    </p>
+  </div>
+
+  <!-- Formulaire de création -->
+  <div class="bg-white shadow rounded-lg">
+    <form method="POST" class="p-6">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+      <div class="space-y-6">
+        <!-- Titre -->
+        <div>
+          <label for="titre" class="block text-sm font-medium text-gray-700 mb-1">
+            Titre de la notification <span class="text-red-500">*</span>
+          </label>
+          <input type="text" id="titre" name="titre" required
+            class="w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+            placeholder="Ex: Maintenance programmée, Information importante..." maxlength="200" />
+          <p class="mt-1 text-xs text-gray-500">Maximum 200 caractères</p>
+        </div>
+
+        <!-- Message -->
+        <div>
+          <label for="message" class="block text-sm font-medium text-gray-700 mb-1">
+            Message <span class="text-red-500">*</span>
+          </label>
+          <textarea id="message" name="message" rows="4" required
+            class="w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+            placeholder="Décrivez le message que vous souhaitez communiquer à tous les utilisateurs..."></textarea>
+          <p class="mt-1 text-xs text-gray-500">
+            Le formatage HTML simple est supporté
+          </p>
+        </div>
+
+        <!-- Type de notification -->
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-3">
+            Type de notification
+          </label>
+          <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div class="relative">
+              <input type="radio" id="type-info" name="type" value="info" checked class="sr-only peer" />
+              <label for="type-info"
+                class="flex flex-col items-center justify-center p-4 border-2 border-gray-200 rounded-lg cursor-pointer peer-checked:border-blue-500 peer-checked:bg-blue-50 hover:bg-gray-50 transition">
+                <i class="fas fa-info-circle text-blue-500 text-lg mb-2"></i>
+                <span class="text-sm font-medium text-gray-700">Information</span>
+              </label>
+            </div>
+
+            <div class="relative">
+              <input type="radio" id="type-success" name="type" value="success" class="sr-only peer" />
+              <label for="type-success"
+                class="flex flex-col items-center justify-center p-4 border-2 border-gray-200 rounded-lg cursor-pointer peer-checked:border-green-500 peer-checked:bg-green-50 hover:bg-gray-50 transition">
+                <i class="fas fa-check-circle text-green-500 text-lg mb-2"></i>
+                <span class="text-sm font-medium text-gray-700">Succès</span>
+              </label>
+            </div>
+
+            <div class="relative">
+              <input type="radio" id="type-warning" name="type" value="warning" class="sr-only peer" />
+              <label for="type-warning"
+                class="flex flex-col items-center justify-center p-4 border-2 border-gray-200 rounded-lg cursor-pointer peer-checked:border-yellow-500 peer-checked:bg-yellow-50 hover:bg-gray-50 transition">
+                <i class="fas fa-exclamation-triangle text-yellow-500 text-lg mb-2"></i>
+                <span class="text-sm font-medium text-gray-700">Avertissement</span>
+              </label>
+            </div>
+
+            <div class="relative">
+              <input type="radio" id="type-error" name="type" value="error" class="sr-only peer" />
+              <label for="type-error"
+                class="flex flex-col items-center justify-center p-4 border-2 border-gray-200 rounded-lg cursor-pointer peer-checked:border-red-500 peer-checked:bg-red-50 hover:bg-gray-50 transition">
+                <i class="fas fa-times-circle text-red-500 text-lg mb-2"></i>
+                <span class="text-sm font-medium text-gray-700">Erreur</span>
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <!-- Priorité -->
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-3">
+            Priorité
+          </label>
+          <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div class="relative">
+              <input type="radio" id="priorite-1" name="priorite" value="1" checked class="sr-only peer" />
+              <label for="priorite-1"
+                class="flex flex-col items-center justify-center p-3 border-2 border-gray-200 rounded-lg cursor-pointer peer-checked:border-blue-500 peer-checked:bg-blue-50 hover:bg-gray-50 transition">
+                <span class="text-xs text-gray-500 mb-1">1</span>
+                <span class="text-sm font-medium text-gray-700">Faible</span>
+              </label>
+            </div>
+
+            <div class="relative">
+              <input type="radio" id="priorite-2" name="priorite" value="2" class="sr-only peer" />
+              <label for="priorite-2"
+                class="flex flex-col items-center justify-center p-3 border-2 border-gray-200 rounded-lg cursor-pointer peer-checked:border-yellow-500 peer-checked:bg-yellow-50 hover:bg-gray-50 transition">
+                <span class="text-xs text-gray-500 mb-1">2</span>
+                <span class="text-sm font-medium text-gray-700">Moyen</span>
+              </label>
+            </div>
+
+            <div class="relative">
+              <input type="radio" id="priorite-3" name="priorite" value="3" class="sr-only peer" />
+              <label for="priorite-3"
+                class="flex flex-col items-center justify-center p-3 border-2 border-gray-200 rounded-lg cursor-pointer peer-checked:border-orange-500 peer-checked:bg-orange-50 hover:bg-gray-50 transition">
+                <span class="text-xs text-gray-500 mb-1">3</span>
+                <span class="text-sm font-medium text-gray-700">Élevé</span>
+              </label>
+            </div>
+
+            <div class="relative">
+              <input type="radio" id="priorite-4" name="priorite" value="4" class="sr-only peer" />
+              <label for="priorite-4"
+                class="flex flex-col items-center justify-center p-3 border-2 border-gray-200 rounded-lg cursor-pointer peer-checked:border-red-500 peer-checked:bg-red-50 hover:bg-gray-50 transition">
+                <span class="text-xs text-gray-500 mb-1">4</span>
+                <span class="text-sm font-medium text-gray-700">Critique</span>
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <!-- Durée d'affichage -->
+        <div>
+          <label for="duree" class="block text-sm font-medium text-gray-700 mb-1">
+            Durée d'affichage (en heures)
+          </label>
+          <div class="flex items-center space-x-4">
+            <input type="number" id="duree" name="duree" min="1" max="168"
+              class="border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm w-32"
+              placeholder="24" value="24" />
+            <span class="text-sm text-gray-500">heures</span>
+            <span class="text-xs text-gray-400">(1 heure minimum, 168 heures maximum)</span>
+          </div>
+          <p class="mt-1 text-xs text-gray-500">
+            Laissez vide pour une notification permanente (jusqu'à désactivation
+            manuelle)
+          </p>
+        </div>
+
+        <!-- Options avancées -->
+        <div x-data="{ showAdvanced: false }" class="border-t border-gray-200 pt-4">
+          <button type="button" @click="showAdvanced = !showAdvanced"
+            class="text-sm font-medium text-blue-600 hover:text-blue-500 focus:outline-none">
+            <span x-show="!showAdvanced">
+              <i class="fas fa-plus-circle mr-1"></i> Options avancées
+            </span>
+            <span x-show="showAdvanced">
+              <i class="fas fa-minus-circle mr-1"></i> Masquer les options
+            </span>
+          </button>
+
+          <div x-show="showAdvanced" class="mt-4 space-y-4">
+            <div class="bg-gray-50 p-4 rounded-lg">
+              <h4 class="text-sm font-medium text-gray-700 mb-2">
+                Aperçu de la notification
+              </h4>
+              <div id="preview" class="p-3 rounded border">
+                <!-- L'aperçu sera généré par JavaScript -->
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Boutons d'action -->
+      <div class="flex justify-end space-x-3 pt-6 border-t border-gray-200 mt-6">
+        <a href="{{ url_for('admin_global_notifications') }}"
+          class="bg-white py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+          Annuler
+        </a>
+        <button type="submit"
+          class="bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+          <i class="fas fa-paper-plane mr-2"></i>
+          Publier la notification
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %} {% block extra_js %}
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    // Générer l'aperçu en temps réel
+    const titreInput = document.getElementById("titre");
+    const messageInput = document.getElementById("message");
+    const typeInputs = document.querySelectorAll('input[name="type"]');
+    const prioriteInputs = document.querySelectorAll('input[name="priorite"]');
+    const previewDiv = document.getElementById("preview");
+
+    function updatePreview() {
+      const titre = titreInput.value || "Titre de la notification";
+      const message = messageInput.value || "Message de la notification";
+      const type = document.querySelector('input[name="type"]:checked').value;
+      const priorite = document.querySelector(
+        'input[name="priorite"]:checked'
+      ).value;
+
+      let typeClass = "";
+      let typeIcon = "";
+
+      switch (type) {
+        case "info":
+          typeClass = "bg-blue-50 border-blue-200 text-blue-800";
+          typeIcon = "fas fa-info-circle";
+          break;
+        case "success":
+          typeClass = "bg-green-50 border-green-200 text-green-800";
+          typeIcon = "fas fa-check-circle";
+          break;
+        case "warning":
+          typeClass = "bg-yellow-50 border-yellow-200 text-yellow-800";
+          typeIcon = "fas fa-exclamation-triangle";
+          break;
+        case "error":
+          typeClass = "bg-red-50 border-red-200 text-red-800";
+          typeIcon = "fas fa-times-circle";
+          break;
+      }
+
+      let prioriteClass = "";
+      switch (priorite) {
+        case "1":
+          prioriteClass = "border-l-4 border-l-blue-400";
+          break;
+        case "2":
+          prioriteClass = "border-l-4 border-l-yellow-400";
+          break;
+        case "3":
+          prioriteClass = "border-l-4 border-l-orange-400";
+          break;
+        case "4":
+          prioriteClass = "border-l-4 border-l-red-400";
+          break;
+      }
+
+      previewDiv.innerHTML = `
+            <div class="p-4 rounded-lg border ${typeClass} ${prioriteClass}">
+                <div class="flex items-start space-x-3">
+                    <div class="flex-shrink-0">
+                        <i class="${typeIcon} text-lg"></i>
+                    </div>
+                    <div class="flex-1">
+                        <h4 class="font-semibold text-sm">${titre}</h4>
+                        <p class="text-sm mt-1">${message}</p>
+                        <div class="flex items-center space-x-2 mt-2">
+                            <span class="text-xs px-2 py-1 bg-white bg-opacity-50 rounded-full">
+                                Priorité ${priorite}
+                            </span>
+                            <span class="text-xs px-2 py-1 bg-white bg-opacity-50 rounded-full capitalize">
+                                ${type}
+                            </span>
+                        </div>
+                    </div>
+                    <div class="flex-shrink-0">
+                        <button class="text-gray-400 hover:text-gray-600">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+
+    // Écouter les changements
+    titreInput.addEventListener("input", updatePreview);
+    messageInput.addEventListener("input", updatePreview);
+    typeInputs.forEach((input) =>
+      input.addEventListener("change", updatePreview)
+    );
+    prioriteInputs.forEach((input) =>
+      input.addEventListener("change", updatePreview)
+    );
+
+    // Initialiser l'aperçu
+    updatePreview();
+
+    // Validation du formulaire
+    const form = document.querySelector("form");
+    form.addEventListener("submit", function (e) {
+      const titre = titreInput.value.trim();
+      const message = messageInput.value.trim();
+
+      if (!titre) {
+        e.preventDefault();
+        alert("Le titre est obligatoire");
+        titreInput.focus();
+        return;
+      }
+
+      if (!message) {
+        e.preventDefault();
+        alert("Le message est obligatoire");
+        messageInput.focus();
+        return;
+      }
+
+      if (titre.length > 200) {
+        e.preventDefault();
+        alert("Le titre ne peut pas dépasser 200 caractères");
+        titreInput.focus();
+        return;
+      }
+    });
+  });
+</script>
+{% endblock %}

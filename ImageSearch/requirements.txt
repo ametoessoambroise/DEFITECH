@@ -1,0 +1,24 @@
+# Dépendances pour Seeker AI Backend
+
+# Framework Web
+fastapi==0.104.1
+uvicorn[standard]==0.24.0
+python-multipart==0.0.6
+
+# Base de données
+sqlalchemy==2.0.23
+
+# Requêtes HTTP
+requests==2.31.0
+
+# Traitement d'images
+Pillow==10.1.0
+
+# Machine Learning (optionnel - pour l'entraînement du modèle)
+tensorflow==2.15.0
+scikit-learn==1.3.2
+numpy==1.26.2
+
+# Utilitaires
+python-dotenv==1.0.0
+pydantic==2.5.0

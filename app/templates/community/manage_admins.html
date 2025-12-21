@@ -1,0 +1,115 @@
+{% extends 'community/base.html' %}
+{% block community_content %}
+        <div class="flex justify-between items-center mb-6">
+            <h1 class="text-2xl font-bold text-gray-800">Gestion des administrateurs de filière</h1>
+        </div>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+        {% for category, message in messages %}
+        <div
+            class="mb-4 p-4 rounded-md {% if category == 'success' %}bg-green-100 text-green-700{% else %}bg-red-100 text-red-700{% endif %}">
+            {{ message }}
+        </div>
+        {% endfor %}
+        {% endif %}
+        {% endwith %}
+
+        <div class="space-y-8">
+            {% for filiere in filieres %}
+            <div class="border rounded-lg overflow-hidden">
+                <div class="bg-gray-50 text-black px-4 py-3 border-b flex justify-between items-center">
+                    <h2 class="text-lg font-medium text-gray-800">{{ filiere.nom }}</h2>
+                    <span class="text-sm text-gray-500">{{ filiere.type_formation }}</span>
+                </div>
+
+                <div class="p-4">
+                    <div class="mb-4">
+                        <h3 class="text-sm font-medium text-gray-700 mb-2">Administrateurs actuels</h3>
+
+                        {% if filiere.admins %}
+                        <ul class="divide-y divide-gray-200">
+                            {% for admin in filiere.admins %}
+                            <li class="py-2 flex justify-between items-center">
+                                <div>
+                                    <span class="font-medium">{{ admin.enseignant.user.nom }} {{
+                                        admin.enseignant.user.prenom }}</span>
+                                    <span class="text-sm text-gray-500 ml-2">({{ admin.enseignant.user.email }})</span>
+                                </div>
+                                <form
+                                    action="{{ url_for('community.remove_filiere_admin', filiere_id=filiere.id, enseignant_id=admin.enseignant.id) }}"
+                                    method="post"
+                                    onsubmit="return confirm('Êtes-vous sûr de vouloir retirer les droits d\'administration à cet enseignant ?')">
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                    <button type="submit" class="text-red-600 hover:text-red-800 text-sm font-medium">
+                                        <i class="fas fa-times mr-1"></i> Retirer
+                                    </button>
+                                </form>
+                            </li>
+                            {% endfor %}
+                        </ul>
+                        {% else %}
+                        <p class="text-sm text-gray-500 italic">Aucun administrateur défini pour cette filière.</p>
+                        {% endif %}
+                    </div>
+
+                    <div class="pt-3 border-t">
+                        <form action="{{ url_for('community.add_filiere_admin', filiere_id=filiere.id) }}" method="post"
+                            class="flex items-end gap-2">
+                            <!-- {{ csrf_token() }} -->
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" class="hidden">
+                            <div class="flex-1">
+                                <label for="enseignant_id_{{ filiere.id }}"
+                                    class="block text-sm font-medium text-gray-700 mb-1">
+                                    Ajouter un administrateur
+                                </label>
+                                <select name="enseignant_id" id="enseignant_id_{{ filiere.id }}"
+                                    class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md">
+                                    <option value="">Sélectionner un enseignant</option>
+                                    {% for enseignant in enseignants %}
+                                    {% set is_admin = false %}
+                                    {% for admin in filiere.admins %}
+                                    {% if admin.enseignant_id == enseignant.id %}
+                                    {% set is_admin = true %}
+                                    {% endif %}
+                                    {% endfor %}
+                                    {% if not is_admin %}
+                                    <option value="{{ enseignant.id }}">
+                                        {{ enseignant.user.nom }} {{ enseignant.user.prenom }} ({{ enseignant.specialite
+                                        }})
+                                    </option>
+                                    {% endif %}
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <button type="submit"
+                                class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                                <i class="fas fa-plus mr-2"></i> Ajouter
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            {% else %}
+            <div class="text-center py-8">
+                <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                    xmlns="http://www.w3.org/2000/svg">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z">
+                    </path>
+                </svg>
+                <h3 class="mt-2 text-sm font-medium text-gray-900">Aucune filière</h3>
+                <p class="mt-1 text-sm text-gray-500">Commencez par créer des filières avant de définir des
+                    administrateurs.
+                </p>
+                <div class="mt-6">
+                    <a href="{{ url_for('admin_filieres') }}"
+                        class="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                        <i class="fas fa-plus mr-2"></i> Gérer les filières
+                    </a>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+{% endblock %}

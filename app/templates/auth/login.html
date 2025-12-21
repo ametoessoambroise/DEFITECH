@@ -1,0 +1,144 @@
+{% extends "base.html" %} {% block title %}Connexion | DEFITECH{% endblock %} {%
+block content %}
+<div
+  class="min-h-screen flex flex-col justify-center items-center bg-gray-50 py-8 px-6"
+>
+  <div
+    class="w-full max-w-md bg-white shadow-lg rounded-2xl p-8 space-y-6 transition-all duration-300 hover:shadow-xl"
+  >
+    <!-- Logo -->
+    <div class="flex flex-col items-center text-center">
+      <div
+        class="bg-blue-600 h-16 w-16 flex items-center justify-center rounded-full shadow-md mb-4"
+      >
+        <i class="fas fa-graduation-cap text-white text-2xl"></i>
+      </div>
+      <h1 class="text-3xl font-extrabold text-gray-900">Connexion DEFITECH</h1>
+      <p class="mt-2 text-sm text-gray-500">
+        Accédez à votre espace étudiant ou enseignant
+      </p>
+    </div>
+
+    <!-- Formulaire -->
+    <form method="POST" action="{{ url_for('auth.login') }}" class="space-y-5">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+
+      <!-- Email -->
+      <div>
+        <label for="email" class="block text-sm font-medium text-gray-700"
+          >Adresse e-mail</label
+        >
+        <div class="relative mt-1">
+          <input
+            type="email"
+            id="email"
+            name="email"
+            required
+            autocomplete="email"
+            class="w-full rounded-lg border border-gray-300 px-3 py-2 pl-3 text-sm shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+            placeholder="exemple@defitech.tg"
+          />
+          <i class="fas fa-envelope text-gray-400 absolute right-3 top-2.5"></i>
+        </div>
+      </div>
+
+      <!-- Mot de passe -->
+      <div>
+        <label for="password" class="block text-sm font-medium text-gray-700"
+          >Mot de passe</label
+        >
+        <div class="relative mt-1">
+          <input
+            type="password"
+            id="password"
+            name="password"
+            required
+            autocomplete="current-password"
+            class="w-full rounded-lg border border-gray-300 px-3 py-2 pr-10 text-sm shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+            placeholder="••••••••"
+          />
+          <i
+            id="togglePassword"
+            class="fas fa-eye text-gray-400 absolute right-3 top-2.5 cursor-pointer"
+          ></i>
+        </div>
+      </div>
+
+      <!-- Options -->
+      <div class="flex items-center justify-between">
+        <label class="flex items-center space-x-2 text-sm text-gray-600">
+          <input
+            type="checkbox"
+            name="remember_me"
+            id="remember_me"
+            class="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+          />
+          <span>Se souvenir de moi</span>
+        </label>
+        <a
+          href="{{ url_for('auth.forgot_password') }}"
+          class="text-sm font-medium text-blue-600 hover:text-blue-500 transition-colors"
+        >
+          Mot de passe oublié ?
+        </a>
+      </div>
+
+      <!-- Bouton -->
+      <button
+        type="submit"
+        class="w-full flex justify-center items-center bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg py-2.5 shadow-sm transition-all duration-200 focus:ring-4 focus:ring-blue-300"
+      >
+        Se connecter
+      </button>
+    </form>
+
+    <!-- Séparateur -->
+    <div class="relative flex justify-center items-center my-6">
+      <div class="w-full border-t border-gray-300"></div>
+      <span class="absolute bg-white px-3 text-gray-500 text-sm">ou</span>
+    </div>
+
+    <!-- Lien d'inscription -->
+    <div class="text-center">
+      <a
+        href="{{ url_for('auth.register') }}"
+        id="register"
+        class="inline-block w-full text-center border border-gray-300 rounded-lg px-4 py-2 text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 transition"
+      >
+        Créer un nouveau compte
+        <i class="fas fa-spiiner fa-spin ml-2" id="spinner"></i>
+      </a>
+    </div>
+  </div>
+</div>
+{% endblock %} {% block extra_js %}
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    // Gestion du bouton de soumission
+    const form = document.querySelector("form");
+    form.addEventListener("submit", function () {
+      const button = form.querySelector('button[type="submit"]');
+      button.disabled = true;
+      button.innerHTML =
+        'Connexion en cours... <i class="fas fa-spinner fa-spin ml-2"></i>';
+    });
+
+    // Afficher / cacher le mot de passe
+    const togglePassword = document.getElementById("togglePassword");
+    const passwordField = document.getElementById("password");
+    togglePassword.addEventListener("click", function () {
+      const type =
+        passwordField.getAttribute("type") === "password" ? "text" : "password";
+      passwordField.setAttribute("type", type);
+      this.classList.toggle("fa-eye-slash");
+    });
+  });
+
+  const spinner = document.getElementById("spinner");
+  const registerBtn = document.getElementById("register");
+
+  registerBtn.addEventListener("click", () => {
+    spinner.classList.remove("hidden");
+  });
+</script>
+{% endblock %}

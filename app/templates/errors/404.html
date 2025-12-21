@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+
+{% block title %}404 - Page Non Trouvée{% endblock %}
+
+{% block content %}
+<div class="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+    <div class="max-w-md w-full space-y-8">
+        <div class="text-center">
+            <div class="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-blue-100">
+                <i class="fas fa-search text-blue-600 text-2xl"></i>
+            </div>
+            <h2 class="mt-6 text-3xl font-extrabold text-gray-900">404 - Page Non Trouvée</h2>
+            <p class="mt-2 text-sm text-gray-600">
+                La page que vous recherchez n'existe pas ou a été déplacée.
+            </p>
+        </div>
+
+        {% if url %}
+        <div class="mt-8 bg-blue-50 border border-blue-200 rounded-lg p-4">
+            <div class="flex">
+                <div class="flex-shrink-0">
+                    <i class="fas fa-info-circle text-blue-400"></i>
+                </div>
+                <div class="ml-3">
+                    <h3 class="text-sm font-medium text-blue-800">URL demandée</h3>
+                    <div class="mt-2 text-sm text-blue-700 break-all">
+                        {{ url }}
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <div class="mt-8 bg-white shadow rounded-lg p-6">
+            <h3 class="text-lg font-medium text-gray-900 mb-4">Causes possibles</h3>
+            <ul class="text-sm text-gray-600 space-y-2">
+                <li>• L'URL a été mal tapée</li>
+                <li>• La page a été supprimée ou déplacée</li>
+                <li>• Le lien que vous avez suivi est obsolète</li>
+                <li>• La page n'est plus disponible</li>
+            </ul>
+
+            <div class="mt-6 pt-6 border-t border-gray-200">
+                <h4 class="text-sm font-medium text-gray-900 mb-2">Suggestions</h4>
+                <ul class="text-sm text-gray-600 space-y-1">
+                    <li>• Vérifiez l'orthographe de l'URL</li>
+                    <li>• Utilisez la barre de recherche</li>
+                    <li>• Naviguez depuis le menu principal</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="space-y-4">
+            <div class="text-center">
+                <form action="{{ url_for('main.index') }}" method="GET" class="flex">
+                    <input type="text" name="q" placeholder="Rechercher sur le site..."
+                        class="flex-1 px-4 py-2 border border-gray-300 rounded-l-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <button type="submit"
+                        class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-r-lg transition duration-200">
+                        <i class="fas fa-search"></i>
+                    </button>
+                </form>
+            </div>
+
+            <div class="flex space-x-4">
+                <a href="{{ url_for('main.index') }}"
+                    class="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg text-center transition duration-200">
+                    <i class="fas fa-home mr-2"></i>
+                    Accueil
+                </a>
+                <button onclick="history.back()"
+                    class="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-800 font-medium py-2 px-4 rounded-lg transition duration-200">
+                    <i class="fas fa-arrow-left mr-2"></i>
+                    Retour
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

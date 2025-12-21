@@ -1,0 +1,382 @@
+{% extends "base.html" %} {% block title %}Inscription | DEFITECH{% endblock %}
+{% block content %}
+
+<div class="min-h-screen flex flex-col justify-center items-center bg-gray-50 py-8 px-4 sm:px-6 lg:px-8">
+  <div
+    class="w-full max-w-2xl bg-white shadow-lg rounded-2xl p-6 sm:p-8 space-y-6 transition-all duration-300 hover:shadow-xl">
+    <!-- En-tête -->
+    <div class="text-center">
+      <div class="mx-auto h-12 w-12 flex items-center justify-center rounded-full bg-blue-600">
+        <i class="fas fa-graduation-cap text-white text-xl"></i>
+      </div>
+      <h2 class="mt-4 text-2xl sm:text-3xl font-extrabold text-gray-900">
+        Inscription DEFITECH
+      </h2>
+      <p class="mt-2 text-sm text-gray-600">
+        Rejoignez notre communauté universitaire
+      </p>
+    </div>
+
+    <!-- Messages flash (conservés pour compatibilité)
+    {% with messages = get_flashed_messages(with_categories=true) %} {% if
+    messages %} {% for category, message in messages %}
+    <div
+      class="rounded-lg p-3 sm:p-4 text-center text-xs sm:text-sm font-semibold {% if category == 'error' %}bg-red-50 text-red-700 border border-red-200{% elif category == 'success' %}bg-green-50 text-green-700 border border-green-200{% else %}bg-blue-50 text-blue-700 border border-blue-200{% endif %}"
+    >
+      {{ message }}
+    </div>
+    {% endfor %} {% endif %} {% endwith %} -->
+
+    <!-- Formulaire -->
+    <form class="space-y-4 sm:space-y-6" method="POST">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+
+      <!-- Nom et Prénom -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div>
+          <label for="nom" class="block text-sm font-medium text-gray-700 mb-1">
+            Nom <span class="text-red-600">*</span>
+          </label>
+          <input id="nom" name="nom" type="text" required
+            class="appearance-none rounded-lg w-full px-3 py-2 border border-gray-300 placeholder-gray-400 text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm transition"
+            placeholder="Votre nom" />
+        </div>
+        <div>
+          <label for="prenom" class="block text-sm font-medium text-gray-700 mb-1">
+            Prénom <span class="text-red-600">*</span>
+          </label>
+          <input id="prenom" name="prenom" type="text" required
+            class="appearance-none rounded-lg w-full px-3 py-2 border border-gray-300 placeholder-gray-400 text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm transition"
+            placeholder="Votre prénom" />
+        </div>
+      </div>
+
+      <!-- Email -->
+      <div>
+        <label for="email" class="block text-sm font-medium text-gray-700 mb-1">
+          Email <span class="text-red-600">*</span>
+        </label>
+        <input id="email" name="email" type="email" required pattern="^[\w\.-]+@[\w\.-]+\.[a-zA-Z]{2,}$"
+          class="appearance-none rounded-lg w-full px-3 py-2 border border-gray-300 placeholder-gray-400 text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm transition"
+          placeholder="votre@email.com" />
+        <span id="email-error" class="text-xs text-red-600 mt-1 hidden">
+          Adresse email invalide
+        </span>
+      </div>
+
+      <!-- Mot de passe -->
+      <div>
+        <label for="password" class="block text-sm font-medium text-gray-700 mb-1">
+          Mot de passe <span class="text-red-600">*</span>
+        </label>
+        <div class="relative">
+          <input type="password" id="password" name="password" required autocomplete="new-password"
+            class="w-full rounded-lg border border-gray-300 px-3 py-2 pr-10 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
+            placeholder="••••••••" />
+          <i id="togglePassword"
+            class="fas fa-eye text-gray-400 absolute right-3 top-2.5 cursor-pointer hover:text-gray-600 transition"></i>
+        </div>
+        <div class="mt-2">
+          <meter max="5" id="password-strength" class="w-full h-2"></meter>
+          <span id="password-strength-text" class="text-xs font-medium"></span>
+        </div>
+      </div>
+
+      <!-- Date de naissance et Sexe -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div>
+          <label for="date_naissance" class="block text-sm font-medium text-gray-700 mb-1">
+            Date de naissance <span class="text-red-600">*</span>
+          </label>
+          <input id="date_naissance" name="date_naissance" type="date" required
+            class="appearance-none rounded-lg w-full px-3 py-2 border border-gray-300 text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm transition" />
+        </div>
+        <div>
+          <label for="sexe" class="block text-sm font-medium text-gray-700 mb-1">
+            Sexe <span class="text-red-600">*</span>
+          </label>
+          <select id="sexe" name="sexe" required
+            class="appearance-none rounded-lg w-full px-3 py-2 border border-gray-300 text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm transition">
+            <option value="">Sélectionner</option>
+            <option value="M">Masculin</option>
+            <option value="F">Féminin</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Rôle -->
+      <div>
+        <label for="role" class="block text-sm font-medium text-gray-700 mb-1">
+          Rôle <span class="text-red-600">*</span>
+        </label>
+        <select id="role" name="role" required
+          class="appearance-none rounded-lg w-full px-3 py-2 border border-gray-300 text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm transition">
+          <option value="">Sélectionner votre rôle</option>
+          <option value="etudiant">Étudiant</option>
+          <option value="enseignant">Enseignant</option>
+        </select>
+      </div>
+
+      <!-- Champs Étudiant -->
+      <div id="etudiant-fields" class="hidden space-y-4">
+        <div>
+          <label for="filiere_etudiant" class="block text-sm font-medium text-gray-700 mb-1">
+            Filière <span class="text-red-600">*</span>
+          </label>
+          <select id="filiere_etudiant" name="filiere"
+            class="appearance-none rounded-lg w-full px-3 py-2 border border-gray-300 text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm transition">
+            <option value="">Sélectionner la filière</option>
+            {% for f in filieres %}
+            <option value="{{ f.nom }}">{{ f.nom }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div>
+          <label for="annee_etudiant" class="block text-sm font-medium text-gray-700 mb-1">
+            Année <span class="text-red-600">*</span>
+          </label>
+          <select id="annee_etudiant" name="annee"
+            class="appearance-none rounded-lg w-full px-3 py-2 border border-gray-300 text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm transition">
+            <option value="">Sélectionner l'année</option>
+            {% for a in annees %}
+            <option value="{{ a.nom }}">{{ a.nom }}</option>
+            {% endfor %}
+          </select>
+        </div>
+      </div>
+
+      <!-- Champs Enseignant -->
+      <div id="enseignant-fields" class="hidden space-y-4">
+        <div>
+          <label class="block text-sm font-medium text-blue-600 mb-2">
+            Filières enseignées <span class="text-red-600">*</span>
+          </label>
+          <div
+            class="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-64 overflow-y-auto p-3 border border-gray-200 rounded-lg bg-gray-50">
+            {% for filiere in filieres_enseignees %}
+            <label
+              class="flex items-start text-xs sm:text-sm text-gray-700 hover:bg-blue-50 p-2 rounded cursor-pointer transition">
+              <input type="checkbox" name="filieres_enseignees" value="{{ filiere }}"
+                class="mt-0.5 mr-2 text-blue-600 focus:ring-blue-500" />
+              <span>{{ filiere }}</span>
+            </label>
+            {% endfor %}
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium text-blue-600 mb-2">
+            Année(s) d'enseignement <span class="text-red-600">*</span>
+          </label>
+          <div class="flex flex-wrap gap-3 p-3 border border-gray-200 rounded-lg bg-gray-50">
+            {% for annee in annees_enseignement %}
+            <label
+              class="flex items-center text-xs sm:text-sm text-gray-700 hover:bg-blue-50 px-3 py-2 rounded cursor-pointer transition">
+              <input type="checkbox" name="annees_enseignant" value="{{ annee }}"
+                class="mr-2 text-blue-600 focus:ring-blue-500" />
+              <span>{{ annee }}</span>
+            </label>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+
+      <!-- Bouton de soumission -->
+      <div>
+        <button type="submit" id="register"
+          class="group relative w-full flex justify-center items-center py-3 px-4 border border-transparent text-sm sm:text-base font-medium rounded-lg text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all duration-300 shadow-sm hover:shadow">
+          <span class="absolute left-4 flex items-center">
+            <i class="fas fa-user-plus"></i>
+          </span>
+          S'inscrire
+          <i class="fas fa-spinner fa-spin ml-2 hidden" id="spinner"></i>
+        </button>
+      </div>
+
+      <!-- Lien de connexion -->
+      <div class="text-center">
+        <a href="{{ url_for('auth.login') }}" class="text-sm font-medium text-blue-600 hover:text-blue-700 transition">
+          Déjà inscrit ? Se connecter
+        </a>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Toast notifications -->
+<div id="toast-container" class="fixed top-20 left-1/2 transform -translate-x-1/2 z-50 w-full max-w-xs px-4"></div>
+
+<style>
+  @keyframes fade-in {
+    from {
+      opacity: 0;
+      transform: translateY(-10px);
+    }
+
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .animate-fade-in {
+    animation: fade-in 0.4s;
+    transition: opacity 0.4s;
+  }
+
+  /* Style pour meter */
+  meter {
+    width: 100%;
+    height: 0.5rem;
+  }
+
+  meter::-webkit-meter-bar {
+    background: #e5e7eb;
+    border-radius: 0.25rem;
+  }
+
+  meter::-webkit-meter-optimum-value {
+    background: #10b981;
+    border-radius: 0.25rem;
+  }
+
+  meter::-webkit-meter-suboptimum-value {
+    background: #f59e0b;
+    border-radius: 0.25rem;
+  }
+
+  meter::-webkit-meter-even-less-good-value {
+    background: #ef4444;
+    border-radius: 0.25rem;
+  }
+</style>
+
+{% endblock %} {% block extra_js %}
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    // Toast notifications
+    const messages = [
+      {% with messages = get_flashed_messages(with_categories = true) %}
+        {% if messages %}
+  {% for category, message in messages %}
+  { category: '{{ category }}', message: `{{ message|escape }}` } {% if not loop.last %}, {% endif %}
+  {% endfor %}
+  {% endif %}
+  {% endwith %}
+    ];
+
+  const colors = {
+    success: 'bg-green-500 text-white',
+    error: 'bg-red-500 text-white',
+    warning: 'bg-yellow-400 text-gray-900',
+    info: 'bg-blue-500 text-white',
+  };
+
+  const container = document.getElementById('toast-container');
+
+  messages.forEach((msg, i) => {
+    const toast = document.createElement('div');
+    toast.className = `flex items-center justify-between px-4 py-3 rounded-lg shadow-lg mb-2 animate-fade-in ${colors[msg.category] || colors.info}`;
+    toast.style.opacity = 0;
+    toast.innerHTML = `
+        <span class="flex-1 pr-2 text-sm">${msg.message}</span>
+        <button class="ml-2 text-xl font-bold focus:outline-none hover:opacity-80" aria-label="Fermer">&times;</button>
+      `;
+    container.appendChild(toast);
+
+    setTimeout(() => { toast.style.opacity = 1; }, 100);
+
+    toast.querySelector('button').onclick = () => {
+      toast.style.opacity = 0;
+      setTimeout(() => toast.remove(), 400);
+    };
+
+    setTimeout(() => {
+      toast.style.opacity = 0;
+      setTimeout(() => toast.remove(), 400);
+    }, 4000 + i * 200);
+  });
+
+  // Toggle password visibility
+  const togglePassword = document.getElementById("togglePassword");
+  const passwordField = document.getElementById("password");
+
+  togglePassword.addEventListener("click", function () {
+    const type = passwordField.getAttribute("type") === "password" ? "text" : "password";
+    passwordField.setAttribute("type", type);
+    this.classList.toggle("fa-eye");
+    this.classList.toggle("fa-eye-slash");
+  });
+
+  // Role-based fields
+  const roleSelect = document.getElementById("role");
+  const etudiantFields = document.getElementById("etudiant-fields");
+  const enseignantFields = document.getElementById("enseignant-fields");
+
+  function updateFields() {
+    if (roleSelect.value === "etudiant") {
+      etudiantFields.classList.remove("hidden");
+      enseignantFields.classList.add("hidden");
+    } else if (roleSelect.value === "enseignant") {
+      enseignantFields.classList.remove("hidden");
+      etudiantFields.classList.add("hidden");
+    } else {
+      etudiantFields.classList.add("hidden");
+      enseignantFields.classList.add("hidden");
+    }
+  }
+
+  roleSelect.addEventListener("change", updateFields);
+  updateFields();
+
+  // Email validation
+  const emailInput = document.getElementById("email");
+  const emailError = document.getElementById("email-error");
+
+  emailInput.addEventListener("input", function () {
+    const pattern = /^[\w\.-]+@[\w\.-]+\.[a-zA-Z]{2,}$/;
+    if (!pattern.test(emailInput.value) && emailInput.value.length > 0) {
+      emailError.classList.remove("hidden");
+    } else {
+      emailError.classList.add("hidden");
+    }
+  });
+
+  // Password strength
+  const passwordInput = document.getElementById("password");
+  const passwordStrength = document.getElementById("password-strength");
+  const passwordStrengthText = document.getElementById("password-strength-text");
+
+  passwordInput.addEventListener("input", function () {
+    const val = passwordInput.value;
+    let score = 0;
+
+    if (val.length >= 8) score++;
+    if (/[A-Z]/.test(val)) score++;
+    if (/[a-z]/.test(val)) score++;
+    if (/\d/.test(val)) score++;
+    if (/[^A-Za-z0-9]/.test(val)) score++;
+
+    passwordStrength.value = score;
+
+    if (score <= 2) {
+      passwordStrengthText.textContent = "Faible";
+      passwordStrengthText.className = "text-xs font-medium text-red-600";
+    } else if (score === 3 || score === 4) {
+      passwordStrengthText.textContent = "Moyen";
+      passwordStrengthText.className = "text-xs font-medium text-yellow-600";
+    } else if (score >= 5) {
+      passwordStrengthText.textContent = "Fort";
+      passwordStrengthText.className = "text-xs font-medium text-green-600";
+    }
+  });
+  });
+
+  const spinner = document.getElementById("spinner");
+  const registerBtn = document.getElementById("register");
+
+  registerBtn.addEventListener("click", () => {
+    spinner.classList.remove("hidden");
+  });
+</script>
+{% endblock %}

@@ -1,0 +1,95 @@
+{% extends "base.html" %}
+
+{% block title %}500 - Internal Server Error{% endblock %}
+
+{% block content %}
+<div class="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+    <div class="max-w-md w-full space-y-8">
+        <div class="text-center">
+            <div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100">
+                <i class="fas fa-exclamation-triangle text-red-600 text-xl"></i>
+            </div>
+            <h2 class="mt-6 text-3xl font-extrabold text-gray-900">500 - Internal Server Error</h2>
+            <p class="mt-2 text-sm text-gray-600">
+                Une erreur inattendue s'est produite sur le serveur.
+            </p>
+        </div>
+
+        <div class="mt-8 bg-white shadow rounded-lg p-6">
+            <h3 class="text-lg font-medium text-gray-900 mb-4">Erreur serveur interne</h3>
+            <ul class="text-sm text-gray-600 space-y-2">
+                <li>• Le serveur a rencontré une erreur inattendue</li>
+                <li>• Un problème technique est survenu lors du traitement</li>
+                <li>• L'application n'a pas pu compléter votre demande</li>
+                <li>• Les administrateurs ont été notifiés automatiquement</li>
+            </ul>
+
+            <div class="mt-6 pt-6 border-t border-gray-200">
+                <h4 class="text-sm font-medium text-gray-900 mb-2">Ce n'est pas de votre faute</h4>
+                <ul class="text-sm text-gray-600 space-y-1">
+                    <li>• L'erreur vient du serveur, pas de votre action</li>
+                    <li>• L'équipe technique travaille sur une solution</li>
+                    <li>• Réessayer dans quelques minutes peut résoudre le problème</li>
+                </ul>
+            </div>
+        </div>
+
+        {% if error %}
+        <div class="bg-red-50 border border-red-200 rounded-lg p-4">
+            <div class="flex">
+                <div class="flex-shrink-0">
+                    <i class="fas fa-bug text-red-400"></i>
+                </div>
+                <div class="ml-3">
+                    <h3 class="text-sm font-medium text-red-800">Détails de l'erreur</h3>
+                    <div class="mt-2 text-sm text-red-700">
+                        {{ error }}
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+            <div class="flex">
+                <div class="flex-shrink-0">
+                    <i class="fas fa-tools text-yellow-400"></i>
+                </div>
+                <div class="ml-3">
+                    <h3 class="text-sm font-medium text-yellow-800">Action en cours</h3>
+                    <div class="mt-2 text-sm text-yellow-700">
+                        Les administrateurs ont été automatiquement notifiés et travaillent à résoudre ce problème.
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="space-y-4">
+            <button onclick="location.reload()"
+                class="w-full bg-red-600 hover:bg-red-700 text-white font-medium py-3 px-4 rounded-lg transition duration-200">
+                <i class="fas fa-redo mr-2"></i>
+                Réessayer
+            </button>
+
+            <div class="flex space-x-4">
+                <a href="{{ url_for('main.index') }}"
+                    class="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg text-center transition duration-200">
+                    <i class="fas fa-home mr-2"></i>
+                    Accueil
+                </a>
+                <a href="/offline"
+                    class="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-800 font-medium py-2 px-4 rounded-lg text-center transition duration-200">
+                    <i class="fas fa-wifi-slash mr-2"></i>
+                    Mode hors ligne
+                </a>
+            </div>
+        </div>
+
+        <div class="text-center text-sm text-gray-500">
+            <p>Si le problème persiste, contactez le support technique.</p>
+            <p class="mt-1">ID de requête :
+                <code>{{ request.headers.get('X-Request-ID', 'N/A') if request else 'N/A' }}</code></p>
+        </div>
+    </div>
+</div>
+{% endblock %}

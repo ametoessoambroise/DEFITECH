@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Animation Lottie</title>
+
+    <!-- CDN officiel Lottie -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/lottie-web/5.12.2/lottie.min.js"></script>
+
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background: #f5f5f5;
+        }
+
+        #lottie-container {
+            width: 400px;
+            height: 400px;
+        }
+
+    </style>
+</head>
+
+<body>
+    <div id="lottie-container"></div>
+
+
+    <script>
+
+        document.addEventListener('DOMContentLoaded', function () {
+            try {
+                const animation = lottie.loadAnimation({
+                    container: document.getElementById('lottie-container'),
+                    renderer: 'svg',
+                    loop: true,
+                    autoplay: true,
+                    path: "warning.json"
+                });
+
+                animation.addEventListener('DOMLoaded', function () {
+                    console.log("Animation chargée avec succès");
+                });
+
+                animation.addEventListener('data_failed', function () {
+                    console.error("Erreur lors du chargement de l'animation");
+                });
+
+            } catch (error) {
+                console.error("Erreur :", error);
+            }
+        });
+    </script>
+
+</body>
+
+</html>

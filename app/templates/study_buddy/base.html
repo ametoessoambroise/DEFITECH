@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="fr" class="h-full bg-gray-50">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Study Buddy{% endblock %}</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: {
+                            50: '#f0f9ff',
+                            100: '#e0f2fe',
+                            200: '#bae6fd',
+                            300: '#7dd3fc',
+                            400: '#38bdf8',
+                            500: '#0ea5e9',
+                            600: '#0284c7',
+                            700: '#0369a1',
+                            800: '#075985',
+                            900: '#0c4a6e',
+                        },
+                        secondary: {
+                            50: '#f8fafc',
+                            100: '#f1f5f9',
+                            200: '#e2e8f0',
+                            300: '#cbd5e1',
+                            400: '#94a3b8',
+                            500: '#64748b',
+                            600: '#475569',
+                            700: '#334155',
+                            800: '#1e293b',
+                            900: '#0f172a',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    {% block extra_css %}{% endblock %}
+    <!-- Token CSRF -->
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+</head>
+
+<body class="min-h-screen">
+    <!-- Barre de progression -->
+    {% include 'components/progress_bar.html' %}
+    
+    <!-- Navigation principale -->
+    <nav class="bg-black/80 text-white shadow-lg sticky top-4 mx-2 rounded-lg z-[9999]">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <div class="flex">
+                    <div class="flex-shrink-0 flex items-center">
+                        <a href="{{ url_for('study_buddy.index') }}"
+                            class="text-xl font-bold text-white flex items-center gap-2">
+                            <img src="{{ url_for('static', filename='assets/study.png') }}" alt="logo"
+                                class="w-10 h-10 rounded-full">
+                            Study Buddy
+                        </a>
+                    </div>
+                    <div class="hidden sm:ml-6 sm:flex sm:space-x-8">
+                        <a href="{{ url_for('study_buddy.index') }}" class="{% if request.endpoint == 'study_buddy.index' %}border-primary-500 text-white{% else %}text-primary-100 hover:border-gray-300 hover:text-white{% endif %} 
+                                  border-b-2 px-3 pt-1 inline-flex items-center text-sm font-medium">
+                            <i class="fas fa-home mr-2"></i> Accueil
+                        </a>
+                        <a href="{{ url_for('study_buddy.upload_document') }}" class="{% if request.endpoint == 'study_buddy.upload_document' %}border-primary-500 text-white{% else %}text-primary-100 hover:border-gray-300 hover:text-white{% endif %} 
+                                  border-b-2 px-3 pt-1 inline-flex items-center text-sm font-medium">
+                            <i class="fas fa-upload mr-2"></i> Téléverser
+                        </a>
+                        <a href="{{ url_for('study_buddy.flashcard_deck') }}" class="{% if request.endpoint == 'study_buddy.flashcard_deck' %}border-primary-500 text-white{% else %}text-primary-100 hover:border-gray-300 hover:text-white{% endif %} 
+                                  border-b-2 px-3 pt-1 inline-flex items-center text-sm font-medium">
+                            <i class="fas fa-layer-group mr-2"></i> Flashcards
+                        </a>
+                        <a href="{{ url_for('study_buddy.progress_tracking') }}" class="{% if request.endpoint == 'study_buddy.progress_tracking' %}border-primary-500 text-white{% else %}text-primary-100 hover:border-gray-300 hover:text-white{% endif %} 
+                                  border-b-2 px-3 pt-1 inline-flex items-center text-sm font-medium">
+                            <i class="fas fa-chart-line mr-2"></i> Progression
+                        </a>
+                    </div>
+                </div>
+                <div class="hidden sm:ml-6 sm:flex sm:items-center">
+                    <span class="text-sm text-primary-100 mr-4 truncate">
+                        <i class="fas fa-user-circle mr-1"></i> {{ current_user.prenom }}
+                    </span>
+                    <a href="{{ url_for('main.index') }}"
+                        class="inline-flex items-center px-3 py-1 border border-transparent text-sm font-medium rounded-md text-primary-700 bg-white hover:bg-primary-50">
+                        <img src="{{ url_for('static', filename='assets/favicon.ico') }}" alt="Dashboard"
+                            class="w-4 h-4 rounded-full mr-1" /> Dashboard
+                    </a>
+                </div>
+                <!-- Mobile menu button -->
+                <div class="-mr-2 flex items-center sm:hidden">
+                    <button type="button"
+                        class="inline-flex items-center justify-center p-2 rounded-md text-primary-100 hover:text-white hover:bg-primary-600"
+                        aria-controls="mobile-menu" aria-expanded="false"
+                        onclick="document.getElementById('mobile-menu').classList.toggle('hidden'); document.getElementById('menuIcon').classList.toggle('fa-times'); document.getElementById('menuIcon').classList.toggle('fa-bars');">
+                        <span class="sr-only">Ouvrir le menu</span>
+                        <i class="fas fa-bars block h-6 w-6" id="menuIcon"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Mobile menu -->
+        <div class="sm:hidden hidden" id="mobile-menu">
+            <div class="pt-2 pb-3 space-y-1">
+                <a href="{{ url_for('study_buddy.index') }}" class="{% if request.endpoint == 'study_buddy.index' %}bg-primary-800 text-white{% else %}text-primary-100 hover:bg-primary-600 hover:text-white{% endif %} 
+                          block pl-3 pr-4 py-2 border-l-4 border-primary-500 text-base font-medium">
+                    <i class="fas fa-home mr-2"></i> Accueil
+                </a>
+                <a href="{{ url_for('study_buddy.upload_document') }}" class="{% if request.endpoint == 'study_buddy.upload_document' %}bg-primary-800 text-white{% else %}text-primary-100 hover:bg-primary-600 hover:text-white{% endif %} 
+                          block pl-3 pr-4 py-2 border-l-4 border-primary-500 text-base font-medium">
+                    <i class="fas fa-upload mr-2"></i> Téléverser
+                </a>
+                <a href="{{ url_for('study_buddy.flashcard_deck') }}" class="{% if request.endpoint == 'study_buddy.flashcard_deck' %}bg-primary-800 text-white{% else %}text-primary-100 hover:bg-primary-600 hover:text-white{% endif %} 
+                          block pl-3 pr-4 py-2 border-l-4 border-primary-500 text-base font-medium">
+                    <i class="fas fa-layer-group mr-2"></i> Flashcards
+                </a>
+                <a href="{{ url_for('study_buddy.progress_tracking') }}" class="{% if request.endpoint == 'study_buddy.progress_tracking' %}bg-primary-800 text-white{% else %}text-primary-100 hover:bg-primary-600 hover:text-white{% endif %} 
+                          block pl-3 pr-4 py-2 border-l-4 border-primary-500 text-base font-medium">
+                    <i class="fas fa-chart-line mr-2"></i> Progression
+                </a>
+                <div class="pt-4 pb-3 border-t border-primary-600">
+                    <div class="flex items-center px-4">
+                        <div class="flex-shrink-0">
+                            <i class="fas fa-user-circle text-2xl text-primary-200"></i>
+                        </div>
+                        <div class="ml-3">
+                            <div class="text-base font-medium text-white">{{ current_user.prenom }} {{ current_user.nom
+                                }}</div>
+                        </div>
+                    </div>
+                    <div class="mt-3 space-y-1">
+                        <a href="{{ url_for('auth.logout') }}"
+                            class="block px-4 py-2 text-base font-medium text-primary-100 hover:bg-primary-600 hover:text-white">
+                            <i class="fas fa-sign-out-alt mr-2"></i> Déconnexion
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="min-h-[calc(100vh-4rem)] flex">
+        <!-- Barre latérale -->
+        <div class="hidden md:flex md:flex-shrink-0">
+            <div class="flex flex-col w-64 border-r border-gray-200 bg-white">
+                <div class="flex-1 flex flex-col pt-5 pb-4 overflow-y-auto">
+                    <div class="flex-1 px-3 space-y-1">
+                        <h3 class="text-sm font-medium text-gray-500 px-3 mb-4">
+                            <i class="fas fa-history mr-2 text-gray-400"></i> Documents récents
+                        </h3>
+                        <nav class="space-y-1">
+                            {% for doc in recent_documents %}
+                            <a href="{{ url_for('study_buddy.document_detail', document_id=doc.id) }}"
+                                class="group flex items-center px-3 py-2 text-sm font-medium text-gray-700 rounded-md hover:bg-gray-50 hover:text-gray-900">
+                                <i class="fas fa-file-alt mr-3 text-gray-400 group-hover:text-gray-500"></i>
+                                <span class="truncate">{{ doc.title|truncate(20) }}</span>
+                            </a>
+                            {% else %}
+                            <div class="px-3 py-2 text-sm text-gray-500">
+                                Aucun document récent
+                            </div>
+                            {% endfor %}
+                        </nav>
+
+                        <h3 class="text-sm font-medium text-gray-500 px-3 mt-8 mb-4">
+                            <i class="fas fa-tasks mr-2 text-gray-400"></i> Progression
+                        </h3>
+                        <div class="px-3 space-y-2">
+                            <div class="flex justify-between text-sm">
+                                <span class="text-gray-500">Objectif quotidien</span>
+                                <span class="font-medium text-gray-900">
+                                    {{ (progress.total_study_time_seconds // 60) }} min / {{ progress.daily_goal_minutes
+                                    }} min
+                                </span>
+                            </div>
+                            <div class="w-full bg-gray-200 rounded-full h-2.5">
+                                <div class="bg-green-500 h-2.5 rounded-full"
+                                    style="width: {{ [((progress.total_study_time_seconds / 60) / progress.daily_goal_minutes * 100), 100]|min }}%">
+                                </div>
+                            </div>
+                            <div class="text-xs text-gray-500 text-right">
+                                {{ "%0.0f"|format([(progress.total_study_time_seconds / 60 / progress.daily_goal_minutes
+                                * 100), 100]|min) }}% complété
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Contenu principal -->
+        <div class="flex-1 overflow-auto focus:outline-none">
+            <main class="flex-1 relative pb-8 z-0">
+                <!-- Messages flash -->
+                <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-4">
+                    {% with messages = get_flashed_messages(with_categories=true) %}
+                    {% if messages %}
+                    {% for category, message in messages %}
+                    {% set bg_color = 'bg-green-50' if category == 'success' else 'bg-red-50' %}
+                    {% set text_color = 'text-green-800' if category == 'success' else 'text-red-800' %}
+                    {% set border_color = 'border-green-400' if category == 'success' else 'border-red-400' %}
+
+                    <div class="rounded-md {{ bg_color }} p-4 mb-4 border-l-4 {{ border_color }}">
+                        <div class="flex">
+                            <div class="flex-shrink-0">
+                                {% if category == 'success' %}
+                                <i class="fas fa-check-circle text-green-400"></i>
+                                {% else %}
+                                <i class="fas fa-exclamation-circle text-red-400"></i>
+                                {% endif %}
+                            </div>
+                            <div class="ml-3">
+                                <p class="text-sm font-medium {{ text_color }}">
+                                    {{ message }}
+                                </p>
+                            </div>
+                            <div class="ml-auto pl-3">
+                                <div class="-mx-1.5 -my-1.5">
+                                    <button type="button"
+                                        class="inline-flex rounded-md p-1.5 {{ text_color }} hover:bg-opacity-30"
+                                        onclick="this.parentElement.parentElement.parentElement.remove()">
+                                        <span class="sr-only">Fermer</span>
+                                        <i class="fas fa-times"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                    {% endif %}
+                    {% endwith %}
+                </div>
+
+                <!-- Contenu de la page -->
+                <div class="max-w-7xl mx-auto px-4 sm:px-6 md:px-8 py-6">
+                    {% block content %}{% endblock %}
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <button id="defaiBtn" onclick="window.location.href='/ai/chat'" title="Defai Votre Assistant"
+        class="w-12 h-12 z-[9999] rounded-full outline-none fixed bottom-4 right-4 shadow-lg hover:scale-110 transition-all duration-150"><img
+            src="{{ url_for('static', filename='assets/defai.png') }}" alt="logo"></button>
+
+    <script>
+        // Configuration globale pour CSRF Token
+        document.addEventListener('DOMContentLoaded', function () {
+            // Configuration d'Axios pour inclure le token CSRF
+            if (typeof axios !== 'undefined') {
+                const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+                axios.defaults.headers.common['X-CSRF-TOKEN'] = csrfToken;
+                axios.defaults.headers.common['X-Requested-With'] = 'XMLHttpRequest';
+            }
+
+            const btn = document.getElementById("defaiBtn");
+
+            let dragging = false;
+            let offsetX = 0;
+            let offsetY = 0;
+
+            function startDrag(x, y) {
+                dragging = true;
+                offsetX = x - btn.offsetLeft;
+                offsetY = y - btn.offsetTop;
+                btn.style.transition = "none";   // désactive l'animation pendant le drag
+                btn.style.cursor = "grabbing";
+            }
+
+            function moveDrag(x, y) {
+                if (!dragging) return;
+
+                btn.style.left = (x - offsetX) + "px";
+                btn.style.top = (y - offsetY) + "px";
+            }
+
+            function endDrag() {
+                if (!dragging) return;
+                dragging = false;
+                btn.style.cursor = "grab";
+                btn.style.transition = "all 0.25s ease"; // réactive l’animation pour le snapping
+
+                snapToCorner();
+            }
+
+            function snapToCorner() {
+                const vw = window.innerWidth;
+                const vh = window.innerHeight;
+                const bw = btn.offsetWidth;
+                const bh = btn.offsetHeight;
+
+                const x = btn.offsetLeft;
+                const y = btn.offsetTop;
+
+                const dist = {
+                    tl: Math.hypot(x, y),
+                    tr: Math.hypot(vw - x - bw, y),
+                    bl: Math.hypot(x, vh - y - bh),
+                    br: Math.hypot(vw - x - bw, vh - y - bh)
+                };
+
+                const nearest = Object.entries(dist).sort((a, b) => a[1] - b[1])[0][0];
+
+                switch (nearest) {
+                    case "tl":
+                        btn.style.left = "10px";
+                        btn.style.top = "10px";
+                        break;
+                    case "tr":
+                        btn.style.left = (vw - bw - 10) + "px";
+                        btn.style.top = "10px";
+                        break;
+                    case "bl":
+                        btn.style.left = "10px";
+                        btn.style.top = (vh - bh - 10) + "px";
+                        break;
+                    case "br":
+                        btn.style.left = (vw - bw - 10) + "px";
+                        btn.style.top = (vh - bh - 10) + "px";
+                        break;
+                }
+            }
+
+            /* -------------------- PC (mouse) -------------------- */
+            btn.addEventListener("mousedown", e => startDrag(e.clientX, e.clientY));
+            document.addEventListener("mousemove", e => moveDrag(e.clientX, e.clientY));
+            document.addEventListener("mouseup", endDrag);
+
+            /* -------------------- Mobile (touch) -------------------- */
+            btn.addEventListener("touchstart", e => {
+                const t = e.touches[0];
+                startDrag(t.clientX, t.clientY);
+            });
+
+            document.addEventListener("touchmove", e => {
+                const t = e.touches[0];
+                moveDrag(t.clientX, t.clientY);
+            });
+
+            document.addEventListener("touchend", endDrag);
+
+
+            // Gestion des messages flash
+            // Masquer les alertes après 5 secondes
+            setTimeout(function () {
+                const alerts = document.querySelectorAll('[role="alert"]');
+                alerts.forEach(alert => {
+                    alert.style.opacity = '0';
+                    setTimeout(() => alert.remove(), 300);
+                });
+            }, 5000);
+
+            // Initialiser les tooltips personnalisés si nécessaire
+            const tooltips = document.querySelectorAll('[data-tooltip]');
+            tooltips.forEach(tooltip => {
+                const tooltipText = tooltip.getAttribute('data-tooltip');
+                const tooltipElement = document.createElement('div');
+                tooltipElement.className = 'hidden absolute z-10 p-2 text-xs text-white bg-gray-800 rounded-md opacity-0 transition-opacity duration-200';
+                tooltipElement.textContent = tooltipText;
+                document.body.appendChild(tooltipElement);
+
+                const updateTooltipPosition = (e) => {
+                    const rect = tooltip.getBoundingClientRect();
+                    tooltipElement.style.top = `${rect.bottom + window.scrollY + 5}px`;
+                    tooltipElement.style.left = `${rect.left + (rect.width / 2) - (tooltipElement.offsetWidth / 2)}px`;
+                };
+
+                tooltip.addEventListener('mouseenter', (e) => {
+                    tooltipElement.classList.remove('hidden');
+                    updateTooltipPosition(e);
+                    setTimeout(() => tooltipElement.classList.add('opacity-100'), 10);
+                });
+
+                tooltip.addEventListener('mouseleave', () => {
+                    tooltipElement.classList.remove('opacity-100');
+                    setTimeout(() => tooltipElement.classList.add('hidden'), 200);
+                });
+
+                tooltip.addEventListener('mousemove', updateTooltipPosition);
+            });
+        });
+    </script>
+    {% block extra_js %}{% endblock %}
+</body>
+
+</html>

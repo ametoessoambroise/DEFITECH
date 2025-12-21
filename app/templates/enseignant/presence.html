@@ -1,0 +1,79 @@
+{% extends "base.html" %} {% block title %}{{ current_user.nom }} {{
+current_user.prenom }} | DEFITECH{% endblock %} {% block content %}
+
+<div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex-grow">
+    <div class="bg-white rounded-lg shadow p-6 mb-8">
+        <h2 class="text-xl font-semibold text-gray-900 mb-4">Gestion des présences</h2>
+        <form method="get" class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+            <div>
+                <label class="block text-sm font-medium text-gray-700">Filière</label>
+                <select name="filiere" class="mt-1 block w-full rounded border-gray-300" required>
+                    <option value="">-- Choisir --</option>
+                    {% for f in filieres %}
+                    <option value="{{ f }}" {% if selected_filiere==f %}selected{% endif %}>{{ f }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700">Année</label>
+                <select name="annee" class="mt-1 block w-full rounded border-gray-300" required>
+                    <option value="">-- Choisir --</option>
+                    {% for a in annees %}
+                    <option value="{{ a }}" {% if selected_annee==a %}selected{% endif %}>{{ a }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700">Matière</label>
+                <select name="matiere" class="mt-1 block w-full rounded border-gray-300">
+                    <option value="">-- Choisir --</option>
+                    {% for m in matieres %}
+                    <option value="{{ m.id }}" {% if selected_matiere==m.id|string %}selected{% endif %}>{{ m.nom }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700">Date</label>
+                <input type="date" name="date" class="mt-1 block w-full rounded border-gray-300"
+                    value="{{ selected_date }}" required>
+            </div>
+            <div class="md:col-span-4 flex justify-end items-end">
+                <button type="submit"
+                    class="px-6 py-2 bg-purple-600 text-white rounded hover:bg-purple-700">Afficher</button>
+            </div>
+        </form>
+        {% if etudiants %}
+        <form method="post">
+            <table class="min-w-full bg-white">
+                <thead>
+                    <tr>
+                        <th class="px-4 py-2">Nom</th>
+                        <th class="px-4 py-2">Prénom</th>
+                        <th class="px-4 py-2">Présent</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for etu in etudiants %}
+                    <tr class="border-b">
+                        <td class="px-4 py-2">{{ etu.nom }}</td>
+                        <td class="px-4 py-2">{{ etu.prenom }}</td>
+                        <td class="px-4 py-2 text-center">
+                            <input type="checkbox" name="present_{{ etu.id }}">
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            <div class="mt-6 flex justify-end">
+                <button type="submit" class="px-6 py-2 bg-green-600 text-white rounded hover:bg-green-700">Enregistrer
+                    la
+                    présence</button>
+            </div>
+        </form>
+        {% elif selected_filiere and selected_annee %}
+        <div class="text-center text-gray-500 py-8">Aucun étudiant trouvé pour cette filière/année.</div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

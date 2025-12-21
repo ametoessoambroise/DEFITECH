@@ -1,0 +1,21 @@
+services:
+  - type: web
+    name: defitech
+    env: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn --worker-class eventlet -w 1 wsgi:app
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.13.0
+      - key: FLASK_APP
+        value: wsgi.py
+      - key: FLASK_ENV
+        value: production
+      - fromDatabase:
+          name: defitech_db
+          property: connectionString
+
+databases:
+  - name: defitech_db
+    user: defitech_user
+    plan: free

@@ -1,0 +1,367 @@
+{% extends "base.html" %}
+{% block title %}{{ bug_report.title }} - Rapports de Bugs - DEFITECH{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/20 to-slate-50 py-6 sm:py-8 lg:py-12">
+  <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+    <!-- Navigation -->
+    <div class="mb-6">
+      <a href="{{ url_for('bug_reports.list_bug_reports') }}"
+        class="inline-flex items-center text-sm font-medium text-blue-600 hover:text-blue-800 transition-colors">
+        <i class="fas fa-arrow-left mr-2"></i>
+        Retour à la liste
+      </a>
+    </div>
+
+    <!-- En-tête avec badges et actions -->
+    <div class="bg-white shadow-xl rounded-2xl overflow-hidden border border-gray-100 mb-6">
+      <div class="px-4 sm:px-6 py-5 sm:py-6">
+        <div class="flex flex-col lg:flex-row lg:items-start lg:justify-between space-y-4 lg:space-y-0">
+          <!-- Titre et informations -->
+          <div class="flex-1 min-w-0">
+            <div class="flex flex-wrap items-center gap-2 mb-3">
+              <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold
+                          {% if bug_report.priority == 'critical' %}bg-red-100 text-red-800 ring-1 ring-red-200
+                          {% elif bug_report.priority == 'high' %}bg-orange-100 text-orange-800 ring-1 ring-orange-200
+                          {% elif bug_report.priority == 'medium' %}bg-yellow-100 text-yellow-800 ring-1 ring-yellow-200
+                          {% else %}bg-blue-100 text-blue-800 ring-1 ring-blue-200{% endif %}">
+                <i class="fas fa-circle text-[6px] mr-1.5"></i>
+                {% if bug_report.priority == 'critical' %}Critique
+                {% elif bug_report.priority == 'high' %}Élevé
+                {% elif bug_report.priority == 'medium' %}Moyen
+                {% else %}Faible{% endif %}
+              </span>
+
+              <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold
+                          {% if bug_report.status == 'open' %}bg-blue-100 text-blue-800 ring-1 ring-blue-200
+                          {% elif bug_report.status == 'in_progress' %}bg-yellow-100 text-yellow-800 ring-1 ring-yellow-200
+                          {% elif bug_report.status == 'resolved' %}bg-green-100 text-green-800 ring-1 ring-green-200
+                          {% else %}bg-gray-100 text-gray-800 ring-1 ring-gray-200{% endif %}">
+                <i class="fas fa-circle text-[6px] mr-1.5"></i>
+                {% if bug_report.status == 'open' %}Ouvert
+                {% elif bug_report.status == 'in_progress' %}En cours
+                {% elif bug_report.status == 'resolved' %}Résolu
+                {% else %}Non corrigé{% endif %}
+              </span>
+            </div>
+
+            <h1 class="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 mb-3">
+              {{ bug_report.title }}
+            </h1>
+
+            <div class="flex flex-wrap items-center gap-4 text-sm text-gray-600">
+              <div class="flex items-center">
+                <i class="fas fa-user-circle text-gray-400 mr-2"></i>
+                <span>{{ bug_report.user.prenom }} {{ bug_report.user.nom }}</span>
+              </div>
+              <div class="flex items-center">
+                <i class="fas fa-calendar-alt text-gray-400 mr-2"></i>
+                <time datetime="{{ bug_report.created_at.isoformat() }}">
+                  {{ bug_report.created_at.strftime('%d/%m/%Y à %H:%M') }}
+                </time>
+              </div>
+              {% if bug_report.updated_at and bug_report.updated_at != bug_report.created_at %}
+              <div class="flex items-center">
+                <i class="fas fa-clock text-gray-400 mr-2"></i>
+                <span>Mis à jour le {{ bug_report.updated_at.strftime('%d/%m/%Y') }}</span>
+              </div>
+              {% endif %}
+            </div>
+          </div>
+
+          <!-- Actions -->
+          <div class="flex flex-wrap gap-2">
+            {% if current_user.role == 'admin' and admin_form %}
+            <button type="button" onclick="toggleAdminPanel()"
+              class="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-xl text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all">
+              <i class="fas fa-cog mr-2"></i>
+              <span class="hidden sm:inline">Admin</span>
+            </button>
+            {% endif %}
+
+            {% if bug_report.user_id == current_user.id or current_user.role == 'admin' %}
+            <a href="{{ url_for('bug_reports.edit_bug_report', report_id=bug_report.id) }}"
+              class="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-xl text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all">
+              <i class="fas fa-edit mr-2"></i>
+              <span class="hidden sm:inline">Modifier</span>
+            </a>
+
+            <form id="delete-form" action="{{ url_for('bug_reports.delete_bug_report', report_id=bug_report.id) }}"
+              method="POST" class="hidden">
+              <button type="button" onclick="confirmDelete()"
+                class="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-xl text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-all">
+                <i class="fas fa-trash-alt mr-2"></i>
+                <span class="hidden sm:inline">Supprimer</span>
+                <input type="hidden" name="_method" value="DELETE" />
+              </button>
+            </form>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Panneau administrateur (caché par défaut) -->
+    {% if current_user.role == 'admin' and admin_form %}
+    <div id="admin-panel"
+      class="hidden bg-white shadow-xl rounded-2xl overflow-hidden border border-gray-100 mb-6 animate-fadeIn">
+      <div class="bg-gradient-to-r from-blue-50 to-indigo-50 px-4 sm:px-6 py-4 border-b border-blue-100">
+        <h3 class="text-lg font-semibold text-blue-900 flex items-center">
+          <i class="fas fa-user-shield mr-2"></i>
+          Panneau administrateur
+        </h3>
+      </div>
+
+      <form method="POST" action="{{ url_for('bug_reports.update_bug_report', report_id=bug_report.id) }}"
+        class="p-4 sm:p-6">
+        {{ admin_form.hidden_tag() }}
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
+          <div class="space-y-2">
+            <label class="block text-sm font-semibold text-gray-900">
+              {{ admin_form.status.label.text }}
+            </label>
+            {{ admin_form.status(class="block w-full rounded-xl border-gray-300 shadow-sm focus:border-blue-500
+            focus:ring-2 focus:ring-blue-500/20 sm:text-sm transition-all") }}
+          </div>
+
+          <div class="space-y-2">
+            <label class="block text-sm font-semibold text-gray-900">
+              {{ admin_form.admin_notes.label.text }}
+            </label>
+            {{ admin_form.admin_notes(class="block w-full rounded-xl border-gray-300 shadow-sm focus:border-blue-500
+            focus:ring-2 focus:ring-blue-500/20 sm:text-sm transition-all",
+            placeholder="Notes internes...") }}
+          </div>
+        </div>
+
+        <div class="mt-6 flex justify-end">
+          <button type="submit"
+            class="inline-flex items-center px-5 py-2.5 border border-transparent shadow-lg text-sm font-medium rounded-xl text-white bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all transform hover:scale-105">
+            <i class="fas fa-save mr-2"></i>
+            Mettre à jour
+          </button>
+        </div>
+      </form>
+    </div>
+    {% endif %}
+
+    <!-- Contenu principal -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <!-- Détails du bug -->
+      <div class="lg:col-span-2 space-y-6">
+        <!-- Description -->
+        <div class="bg-white shadow-xl rounded-2xl overflow-hidden border border-gray-100">
+          <div class="bg-gradient-to-r from-gray-50 to-white px-4 sm:px-6 py-4 border-b border-gray-200">
+            <h2 class="text-lg font-semibold text-gray-900 flex items-center">
+              <i class="fas fa-align-left text-blue-600 mr-2"></i>
+              Description du problème
+            </h2>
+          </div>
+          <div class="px-4 sm:px-6 py-5">
+            <div class="prose prose-blue max-w-none text-gray-700 leading-relaxed">
+              {{ bug_report.description | nl2br | safe }}
+            </div>
+          </div>
+        </div>
+
+        <!-- Étapes de reproduction -->
+        <div class="bg-white shadow-xl rounded-2xl overflow-hidden border border-gray-100">
+          <div class="bg-gradient-to-r from-gray-50 to-white px-4 sm:px-6 py-4 border-b border-gray-200">
+            <h2 class="text-lg font-semibold text-gray-900 flex items-center">
+              <i class="fas fa-list-ol text-blue-600 mr-2"></i>
+              Étapes pour reproduire
+            </h2>
+          </div>
+          <div class="px-4 sm:px-6 py-5">
+            <div class="prose prose-blue max-w-none text-gray-700 leading-relaxed">
+              {{ bug_report.steps_to_reproduce | nl2br | safe }}
+            </div>
+          </div>
+        </div>
+
+        <!-- Capture d'écran -->
+        {% if bug_report.image_path %}
+        <div class="bg-white shadow-xl rounded-2xl overflow-hidden border border-gray-100">
+          <div class="bg-gradient-to-r from-gray-50 to-white px-4 sm:px-6 py-4 border-b border-gray-200">
+            <h2 class="text-lg font-semibold text-gray-900 flex items-center">
+              <i class="fas fa-image text-blue-600 mr-2"></i>
+              Capture d'écran
+            </h2>
+          </div>
+          <div class="px-4 sm:px-6 py-5">
+            <div class="relative group cursor-zoom-in" onclick="openImageModal(this)">
+              <img src="{{ url_for('static', filename=bug_report.image_path) }}" alt="Capture d'écran du bug"
+                class="w-full h-auto rounded-xl shadow-lg border border-gray-200 transition-transform group-hover:scale-[1.02]" />
+              <div
+                class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-10 transition-all rounded-xl flex items-center justify-center">
+                <div class="opacity-0 group-hover:opacity-100 transition-opacity">
+                  <div class="bg-white rounded-full p-3 shadow-lg">
+                    <i class="fas fa-search-plus text-blue-600 text-xl"></i>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        {% endif %}
+      </div>
+
+      <!-- Sidebar - Informations -->
+      <div class="space-y-6">
+        <!-- Métadonnées -->
+        <div class="bg-white shadow-xl rounded-2xl overflow-hidden border border-gray-100">
+          <div class="bg-gradient-to-r from-gray-50 to-white px-4 sm:px-6 py-4 border-b border-gray-200">
+            <h2 class="text-lg font-semibold text-gray-900 flex items-center">
+              <i class="fas fa-info-circle text-blue-600 mr-2"></i>
+              Informations
+            </h2>
+          </div>
+          <div class="px-4 sm:px-6 py-5 space-y-4">
+            <div class="flex items-start justify-between pb-4 border-b border-gray-100">
+              <div class="flex-1">
+                <p class="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">Statut</p>
+                <p class="text-sm font-semibold
+                          {% if bug_report.status == 'open' %}text-blue-600
+                          {% elif bug_report.status == 'in_progress' %}text-yellow-600
+                          {% elif bug_report.status == 'resolved' %}text-green-600
+                          {% else %}text-gray-600{% endif %}">
+                  {% if bug_report.status == 'open' %}Ouvert
+                  {% elif bug_report.status == 'in_progress' %}En cours
+                  {% elif bug_report.status == 'resolved' %}Résolu
+                  {% else %}Non corrigé{% endif %}
+                </p>
+              </div>
+            </div>
+
+            <div class="flex items-start justify-between pb-4 border-b border-gray-100">
+              <div class="flex-1">
+                <p class="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">Priorité</p>
+                <p class="text-sm font-semibold
+                          {% if bug_report.priority == 'critical' %}text-red-600
+                          {% elif bug_report.priority == 'high' %}text-orange-600
+                          {% elif bug_report.priority == 'medium' %}text-yellow-600
+                          {% else %}text-blue-600{% endif %}">
+                  {% if bug_report.priority == 'critical' %}Critique
+                  {% elif bug_report.priority == 'high' %}Élevé
+                  {% elif bug_report.priority == 'medium' %}Moyen
+                  {% else %}Faible{% endif %}
+                </p>
+              </div>
+            </div>
+
+            <div class="flex items-start justify-between pb-4 border-b border-gray-100">
+              <div class="flex-1">
+                <p class="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">Signalé par</p>
+                <p class="text-sm font-semibold text-gray-900">
+                  {{ bug_report.user.prenom }} {{ bug_report.user.nom }}
+                </p>
+              </div>
+            </div>
+
+            <div class="flex items-start justify-between">
+              <div class="flex-1">
+                <p class="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">Date de création</p>
+                <p class="text-sm text-gray-900">
+                  {{ bug_report.created_at.strftime('%d/%m/%Y à %H:%M') }}
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Notes admin -->
+        {% if bug_report.admin_notes and current_user.role == 'admin' %}
+        <div class="bg-blue-50 shadow-xl rounded-2xl overflow-hidden border border-blue-100">
+          <div class="bg-gradient-to-r from-blue-100 to-indigo-100 px-4 sm:px-6 py-4 border-b border-blue-200">
+            <h2 class="text-lg font-semibold text-blue-900 flex items-center">
+              <i class="fas fa-sticky-note mr-2"></i>
+              Notes internes
+            </h2>
+          </div>
+          <div class="px-4 sm:px-6 py-5">
+            <p class="text-sm text-blue-900 leading-relaxed">
+              {{ bug_report.admin_notes | nl2br | safe }}
+            </p>
+          </div>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- Formulaire de suppression caché -->
+    <form id="delete-form" action="{{ url_for('bug_reports.delete_bug_report', report_id=bug_report.id) }}"
+      method="POST" class="hidden">
+      <input type="hidden" name="_method" value="DELETE" />
+    </form>
+  </div>
+</div>
+
+<!-- Modal pour l'image en plein écran -->
+<div id="image-modal" class="hidden fixed inset-0 bg-black bg-opacity-90 z-50 flex items-center justify-center p-4"
+  onclick="closeImageModal()">
+  <div class="relative max-w-7xl max-h-full">
+    <button type="button" class="absolute -top-12 right-0 text-white hover:text-gray-300 transition-colors"
+      onclick="closeImageModal()">
+      <i class="fas fa-times text-2xl"></i>
+    </button>
+    <img id="modal-image" src="" alt="" class="max-w-full max-h-[90vh] rounded-lg shadow-2xl" />
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  function toggleAdminPanel() {
+    const panel = document.getElementById('admin-panel');
+    panel.classList.toggle('hidden');
+  }
+
+  function confirmDelete() {
+    if (confirm('Êtes-vous sûr de vouloir supprimer ce rapport de bug ? Cette action est irréversible.')) {
+      document.getElementById('delete-form').submit();
+    }
+  }
+
+  function openImageModal(element) {
+    const img = element.querySelector('img');
+    const modal = document.getElementById('image-modal');
+    const modalImg = document.getElementById('modal-image');
+
+    modalImg.src = img.src;
+    modalImg.alt = img.alt;
+    modal.classList.remove('hidden');
+    document.body.style.overflow = 'hidden';
+  }
+
+  function closeImageModal() {
+    const modal = document.getElementById('image-modal');
+    modal.classList.add('hidden');
+    document.body.style.overflow = 'auto';
+  }
+
+  // Fermer avec Escape
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      closeImageModal();
+    }
+  });
+</script>
+
+<style>
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+      transform: translateY(-10px);
+    }
+
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .animate-fadeIn {
+    animation: fadeIn 0.3s ease-out;
+  }
+</style>
+{% endblock %}

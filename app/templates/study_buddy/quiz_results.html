@@ -1,0 +1,305 @@
+{% extends "study_buddy/base.html" %}
+
+{% block title %}Résultats du quiz - {{ score }}%{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
+    <div class="bg-white shadow rounded-lg p-6">
+        <!-- En-tête des résultats -->
+        <div class="text-center mb-8">
+            <h1 class="text-2xl font-bold text-gray-900">Résultats du quiz</h1>
+            <p class="mt-2 text-gray-600">{{ attempt.quiz.title }}</p>
+
+            <!-- Carte de score avec animation -->
+            <div
+                class="mt-6 bg-gradient-to-br {% if score >= 80 %}from-green-50 to-green-100{% elif score >= 60 %}from-blue-50 to-blue-100{% elif score >= 40 %}from-yellow-50 to-yellow-100{% else %}from-red-50 to-red-100{% endif %} rounded-lg p-6 max-w-md mx-auto border-2 {% if score >= 80 %}border-green-200{% elif score >= 60 %}border-blue-200{% elif score >= 40 %}border-yellow-200{% else %}border-red-200{% endif %}">
+                <div
+                    class="text-5xl font-bold {% if score >= 80 %}text-green-600{% elif score >= 60 %}text-blue-600{% elif score >= 40 %}text-yellow-600{% else %}text-red-600{% endif %} mb-2">
+                    {{ score }}%
+                </div>
+
+                <!-- Évaluation -->
+                <div
+                    class="text-lg font-medium {% if score >= 80 %}text-green-700{% elif score >= 60 %}text-blue-700{% elif score >= 40 %}text-yellow-700{% else %}text-red-700{% endif %} mb-2">
+                    {% if score >= 80 %}
+                    <i class="fas fa-trophy mr-2"></i>Excellent !
+                    {% elif score >= 60 %}
+                    <i class="fas fa-thumbs-up mr-2"></i>Bien joué !
+                    {% elif score >= 40 %}
+                    <i class="fas fa-hand-point-up mr-2"></i>Peut mieux faire
+                    {% else %}
+                    <i class="fas fa-book-reader mr-2"></i>À retravailler
+                    {% endif %}
+                </div>
+
+                <div class="text-gray-700">
+                    <span class="font-semibold">{{ correct_answers }}</span> bonnes réponses sur
+                    <span class="font-semibold">{{ total_questions }}</span> questions
+                </div>
+
+                <!-- Barre de progression animée -->
+                <div class="mt-4 w-full bg-white rounded-full h-3 shadow-inner">
+                    <div class="h-3 rounded-full transition-all duration-1000 ease-out {% if score >= 80 %}bg-green-600{% elif score >= 60 %}bg-blue-600{% elif score >= 40 %}bg-yellow-600{% else %}bg-red-600{% endif %}"
+                        style="width: 0%;" data-width="{{ score }}%">
+                    </div>
+                </div>
+
+                <!-- Informations supplémentaires -->
+                {% if attempt.completed_at %}
+                <div class="mt-4 pt-4 border-t border-gray-300 text-sm text-gray-600">
+                    <i class="far fa-clock mr-1"></i>
+                    Terminé le {{ attempt.completed_at.strftime('%d/%m/%Y à %H:%M') }}
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Statistiques rapides -->
+            <div class="mt-6 grid grid-cols-3 gap-4 max-w-md mx-auto">
+                <div class="bg-white border border-gray-200 rounded-lg p-3">
+                    <div class="text-2xl font-bold text-green-600">{{ correct_answers }}</div>
+                    <div class="text-xs text-gray-500">Correctes</div>
+                </div>
+                <div class="bg-white border border-gray-200 rounded-lg p-3">
+                    <div class="text-2xl font-bold text-red-600">{{ total_questions - correct_answers }}</div>
+                    <div class="text-xs text-gray-500">Incorrectes</div>
+                </div>
+                <div class="bg-white border border-gray-200 rounded-lg p-3">
+                    <div class="text-2xl font-bold text-blue-600">{{ total_questions }}</div>
+                    <div class="text-xs text-gray-500">Total</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Détails des réponses -->
+        <div class="space-y-6">
+            <div class="flex items-center justify-between border-b pb-2">
+                <h2 class="text-xl font-semibold text-gray-900">Détail des réponses</h2>
+
+                <!-- Filtres -->
+                <div class="flex space-x-2">
+                    <button onclick="filterAnswers('all')"
+                        class="filter-btn px-3 py-1 text-sm rounded-md bg-gray-100 text-gray-700 hover:bg-gray-200 active"
+                        data-filter="all">
+                        Toutes
+                    </button>
+                    <button onclick="filterAnswers('correct')"
+                        class="filter-btn px-3 py-1 text-sm rounded-md bg-green-100 text-green-700 hover:bg-green-200"
+                        data-filter="correct">
+                        Correctes
+                    </button>
+                    <button onclick="filterAnswers('incorrect')"
+                        class="filter-btn px-3 py-1 text-sm rounded-md bg-red-100 text-red-700 hover:bg-red-200"
+                        data-filter="incorrect">
+                        Incorrectes
+                    </button>
+                </div>
+            </div>
+
+            {% if answers %}
+            {% for answer in answers %}
+            <div class="answer-item border rounded-lg p-4 transition-all {% if answer.is_correct %}bg-green-50 border-green-200{% else %}bg-red-50 border-red-200{% endif %}"
+                data-correct="{{ answer.is_correct|lower }}">
+                <div class="flex justify-between items-start gap-4">
+                    <div class="flex-1">
+                        <!-- Numéro et question -->
+                        <div class="flex items-start">
+                            <span
+                                class="flex-shrink-0 inline-flex items-center justify-center h-6 w-6 rounded-full {% if answer.is_correct %}bg-green-600{% else %}bg-red-600{% endif %} text-white text-xs font-bold mr-3">
+                                {{ loop.index }}
+                            </span>
+                            <div class="flex-1">
+                                <h3 class="font-medium text-gray-900">
+                                    {{ answer.question.question_text }}
+                                </h3>
+                            </div>
+                        </div>
+
+                        <!-- Réponses -->
+                        <div class="mt-3 ml-9 space-y-2">
+                            <!-- Réponse de l'utilisateur -->
+                            <p class="text-sm">
+                                <span class="font-medium text-gray-600">Votre réponse :</span>
+                                <span
+                                    class="{% if answer.is_correct %}text-green-700 font-medium{% else %}text-red-700{% endif %}">
+                                    {% if answer.answer_data %}
+                                    {% set user_answer = answer.answer_data|from_json if answer.answer_data is string
+                                    else answer.answer_data %}
+                                    {{ user_answer }}
+                                    {% else %}
+                                    <em class="text-gray-400">Aucune réponse</em>
+                                    {% endif %}
+                                </span>
+                                {% if answer.is_correct %}
+                                <i class="fas fa-check-circle text-green-600 ml-2"></i>
+                                {% else %}
+                                <i class="fas fa-times-circle text-red-600 ml-2"></i>
+                                {% endif %}
+                            </p>
+
+                            <!-- Bonne réponse si incorrecte -->
+                            {% if not answer.is_correct %}
+                            <p class="text-sm">
+                                <span class="font-medium text-gray-600">Bonne réponse :</span>
+                                <span class="text-green-700 font-medium">
+                                    {{ answer.question.correct_answer }}
+                                </span>
+                            </p>
+                            {% endif %}
+
+                            <!-- Explication -->
+                            {% if answer.question.explanation %}
+                            <div class="mt-3 p-3 bg-white bg-opacity-70 rounded-md border border-gray-200">
+                                <p class="text-sm text-gray-700">
+                                    <i class="fas fa-lightbulb text-yellow-500 mr-1"></i>
+                                    <span class="font-medium">Explication :</span>
+                                    {{ answer.question.explanation }}
+                                </p>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- Badge de statut -->
+                    <span
+                        class="flex-shrink-0 inline-flex items-center px-3 py-1 rounded-full text-xs font-medium {% if answer.is_correct %}bg-green-100 text-green-800{% else %}bg-red-100 text-red-800{% endif %}">
+                        {% if answer.is_correct %}
+                        <i class="fas fa-check mr-1"></i> Correct
+                        {% else %}
+                        <i class="fas fa-times mr-1"></i> Incorrect
+                        {% endif %}
+                    </span>
+                </div>
+            </div>
+            {% endfor %}
+            {% else %}
+            <div class="text-center py-8">
+                <i class="fas fa-inbox text-gray-400 text-4xl mb-3"></i>
+                <p class="text-gray-500">Aucune réponse enregistrée</p>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Boutons d'action -->
+        <div class="mt-8 pt-6 border-t border-gray-200">
+            <div class="flex flex-col sm:flex-row justify-between items-center gap-4">
+                <!-- Boutons à gauche -->
+                <div class="flex flex-wrap gap-3">
+                    <a href="{{ url_for('study_buddy.index') }}"
+                        class="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors">
+                        <i class="fas fa-home mr-2"></i>
+                        Accueil
+                    </a>
+
+                    {% if attempt.quiz.document_id %}
+                    <a href="{{ url_for('study_buddy.document_detail', document_id=attempt.quiz.document_id) }}"
+                        class="inline-flex items-center px-4 py-2 border border-blue-300 shadow-sm text-sm font-medium rounded-md text-blue-700 bg-blue-50 hover:bg-blue-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors">
+                        <i class="fas fa-book mr-2"></i>
+                        Voir le document
+                    </a>
+                    {% endif %}
+                </div>
+
+                <!-- Boutons à droite -->
+                <div class="flex flex-wrap gap-3">
+                    <button onclick="window.print()"
+                        class="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 transition-colors">
+                        <i class="fas fa-print mr-2"></i>
+                        Imprimer
+                    </button>
+
+                    <form method="POST" action="{{ url_for('study_buddy.restart_quiz', attempt_id=attempt.id) }}"
+                        class="inline" onsubmit="return confirm('Êtes-vous sûr de vouloir recommencer ce quiz ?');">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <button type="submit"
+                            class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors">
+                            <i class="fas fa-redo mr-2"></i>
+                            Recommencer
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Animation de la barre de progression
+    document.addEventListener('DOMContentLoaded', function () {
+        const progressBar = document.querySelector('[data-width]');
+        if (progressBar) {
+            const targetWidth = progressBar.getAttribute('data-width');
+            setTimeout(() => {
+                progressBar.style.width = targetWidth;
+            }, 100);
+        }
+
+        // Initialiser le filtre
+        filterAnswers('all');
+    });
+
+    // Fonction de filtrage des réponses
+    function filterAnswers(filter) {
+        const items = document.querySelectorAll('.answer-item');
+        const buttons = document.querySelectorAll('.filter-btn');
+
+        // Mettre à jour les boutons
+        buttons.forEach(btn => {
+            if (btn.getAttribute('data-filter') === filter) {
+                btn.classList.add('active', 'ring-2', 'ring-offset-2', 'ring-primary-500');
+            } else {
+                btn.classList.remove('active', 'ring-2', 'ring-offset-2', 'ring-primary-500');
+            }
+        });
+
+        // Filtrer les éléments
+        items.forEach(item => {
+            const isCorrect = item.getAttribute('data-correct') === 'true';
+
+            if (filter === 'all') {
+                item.style.display = '';
+                item.classList.remove('hidden');
+            } else if (filter === 'correct' && isCorrect) {
+                item.style.display = '';
+                item.classList.remove('hidden');
+            } else if (filter === 'incorrect' && !isCorrect) {
+                item.style.display = '';
+                item.classList.remove('hidden');
+            } else {
+                item.style.display = 'none';
+                item.classList.add('hidden');
+            }
+        });
+
+        // Afficher un message si aucun résultat
+        const visibleItems = Array.from(items).filter(item => item.style.display !== 'none');
+        const container = items[0]?.parentElement;
+
+        if (container) {
+            let noResultsMsg = container.querySelector('.no-results-message');
+
+            if (visibleItems.length === 0) {
+                if (!noResultsMsg) {
+                    noResultsMsg = document.createElement('div');
+                    noResultsMsg.className = 'no-results-message text-center py-8 text-gray-500';
+                    noResultsMsg.innerHTML = '<i class="fas fa-filter text-4xl mb-3"></i><p>Aucune réponse ne correspond au filtre sélectionné</p>';
+                    container.appendChild(noResultsMsg);
+                }
+            } else if (noResultsMsg) {
+                noResultsMsg.remove();
+            }
+        }
+    }
+
+    // Style d'impression
+    const style = document.createElement('style');
+    style.textContent = `
+        @media print {
+            .filter-btn, button, a { display: none !important; }
+            .answer-item { page-break-inside: avoid; }
+        }
+    `;
+    document.head.appendChild(style);
+</script>
+{% endblock %}

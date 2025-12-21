@@ -1,0 +1,242 @@
+{% extends "base.html" %}
+{% block title %}Rapports de Bugs - DEFITECH{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/20 to-slate-50 py-6 sm:py-8 lg:py-12">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <!-- En-tête amélioré -->
+    <div class="mb-6 sm:mb-8">
+      <div class="flex flex-col space-y-4 lg:flex-row lg:items-center lg:justify-between lg:space-y-0">
+        <div class="space-y-1">
+          <h1 class="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 flex items-center">
+            <span
+              class="flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-yellow-100 text-yellow-600 mr-3 sm:mr-4">
+              <i class="fas fa-bug text-lg sm:text-xl"></i>
+            </span>
+            Rapports de Bugs
+          </h1>
+          <p class="text-sm sm:text-base text-gray-600 ml-0 lg:ml-16">
+            Gérez et suivez tous les problèmes signalés sur la plateforme
+          </p>
+        </div>
+
+        <a href="{{ url_for('bug_reports.new_bug_report') }}"
+          class="inline-flex items-center justify-center px-5 py-3 border border-transparent rounded-xl shadow-lg text-sm sm:text-base font-medium text-white bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all duration-200 transform hover:scale-105">
+          <i class="fas fa-plus mr-2"></i>
+          <span class="hidden sm:inline">Nouveau rapport</span>
+          <span class="sm:hidden">Nouveau</span>
+        </a>
+      </div>
+    </div>
+
+    <!-- Carte principale avec recherche et filtres -->
+    <div class="bg-white shadow-xl rounded-2xl overflow-hidden border border-gray-100">
+      <!-- Barre de recherche et filtres -->
+      <div class="bg-gradient-to-r from-gray-50 to-white px-4 sm:px-6 py-4 sm:py-5 border-b border-gray-200">
+        <div class="flex flex-col space-y-4 lg:flex-row lg:items-center lg:justify-between lg:space-y-0">
+          <h2 class="text-lg sm:text-xl font-semibold text-gray-900">
+            <i class="fas fa-list-ul text-blue-600 mr-2"></i>
+            Mes rapports
+          </h2>
+
+          <div class="flex flex-col sm:flex-row gap-3 sm:gap-4">
+            <!-- Recherche -->
+            <div class="relative flex-1 sm:w-64 lg:w-80">
+              <input type="text"
+                class="block w-full pl-11 pr-4 py-2 border border-gray-300 rounded-xl text-sm placeholder-gray-400 focus:outline-none focus:ring focus:ring-blue-500 focus:border-transparent transition-all"
+                placeholder="Rechercher un rapport..." id="search-reports" />
+              <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                <i class="fas fa-search text-gray-400"></i>
+              </div>
+            </div>
+
+            <!-- Filtre par statut (optionnel) -->
+            <select
+              class="hidden sm:block px-4 py-2.5 border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white"
+              id="filter-status">
+              <option value="">Tous les statuts</option>
+              <option value="open">Ouvert</option>
+              <option value="in_progress">En cours</option>
+              <option value="resolved">Résolu</option>
+              <option value="wont_fix">Non corrigé</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <!-- Liste des rapports -->
+      <div class="divide-y divide-gray-100">
+        {% if bug_reports.items %}
+        {% for report in bug_reports.items %}
+        <a href="{{ url_for('bug_reports.view_bug_report', report_id=report.id) }}"
+          class="block hover:bg-gradient-to-r hover:from-blue-50/50 hover:to-transparent transition-all duration-200 group">
+          <div class="px-4 sm:px-6 py-4 sm:py-5">
+            <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between space-y-3 lg:space-y-0">
+              <!-- Contenu principal -->
+              <div class="flex-1 min-w-0 space-y-2">
+                <!-- Badges -->
+                <div class="flex flex-wrap items-center gap-2">
+                  <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold
+                                {% if report.priority == 'critical' %}bg-red-100 text-red-800 ring-1 ring-red-200
+                                {% elif report.priority == 'high' %}bg-orange-100 text-orange-800 ring-1 ring-orange-200
+                                {% elif report.priority == 'medium' %}bg-yellow-100 text-yellow-800 ring-1 ring-yellow-200
+                                {% else %}bg-blue-100 text-blue-800 ring-1 ring-blue-200{% endif %}">
+                    <i class="fas fa-circle text-[6px] mr-1.5"></i>
+                    {% if report.priority == 'critical' %}Critique
+                    {% elif report.priority == 'high' %}Élevé
+                    {% elif report.priority == 'medium' %}Moyen
+                    {% else %}Faible{% endif %}
+                  </span>
+
+                  <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold
+                                {% if report.status == 'open' %}bg-blue-100 text-blue-800 ring-1 ring-blue-200
+                                {% elif report.status == 'in_progress' %}bg-yellow-100 text-yellow-800 ring-1 ring-yellow-200
+                                {% elif report.status == 'resolved' %}bg-green-100 text-green-800 ring-1 ring-green-200
+                                {% else %}bg-gray-100 text-gray-800 ring-1 ring-gray-200{% endif %}">
+                    <i class="fas fa-circle text-[6px] mr-1.5"></i>
+                    {% if report.status == 'open' %}Ouvert
+                    {% elif report.status == 'in_progress' %}En cours
+                    {% elif report.status == 'resolved' %}Résolu
+                    {% else %}Non corrigé{% endif %}
+                  </span>
+                </div>
+
+                <!-- Titre et description -->
+                <h3
+                  class="text-base sm:text-lg font-semibold text-gray-900 group-hover:text-blue-600 transition-colors line-clamp-1">
+                  {{ report.title }}
+                </h3>
+                <p class="text-sm text-gray-600 line-clamp-2 pr-4">
+                  {{ report.description }}
+                </p>
+              </div>
+
+              <!-- Métadonnées -->
+              <div
+                class="flex items-center justify-between lg:flex-col lg:items-end lg:justify-start lg:space-y-2 lg:ml-6">
+                <div class="flex items-center space-x-4 lg:flex-col lg:items-end lg:space-x-0 lg:space-y-1.5">
+                  <time datetime="{{ report.created_at.isoformat() }}"
+                    class="text-xs sm:text-sm text-gray-500 flex items-center">
+                    <i class="fas fa-calendar-alt mr-1.5 text-gray-400"></i>
+                    {{ report.created_at.strftime('%d/%m/%Y') }}
+                  </time>
+
+                  <div class="flex items-center text-xs sm:text-sm text-gray-500">
+                    <i class="fas fa-user-circle text-gray-400 mr-1.5"></i>
+                    <span class="truncate max-w-[120px] sm:max-w-none">
+                      {{ report.user.prenom }} {{ report.user.nom }}
+                    </span>
+                  </div>
+                </div>
+
+                <i
+                  class="fas fa-chevron-right text-gray-400 group-hover:text-blue-600 group-hover:translate-x-1 transition-all ml-4 lg:ml-0 lg:mt-2"></i>
+              </div>
+            </div>
+          </div>
+        </a>
+        {% endfor %}
+        {% else %}
+        <!-- État vide amélioré -->
+        <div class="px-6 py-16 sm:py-20 text-center">
+          <div class="inline-flex items-center justify-center w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-gray-100 mb-4">
+            <i class="fas fa-inbox text-gray-400 text-2xl sm:text-3xl"></i>
+          </div>
+          <h3 class="text-lg sm:text-xl font-semibold text-gray-900 mb-2">Aucun rapport trouvé</h3>
+          <p class="text-sm sm:text-base text-gray-600 mb-6 max-w-md mx-auto">
+            {% if current_user.role == 'admin' %}
+            Aucun rapport de bug n'a été soumis pour le moment.
+            {% else %}
+            Vous n'avez pas encore soumis de rapport de bug. Commencez par signaler un problème.
+            {% endif %}
+          </p>
+          <a href="{{ url_for('bug_reports.new_bug_report') }}"
+            class="inline-flex items-center px-5 py-3 border border-transparent shadow-lg text-sm font-medium rounded-xl text-white bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all transform hover:scale-105">
+            <i class="fas fa-plus mr-2"></i>
+            Créer un rapport
+          </a>
+        </div>
+        {% endif %}
+      </div>
+
+      <!-- Pagination améliorée -->
+      {% if bug_reports.pages > 1 %}
+      <div class="bg-gradient-to-r from-gray-50 to-white px-4 sm:px-6 py-4 border-t border-gray-200">
+        <nav class="flex flex-col sm:flex-row items-center justify-between space-y-3 sm:space-y-0"
+          aria-label="Pagination">
+          <div class="flex items-center space-x-2">
+            {% if bug_reports.has_prev %}
+            <a href="{{ url_for('bug_reports.list_bug_reports', page=bug_reports.prev_num) }}"
+              class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-xl text-gray-700 bg-white hover:bg-gray-50 hover:border-gray-400 transition-all">
+              <i class="fas fa-chevron-left mr-2"></i>
+              <span class="hidden sm:inline">Précédent</span>
+            </a>
+            {% else %}
+            <span
+              class="inline-flex items-center px-4 py-2 border border-gray-200 text-sm font-medium rounded-xl text-gray-400 bg-gray-50 cursor-not-allowed">
+              <i class="fas fa-chevron-left mr-2"></i>
+              <span class="hidden sm:inline">Précédent</span>
+            </span>
+            {% endif %}
+          </div>
+
+          <div class="flex items-center">
+            <span class="text-sm text-gray-700 bg-gray-100 px-4 py-2 rounded-lg">
+              Page <span class="font-semibold text-blue-600">{{ bug_reports.page }}</span>
+              sur <span class="font-semibold">{{ bug_reports.pages }}</span>
+            </span>
+          </div>
+
+          <div class="flex items-center space-x-2">
+            {% if bug_reports.has_next %}
+            <a href="{{ url_for('bug_reports.list_bug_reports', page=bug_reports.next_num) }}"
+              class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-xl text-gray-700 bg-white hover:bg-gray-50 hover:border-gray-400 transition-all">
+              <span class="hidden sm:inline">Suivant</span>
+              <i class="fas fa-chevron-right ml-2"></i>
+            </a>
+            {% else %}
+            <span
+              class="inline-flex items-center px-4 py-2 border border-gray-200 text-sm font-medium rounded-xl text-gray-400 bg-gray-50 cursor-not-allowed">
+              <span class="hidden sm:inline">Suivant</span>
+              <i class="fas fa-chevron-right ml-2"></i>
+            </span>
+            {% endif %}
+          </div>
+        </nav>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  // Recherche en temps réel améliorée
+  const searchInput = document.getElementById('search-reports');
+  const filterStatus = document.getElementById('filter-status');
+
+  function filterReports() {
+    const searchTerm = searchInput.value.toLowerCase();
+    const statusFilter = filterStatus ? filterStatus.value : '';
+    const reports = document.querySelectorAll('a[href*="/bug-reports/"]');
+
+    reports.forEach(report => {
+      const title = report.querySelector('h3')?.textContent.toLowerCase() || '';
+      const description = report.querySelector('p')?.textContent.toLowerCase() || '';
+      const statusBadge = report.querySelectorAll('span[class*="rounded-full"]')[1];
+      const status = statusBadge ? statusBadge.textContent.trim().toLowerCase() : '';
+
+      const matchesSearch = title.includes(searchTerm) || description.includes(searchTerm);
+      const matchesStatus = !statusFilter || status.includes(statusFilter.replace('_', ' '));
+
+      report.style.display = (matchesSearch && matchesStatus) ? 'block' : 'none';
+    });
+  }
+
+  searchInput.addEventListener('input', filterReports);
+  if (filterStatus) {
+    filterStatus.addEventListener('change', filterReports);
+  }
+</script>
+{% endblock %}

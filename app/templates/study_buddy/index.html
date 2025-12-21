@@ -1,0 +1,268 @@
+{% extends "study_buddy/base.html" %}
+
+{% block title %}Tableau de bord - Study Buddy{% endblock %}
+
+{% block content %}
+<div class="mb-8">
+    <h1 class="text-2xl font-bold text-gray-900">Bienvenue, {{ current_user.prenom }} !</h1>
+    <p class="mt-1 text-sm text-gray-500">Voici un aperçu de votre progression et de vos activités récentes.</p>
+</div>
+
+<!-- Cartes de statistiques -->
+<div class="grid grid-cols-1 gap-5 mt-6 sm:grid-cols-2 lg:grid-cols-4">
+    <!-- Temps d'étude aujourd'hui -->
+    <div class="overflow-hidden bg-white rounded-lg shadow">
+        <div class="p-5">
+            <div class="flex items-center">
+                <div class="flex-shrink-0 p-3 rounded-md bg-blue-50">
+                    <i class="text-blue-500 fas fa-clock text-lg"></i>
+                </div>
+                <div class="ml-5 w-0 flex-1">
+                    <dl>
+                        <dt class="text-sm font-medium text-gray-500 truncate">Temps d'étude</dt>
+                        <dd>
+                            <div class="text-lg font-medium text-gray-900">
+                                {{ (progress.total_study_time_seconds // 60) }} min
+                            </div>
+                        </dd>
+                    </dl>
+                </div>
+            </div>
+        </div>
+        <div class="px-5 py-3 bg-gray-50">
+            <div class="text-sm">
+                <a href="{{ url_for('study_buddy.progress_tracking') }}"
+                    class="font-medium text-blue-600 hover:text-blue-500">
+                    Voir la progression
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Documents récents -->
+    <div class="overflow-hidden bg-white rounded-lg shadow">
+        <div class="p-5">
+            <div class="flex items-center">
+                <div class="flex-shrink-0 p-3 rounded-md bg-green-50">
+                    <i class="text-green-500 fas fa-book text-lg"></i>
+                </div>
+                <div class="ml-5 w-0 flex-1">
+                    <dl>
+                        <dt class="text-sm font-medium text-gray-500 truncate">Documents</dt>
+                        <dd>
+                            <div class="text-lg font-medium text-gray-900">
+                                {{ recent_documents|length }}
+                            </div>
+                        </dd>
+                    </dl>
+                </div>
+            </div>
+        </div>
+        <div class="px-5 py-3 bg-gray-50">
+            <div class="text-sm">
+                <a href="{{ url_for('study_buddy.upload_document') }}"
+                    class="font-medium text-blue-600 hover:text-blue-500">
+                    Ajouter un document
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Cartes mémoires -->
+    <div class="overflow-hidden bg-white rounded-lg shadow">
+        <div class="p-5">
+            <div class="flex items-center">
+                <div class="flex-shrink-0 p-3 rounded-md bg-purple-50">
+                    <i class="text-purple-500 fas fa-layer-group text-lg"></i>
+                </div>
+                <div class="ml-5 w-0 flex-1">
+                    <dl>
+                        <dt class="text-sm font-medium text-gray-500 truncate">Cartes mémoires</dt>
+                        <dd>
+                            <div class="text-lg font-medium text-gray-900">
+                                {{ due_flashcards|length }}
+                            </div>
+                        </dd>
+                    </dl>
+                </div>
+            </div>
+        </div>
+        <div class="px-5 py-3 bg-gray-50">
+            <div class="text-sm">
+                <a href="{{ url_for('study_buddy.flashcard_deck') }}"
+                    class="font-medium text-blue-600 hover:text-blue-500">
+                    Réviser les cartes
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quiz complétés -->
+    <div class="overflow-hidden bg-white rounded-lg shadow">
+        <div class="p-5">
+            <div class="flex items-center">
+                <div class="flex-shrink-0 p-3 rounded-md bg-yellow-50">
+                    <i class="text-yellow-500 fas fa-question-circle text-lg"></i>
+                </div>
+                <div class="ml-5 w-0 flex-1">
+                    <dl>
+                        <dt class="text-sm font-medium text-gray-500 truncate">Quiz complétés</dt>
+                        <dd>
+                            <div class="text-lg font-medium text-gray-900">
+                                {{ recent_sessions|selectattr('quiz_attempt')|list|length }}
+                            </div>
+                        </dd>
+                    </dl>
+                </div>
+            </div>
+        </div>
+        <div class="px-5 py-3 bg-gray-50">
+            <div class="text-sm">
+                <a href="#" class="font-medium text-blue-600 hover:text-blue-500">
+                    Voir les résultats
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Activité récente -->
+<div class="mt-8">
+    <div class="sm:flex sm:items-center">
+        <div class="sm:flex-auto">
+            <h2 class="text-lg font-medium leading-6 text-gray-900">Activité récente</h2>
+            <p class="mt-1 text-sm text-gray-500">Vos sessions d'étude et activités les plus récentes.</p>
+        </div>
+    </div>
+
+    <div class="mt-4 bg-white shadow overflow-hidden sm:rounded-md">
+        <ul class="divide-y divide-gray-200">
+            {% if recent_activities %}
+            {% for activity in recent_activities %}
+            <li>
+                <a href="#" class="block hover:bg-gray-50">
+                    <div class="px-4 py-4 sm:px-6">
+                        <div class="flex items-center justify-between">
+                            <p class="text-sm font-medium text-blue-600 truncate">
+                                {{ activity.title }}
+                            </p>
+                            <div class="ml-2 flex-shrink-0 flex">
+                                <p class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
+                                              {% if activity.type == 'study' %}bg-green-100 text-green-800
+                                              {% elif activity.type == 'quiz' %}bg-blue-100 text-blue-800
+                                              {% else %}bg-gray-100 text-gray-800{% endif %}">
+                                    {{ activity.type|title }}
+                                </p>
+                            </div>
+                        </div>
+                        <div class="mt-2 sm:flex sm:justify-between">
+                            <div class="sm:flex">
+                                <p class="flex items-center text-sm text-gray-500">
+                                    <i class="fas fa-calendar-alt mr-1.5 h-4 w-4 text-gray-400"></i>
+                                    {{ activity.date|datetimeformat('%d/%m/%Y') }}
+                                </p>
+                                {% if activity.duration %}
+                                <p class="mt-2 flex items-center text-sm text-gray-500 sm:mt-0 sm:ml-6">
+                                    <i class="fas fa-clock mr-1.5 h-4 w-4 text-gray-400"></i>
+                                    {{ activity.duration }} min
+                                </p>
+                                {% endif %}
+                            </div>
+                            {% if activity.score is not none %}
+                            <div class="mt-2 flex items-center text-sm text-gray-500 sm:mt-0">
+                                <i class="fas fa-chart-line mr-1.5 h-4 w-4 text-gray-400"></i>
+                                Score: {{ activity.score }}%
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </a>
+            </li>
+            {% endfor %}
+            {% else %}
+            <li class="py-12 text-center">
+                <i class="mx-auto h-12 w-12 text-gray-400 fas fa-inbox"></i>
+                <h3 class="mt-2 text-sm font-medium text-gray-900">Aucune activité récente</h3>
+                <p class="mt-1 text-sm text-gray-500">Commencez par ajouter un document ou créer des flashcards.</p>
+                <div class="mt-6">
+                    <a href="{{ url_for('study_buddy.upload_document') }}"
+                        class="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                        <i class="fas fa-plus -ml-1 mr-2 h-5 w-5"></i>
+                        Nouveau document
+                    </a>
+                </div>
+            </li>
+            {% endif %}
+        </ul>
+    </div>
+</div>
+
+<!-- Documents récemment consultés -->
+<div class="mt-8">
+    <div class="sm:flex sm:items-center">
+        <div class="sm:flex-auto">
+            <h2 class="text-lg font-medium leading-6 text-gray-900">Documents récents</h2>
+            <p class="mt-1 text-sm text-gray-500">Vos documents récemment consultés ou modifiés.</p>
+        </div>
+        <div class="mt-4 sm:mt-0 sm:ml-16 sm:flex-none">
+            <a href="{{ url_for('study_buddy.upload_document') }}"
+                class="inline-flex items-center justify-center rounded-md border border-transparent bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 sm:w-auto">
+                <i class="fas fa-plus -ml-1 mr-2 h-4 w-4"></i>
+                Ajouter un document
+            </a>
+        </div>
+    </div>
+
+    <div class="mt-4 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+        {% if recent_documents %}
+        {% for doc in recent_documents %}
+        <div class="bg-white overflow-hidden shadow rounded-lg">
+            <div class="p-5">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0 bg-blue-500 rounded-md p-3">
+                        <i class="text-white fas fa-file-alt text-xl"></i>
+                    </div>
+                    <div class="ml-5 w-0 flex-1">
+                        <dl>
+                            <dt class="text-sm font-medium text-gray-500 truncate">
+                                {{ doc.type|default('Document', true) }}
+                            </dt>
+                            <dd>
+                                <div class="text-lg font-medium text-gray-900">
+                                    <a href="{{ url_for('study_buddy.document_detail', document_id=doc.id) }}"
+                                        class="hover:text-blue-600">
+                                        {{ doc.title }}
+                                    </a>
+                                </div>
+                            </dd>
+                        </dl>
+                    </div>
+                </div>
+            </div>
+            <div class="bg-gray-50 px-5 py-3">
+                <div class="text-sm">
+                    <a href="{{ url_for('study_buddy.document_detail', document_id=doc.id) }}"
+                        class="font-medium text-blue-600 hover:text-blue-500">
+                        Voir le document
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+        {% else %}
+        <div class="col-span-3 text-center py-12 bg-white shadow rounded-lg">
+            <i class="mx-auto h-12 w-12 text-gray-400 fas fa-file-import"></i>
+            <h3 class="mt-2 text-sm font-medium text-gray-900">Aucun document</h3>
+            <p class="mt-1 text-sm text-gray-500">Commencez par ajouter votre premier document.</p>
+            <div class="mt-6">
+                <a href="{{ url_for('study_buddy.upload_document') }}"
+                    class="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                    <i class="fas fa-upload -ml-1 mr-2 h-5 w-5"></i>
+                    Téléverser un document
+                </a>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

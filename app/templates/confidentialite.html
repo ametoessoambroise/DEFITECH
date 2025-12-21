@@ -1,0 +1,358 @@
+{% extends "base.html" %}
+{% block title %}Politique de Confidentialité – DEFITECH Togo{% endblock %}
+
+{% block content %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+
+<div class="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50">
+  <div class="container max-w-5xl mx-auto px-4 py-12" x-data="privacyPolicy()">
+
+    <!-- En-tête élégant -->
+    <div class="text-center mb-12">
+      <div class="inline-flex items-center justify-center w-20 h-20 bg-blue-600 rounded-full mb-6 shadow-2xl">
+        <i class="fa-solid fa-shield-halved text-white text-3xl"></i>
+      </div>
+      <h1 class="text-4xl md:text-5xl font-bold text-gray-900 mb-4">
+        Politique de Confidentialité
+      </h1>
+      <p class="text-xl text-gray-600 max-w-2xl mx-auto">
+        DEFITECH s’engage à protéger vos données personnelles avec le plus grand sérieux
+      </p>
+      <p class="mt-4 text-sm text-gray-500 flex items-center justify-center gap-2">
+        <i class="fa-solid fa-calendar"></i>
+        Dernière mise à jour : <span class="font-medium">{{ current_date or "21 novembre 2025" }}</span>
+      </p>
+    </div>
+
+    <!-- Barre de recherche + filtres rapides -->
+    <div class="mb-10 bg-white rounded-2xl shadow-lg p-6 sticky top-4 z-40 border border-gray-100">
+      <div class="flex flex-col md:flex-row gap-4 items-center">
+        <div class="relative flex-1">
+          <i class="fa-solid fa-magnifying-glass absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"></i>
+          <input type="text" placeholder="Rechercher dans la politique (ex: cookies, suppression, email...)"
+            class="w-full pl-12 pr-6 py-4 rounded-xl border border-gray-200 focus:border-blue-500 focus:ring-4 focus:ring-blue-100 transition"
+            x-model="searchQuery" @input.debounce.500ms="filterSections()">
+        </div>
+        <button @click="expandAll()"
+          class="px-6 py-4 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition flex items-center gap-2 shadow-md">
+          <i class="fa-solid fa-expand"></i> Tout déplier
+        </button>
+        <button @click="collapseAll()"
+          class="px-6 py-4 bg-gray-600 text-white rounded-xl hover:bg-gray-700 transition flex items-center gap-2 shadow-md">
+          <i class="fa-solid fa-compress"></i> Tout replier
+        </button>
+      </div>
+    </div>
+
+    <!-- Accordéon principal avec recherche dynamique -->
+    <div class="space-y-4" id="accordion-container">
+      <template x-for="(section, index) in filteredSections" :key="index">
+        <div class="bg-white rounded-2xl shadow-lg overflow-hidden border border-gray-100 transition-all duration-500"
+          :class="{ 'ring-4 ring-blue-400 ring-opacity-30': section.highlight }">
+          <!-- Header de section -->
+          <div
+            class="bg-gradient-to-r from-blue-600 to-indigo-600 text-white p-6 cursor-pointer flex items-center justify-between"
+            @click="toggleSection(index)" :class="{ 'rounded-t-2xl': !section.open, 'rounded-2xl': section.open }">
+            <div class="flex items-center gap-5">
+              <div
+                class="w-14 h-14 bg-white bg-opacity-20 rounded-full flex items-center justify-center text-2xl font-bold backdrop-blur">
+              </div>
+              <div>
+                <h2 class="text-2xl font-bold" x-text="section.title"></h2>
+                <p class="text-blue-100 text-sm mt-1" x-text="section.subtitle"></p>
+              </div>
+            </div>
+            <div class="flex items-center gap-4">
+              <span class="text-sm bg-white bg-opacity-20 px-4 py-2 rounded-full">
+                <i class="fa-solid fa-eye mr-2"></i><span x-text="section.views || 0"></span> vues
+              </span>
+              <i class="fa-solid fa-chevron-down text-2xl transition-transform duration-300"
+                :class="{ 'rotate-180': section.open }"></i>
+            </div>
+          </div>
+
+          <!-- Contenu animé -->
+          <div x-show="section.open" x-transition:enter="transition ease-out duration-500"
+            x-transition:enter-start="opacity-0 max-h-0" x-transition:enter-end="opacity-100 max-h-screen"
+            x-transition:leave="transition ease-in duration-300" x-transition:leave-end="opacity-0 max-h-0"
+            class="px-8 py-8 border-t-4 border-blue-500 bg-gray-50">
+            <div class="prose prose-lg max-w-none text-gray-700" x-html="section.content"></div>
+
+            <!-- Actions rapides en bas de section -->
+            <div class="mt-8 pt-6 border-t border-gray-200 flex flex flex-wrap gap-3">
+              <button @click="copySection(index)"
+                class="flex items-center gap-2 px-5 py-3 bg-gray-100 hover:bg-gray-200 rounded-xl transition">
+                <i class="fa-solid fa-copy"></i> Copier cette section
+              </button>
+              <button @click="printSection(index)"
+                class="flex items-center gap-2 px-5 py-3 bg-blue-100 hover:bg-blue-200 text-blue-700 rounded-xl transition">
+                <i class="fa-solid fa-print"></i> Imprimer
+              </button>
+              <a :href="`#section-${index}`"
+                class="flex items-center gap-2 px-5 py-3 bg-indigo-100 hover:bg-indigo-200 text-indigo-700 rounded-xl transition">
+                <i class="fa-solid fa-link"></i> Lien direct
+              </a>
+            </div>
+          </div>
+        </div>
+      </template>
+    </div>
+
+    <!-- Contact rapide fixe -->
+    <div class="fixed bottom-6 right-6 z-50">
+      <div class="bg-white rounded-2xl shadow-2xl p-5 border border-gray-200">
+        <p class="font-semibold text-gray-800 mb-2">Besoin d’aide ?</p>
+        <a href="mailto:dpo@defitech.tg" class="text-blue-600 hover:underline font-medium flex items-center gap-2">
+          <i class="fa-solid fa-envelope text-xl"></i></i> dpo@defitech.tg
+        </a>
+      </div>
+    </div>
+
+    <!-- Bouton retour -->
+    <div class="text-center mt-16">
+      <a href="{{ url_for('main.index') }}"
+        class="inline-flex items-center gap-3 px-10 py-5 bg-gradient-to-r from-blue-600 to-indigo-600 text-white text-lg font-semibold rounded-2xl hover:shadow-2xl transform hover:-translate-y-1 transition-all duration-300">
+        <i class="fa-solid fa-home"></i>
+        Retour à l’accueil
+      </a>
+    </div>
+  </div>
+</div>
+
+<script>
+  function privacyPolicy() {
+    return {
+      searchQuery: '',
+      allSections: [
+        {
+          number: "1",
+          title: "Quelles données personnelles collectons-nous ?",
+          subtitle: "Liste complète et détaillée par catégorie",
+          views: 1247,
+          open: true,
+          content: `
+          <div class="grid lg:grid-cols-3 gap-8">
+            <div class="bg-blue-50 p-6 rounded-xl">
+              <h3 class="text-xl font-bold text-blue-800 mb-4"><i class="fas fa-id-card mr-3"></i>Identification</h3>
+              <ul class="space-y-3 text-gray-700">
+                <li>• Nom complet & prénom</li>
+                <li>• Adresse email universitaire (@defitech.tg)</li>
+                <li>• Numéro étudiant unique</li>
+                <li>• Identifiant et mot de passe chiffré</li>
+                <li>• Photo de profil (facultative)</li>
+              </ul>
+            </div>
+            <div class="bg-green-50 p-6 rounded-xl">
+              <h3 class="text-xl font-bold text-green-800 mb-4"><i class="fas fa-graduation-cap mr-3"></i>Données académiques</h3>
+              <ul class="space-y-3 text-gray-700">
+                <li>• Filière et promotion</li>
+                <li>• Historique des cours suivis</li>
+                <li>• Notes et évaluations</li>
+                <li>• Présences et retards</li>
+                <li>• Travaux rendus</li>
+              </ul>
+            </div>
+            <div class="bg-purple-50 p-6 rounded-xl">
+              <h3 class="text-xl font-bold text-purple-800 mb-4"><i class="fas fa-server mr-3"></i>Données techniques</h3>
+              <ul class="space-y-3 text-gray-700">
+                <li>• Adresse IP</li>
+                <li>• Navigateur & système d’exploitation</li>
+                <li>• Horodatages des connexions</li>
+                <li>• Pages visitées & durée</li>
+                <li>• Cookies et identifiants de session</li>
+                <li>• Messages échangés (si messagerie)</li>
+              </ul>
+            </div>
+          </div>
+        `
+        },
+        {
+          number: "2",
+          title: "Pourquoi collectons-nous ces données ?",
+          subtitle: "8 finalités légitimes et précises",
+          views: 892,
+          open: false,
+          content: `
+          <ul class="space-y-5 text-lg">
+            <li class="flex items-start gap-4"><span class="text-3xl">1.</span> Gérer votre compte et votre authentification sécurisée</li>
+            <li class="flex items-start gap-4"><span class="text-3xl">2.</span> Vous donner accès aux cours, devoirs, notes et ressources pédagogiques</li>
+            <li class="flex items-start gap-4"><span class="text-3xl">3.</span> Sécuriser la plateforme contre les fraudes et attaques</li>
+            <li class="flex items-start gap-4"><span class="text-3xl">4.</span> Analyser l’usage anonymisé pour améliorer l’ergonomie</li>
+            <li class="flex items-start gap-4"><span class="text-3xl">5.</span> Vous envoyer des alertes pédagogiques importantes</li>
+            <li class="flex items-start gap-4"><span class="text-3xl">6.</span> Fournir un support technique rapide</li>
+            <li class="flex items-start gap-4"><span class="text-3xl">7.</span> Générer des statistiques d’assiduité pour les enseignants</li>
+            <li class="flex items-start gap-4"><span class="text-3xl">8.</span> Respecter nos obligations légales (diplômes, archives)</li>
+          </ul>
+        `
+        },
+        // ... (les 8 autres sections sont dans le script complet ci-dessous)
+        {
+          number: "3", title: "Sur quelle base légale ?", subtitle: "RGPD + loi togolaise",
+          views: 756, open: false,
+          content: `<p class="text-lg">Le traitement repose sur :</p>
+          <div class="grid md:grid-cols-2 gap-6 mt-6">
+            <div class="bg-amber-50 p-6 rounded-xl border-l-4 border-amber-500">
+              <h4 class="font-bold text-amber-800 text-xl mb-3">Exécution du service</h4>
+              <p>Accès à votre espace étudiant et suivi de scolarité</p>
+            </div>
+            <div class="bg-blue-50 p-6 rounded-xl border-l-4 border-blue-500">
+              <h4 class="font-bold text-blue-800 text-xl mb-3">Intérêt légitime</h4>
+              <p>Sécurité, amélioration continue, statistiques anonymisées</p>
+            </div>
+            <div class="bg-green-50 p-6 rounded-xl border-l-4 border-green-500">
+              <h4 class="font-bold text-green-800 text-xl mb-3">Obligation légale</h4>
+              <p>Conservation des dossiers académiques</p>
+            </div>
+            <div class="bg-purple-50 p-6 rounded-xl border-l-4 border-purple-500">
+              <h4 class="font-bold text-purple-800 text-xl mb-3">Consentement</h4>
+              <p>Cookies analytiques & notifications non essentielles</p>
+            </div>
+          </div>`
+        },
+        {
+          number: "4", title: "Combien de temps gardons-nous vos données ?", views: 981, open: false,
+          content: `<div class="overflow-x-auto"><table class="min-w-full bg-white rounded-xl shadow">
+          <thead class="bg-blue-600 text-white"><tr><th class="px-6 py-4 text-left">Type de donnée</th><th class="px-6 py-4 text-left">Durée de conservation</th></tr></thead>
+          <tbody class="text-gray-700">
+            <tr class="border-b"><td class="px-6 py-4">Compte utilisateur</td><td>Jusqu’à suppression ou 3 ans d’inactivité</td></tr>
+            <tr class="border-b"><td class="px-6 py-4">Notes & bulletins</td><td>50 ans (archives nationales)</td></tr>
+            <tr class="border-b"><td class="px-6 py-4">Journaux de connexion</td><td>12 mois</td></tr>
+            <tr class="border-b"><td class="px-6 py-4">Cookies</td><td>13 mois maximum</td></tr>
+            <tr><td class="px-6 py-4">Statistiques anonymisées</td><td>Illimitée</td></tr>
+          </tbody>
+        </table></div>`
+        },
+        {
+          number: "5", title: "À qui transmettons-nous vos données ?", views: 1103, open: false,
+          content: `<p>Destinataires strictement autorisés :</p>
+          <ul class="grid md:grid-cols-2 gap-4 mt-6">
+            <li class="bg-gray-50 p-5 rounded-xl">Personnel administratif DEFITECH</li>
+            <li class="bg-gray-50 p-5 rounded-xl">Enseignants de vos cours</li>
+            <li class="bg-gray-50 p-5 rounded-xl">Équipe informatique</li>
+            <li class="bg-gray-50 p-5 rounded-xl">Hébergeur OVHcloud (Allemagne)</li>
+          </ul>
+          <p class="mt-8 text-xl font-bold text-red-600 text-center p-6 bg-red-50 rounded-xl">
+            AUCUNE DONNÉE N’EST VENDUE NI PARTAGÉE À DES FINS COMMERCIALES
+          </p>`
+        },
+        {
+          number: "6", title: "Vos droits (accès, suppression, etc.)", views: 2156, open: false,
+          content: `<div class="grid md:grid-cols-3 gap-6">
+          ${['eye', 'edit', 'trash', 'pause', 'ban', 'download', 'envelope-open-text', 'handshake-angle'].map(icon => `
+            <div class="text-center p-6 bg-blue-50 rounded-2xl">
+              <i class="fa-solid fa-${icon} text-5xl text-blue-600 mb-4"></i>
+              <p class="font-bold text-lg capitalize">${icon === 'eye' ? 'Accès' : icon === 'edit' ? 'Rectification' : icon === 'trash' ? 'Suppression' : icon === 'pause' ? 'Limitation' : icon === 'ban' ? 'Opposition' : icon === 'download' ? 'Portabilité' : icon === 'envelope-open-text' ? 'Retrait consentement' : 'Aide'}</p>
+            </div>`).join('')}
+          </div>
+          <div class="mt-8 p-8 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-2xl text-center">
+            <p class="text-2xl font-bold mb-4">Exercez vos droits en 1 clic</p>
+            <a href="mailto:dpo@defitech.tg?subject=Exercice%20de%20mes%20droits%20RGPD" target='_blank' class="inline-block px-10 py-5 bg-white text-blue-600 font-bold rounded-xl hover:bg-gray-100 transition text-xl">
+              Contacter le DPO
+            </a>
+          </div>`
+        },
+        {
+          number: "7", title: "Sécurité : comment protégeons-nous vos données ?", views: 1345, open: false,
+          content: `<ul class="space-y-4 text-lg">
+          <li>Chiffrement HTTPS/TLS + HSTS</li>
+          <li>Mots de passe hachés en bcrypt + sel unique</li>
+          <li>Authentification à deux facteurs (2FA) disponible</li>
+          <li>Sauvegardes chiffrées quotidiennes</li>
+          <li>Audits de sécurité trimestriels</li>
+          <li>Supervision 24/7 + alertes en temps réel</li>
+        </ul>`
+        },
+        {
+          number: "8", title: "Cookies & traceurs", views: 1678, open: false,
+          content: `<p>Nous utilisons uniquement :</p>
+          <ul class="mt-6 space-y-4">
+            <li class="flex items-center gap-4"><span class="text-2xl text-green-600">Obligatoire</span> Cookies nécessaires (connexion, sécurité)</li>
+            <li class="flex items-center gap-4"><span class="text-2xl text-blue-600">Optionnel</span> Cookies analytiques Matomo (auto-hébergé, anonymisé)</li>
+          </ul>
+          <p class="mt-6 text-center">
+            <button @click="window.cookieBanner?.show()" class="px-8 py-4 bg-blue-600 text-white rounded-xl hover:bg-blue-700 text-lg font-medium">
+              Gérer mes préférences cookies
+            </button>
+          </p>`
+        },
+        {
+          number: "9", title: "Transferts internationaux", views: 623, open: false,
+          content: `<p class="text-lg">Hébergement : <strong>Allemagne (OVHcloud)</strong> → décision d’adéquation UE.<br>
+          Aucun transfert vers pays à risque sans votre accord explicite et clauses contractuelles types.</p>`
+        },
+        {
+          number: "10", title: "Modification de cette politique", views: 445, open: false,
+          content: `<p>Nous pouvons mettre à jour cette politique. Vous serez prévenu par :</p>
+          <ul class="mt-4 space-y-3 text-lg">
+            <li>Email automatique</li>
+            <li>Bandeau sur la plateforme</li>
+            <li>Notification dans votre espace étudiant</li>
+          </ul>`
+        }
+      ],
+      filteredSections: [],
+
+      init() {
+        this.filteredSections = [...this.allSections];
+        this.filteredSections.forEach((s, i) => s.id = i);
+      },
+
+      toggleSection(index) {
+        this.filteredSections[index].open = !this.filteredSections[index].open;
+        this.filteredSections[index].views++;
+      },
+
+      expandAll() {
+        this.filteredSections.forEach(s => s.open = true);
+      },
+
+      collapseAll() {
+        this.filteredSections.forEach(s => s.open = false);
+      },
+
+      filterSections() {
+        const query = this.searchQuery.toLowerCase().trim();
+        if (!query) {
+          this.filteredSections = this.allSections.map(s => ({ ...s, highlight: false }));
+          return;
+        }
+
+        this.filteredSections = this.allSections.map(section => ({
+          ...section,
+          highlight: section.title.toLowerCase().includes(query) || section.content.toLowerCase().includes(query)
+        }));
+      },
+
+      copySection(index) {
+        const text = this.allSections[index].title + "\n\n" + this.stripHtml(this.allSections[index].content);
+        navigator.clipboard.writeText(text);
+        alert("Section copiée dans le presse-papiers !");
+      },
+
+      printSection(index) {
+        const content = `<h1>${this.allSections[index].title}</h1>` + this.allSections[index].content;
+        const win = window.open('', '', 'width=800,height=600');
+        win.document.write(`<html><head><title>${this.allSections[index].title}</title></head><body>${content}</body></html>`);
+        win.document.close();
+        win.print();
+      },
+
+      stripHtml(html) {
+        const div = document.createElement("div");
+        div.innerHTML = html;
+        return div.textContent || div.innerText || "";
+      }
+    }
+  }
+</script>
+
+<style>
+  .prose img {
+    max-width: 100%;
+    height: auto;
+    border-radius: 1rem;
+  }
+</style>
+
+{% endblock %}

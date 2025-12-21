@@ -1,0 +1,104 @@
+{% extends "base.html" %} {% block title %}{{ current_user.nom }} {{
+current_user.prenom }} | DEFITECH{% endblock %} {% block content %}
+
+<!-- Toast notifications
+    {% set js_messages = get_flashed_messages(with_categories=true) %}
+    <div id="toast-container" class="fixed top-4 left-1/2 transform -translate-x-1/2 z-50 w-full max-w-xs"></div>
+    <style>
+        @keyframes fade-in {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .animate-fade-in {
+            animation: fade-in 0.4s;
+            transition: opacity 0.4s;
+        }
+    </style>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const messages = {{ js_messages| tojson | safe
+        }};
+        const colors = {
+            success: 'bg-green-500 text-white',
+            error: 'bg-red-500 text-white',
+            warning: 'bg-yellow-400 text-gray-900',
+            info: 'bg-blue-500 text-white',
+        };
+        const container = document.getElementById('toast-container');
+        messages.forEach((msg, i) => {
+            const toast = document.createElement('div');
+            toast.className = `flex items-center justify-between px-4 py-3 rounded shadow mb-2 animate-fade-in ${colors[msg[0]] || colors.info}`;
+            toast.style.opacity = 0;
+            toast.innerHTML = `
+            <span class="flex-1 pr-2">${msg[1]}</span>
+            <button class="ml-2 text-xl font-bold focus:outline-none" aria-label="Fermer">&times;</button>
+          `;
+            container.appendChild(toast);
+            setTimeout(() => { toast.style.opacity = 1; }, 100);
+            // Fermeture manuelle
+            toast.querySelector('button').onclick = () => {
+                toast.style.opacity = 0;
+                setTimeout(() => toast.remove(), 400);
+            };
+            // Fermeture auto
+            setTimeout(() => {
+                toast.style.opacity = 0;
+                setTimeout(() => toast.remove(), 400);
+            }, 4000 + i * 200);
+        });
+        });
+    </script> -->
+
+<div class="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+  <h1 class="text-2xl font-bold mb-6">
+    Accusés de réception pour : {{ devoir.titre }}
+  </h1>
+  <div class="bg-white rounded shadow p-6">
+    <p class="mb-4">
+      Nombre d'élèves ayant consulté :
+      <span class="font-bold">{{ vus|length }}</span>
+    </p>
+    <table class="min-w-full">
+      <thead>
+        <tr>
+          <th class="px-2 py-2">Nom</th>
+          <th class="px-2 py-2">Prénom</th>
+          <th class="px-2 py-2">Sexe</th>
+          <th class="px-2 py-2">Date de consultation</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for vu in vus %}
+        <tr class="border-b">
+          <td class="px-2 py-1">{{ vu.etudiant.user.nom }}</td>
+          <td class="px-2 py-1">{{ vu.etudiant.user.prenom }}</td>
+          <td class="px-2 py-1">{{ vu.etudiant.user.sexe }}</td>
+          <td class="px-2 py-1">
+            {{ vu.date_vue.strftime('%d/%m/%Y %H:%M') }}
+          </td>
+        </tr>
+        {% else %}
+        <tr>
+          <td colspan="4" class="text-center py-4">
+            Aucun élève n'a encore consulté cet élément.
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  <div class="mt-6">
+    <a href="{{ url_for('enseignant_devoirs') }}"
+      class="bg-blue-600 hover:bg-blue-500 text-white p-2 rounded-lg hover:shadow-lg transition-all duration-300">&larr;
+      Retour à la liste</a>
+  </div>
+</div>
+{% endblock %}

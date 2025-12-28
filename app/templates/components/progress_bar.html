@@ -85,7 +85,7 @@
 
         // Vérifier la connectivité réseau
         function checkConnectivity() {
-            return fetch('/api/health', {
+            return fetch('/health', {
                 method: 'HEAD',
                 cache: 'no-cache',
                 timeout: 5000

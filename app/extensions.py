@@ -18,7 +18,9 @@ csrf = CSRFProtect()
 
 migrate = Migrate()
 
-socketio = SocketIO(cors_allowed_origins="*")
+# Use threading async mode explicitly to avoid eventlet/gevent monkeypatching
+# which can interact badly with SQLAlchemy's connection pool on Python 3.13.
+socketio = SocketIO(cors_allowed_origins="*", async_mode="threading")
 
 # Configure login manager
 login_manager.login_view = (

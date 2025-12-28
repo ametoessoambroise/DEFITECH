@@ -11,8 +11,6 @@ import threading
 from datetime import datetime
 from queue import Queue
 from typing import Optional, Dict, Any
-import torch
-from diffusers import AutoPipelineForText2Image
 from PIL import Image, ImageDraw, ImageFont
 
 logger = logging.getLogger(__name__)
@@ -73,6 +71,10 @@ class ImageGenerationQueue:
         try:
             self.is_loading = True
             logger.info("Chargement du modèle Stable Diffusion Turbo...")
+
+            # Import lazy loading for heavy libraries
+            import torch
+            from diffusers import AutoPipelineForText2Image
 
             # Vérifier la mémoire disponible
             import psutil
@@ -382,57 +384,59 @@ def cleanup_worker():
 _lora_pipeline = None
 _lora_loading = False
 
+
 def load_lora_pipeline():
     """Charge le pipeline LoRA (DreamShaper + LoRA custom)"""
     global _lora_pipeline, _lora_loading
-    
+
     if _lora_pipeline is not None:
         return _lora_pipeline
-    
+
     if _lora_loading:
         return None
-    
+
     try:
         _lora_loading = True
         logger.info("🎨 Chargement du modèle DreamShaper + LoRA...")
-        
+
+        # Lazy imports to avoid startup delay
         from diffusers import StableDiffusionPipeline
         import torch
-        
+
         # Chemins des modèles
         base_model_path = "lora/models/dreamshaper/DreamShaper_8_pruned.safetensors"
         lora_weights_path = "lora/models/lora/lora.safetensors"
-        
+
         # Vérifier que les fichiers existent
         if not os.path.exists(base_model_path):
             logger.error(f"❌ Modèle DreamShaper introuvable: {base_model_path}")
             return None
-        
+
         if not os.path.exists(lora_weights_path):
             logger.warning(f"⚠️ LoRA weights introuvable: {lora_weights_path}")
             # Continuer sans LoRA
-        
+
         # Charger le pipeline
         _lora_pipeline = StableDiffusionPipeline.from_single_file(
             base_model_path,
             torch_dtype=torch.float16,
             safety_checker=None,
-            requires_safety_checker=False
+            requires_safety_checker=False,
         ).to("cpu")
-        
+
         # Charger les poids LoRA si disponibles
         if os.path.exists(lora_weights_path):
             _lora_pipeline.load_lora_weights(lora_weights_path)
             _lora_pipeline.fuse_lora(lora_scale=0.8)
             logger.info("✅ LoRA weights chargés et fusionnés")
-        
+
         # Optimisations mémoire
         _lora_pipeline.enable_attention_slicing()
         _lora_pipeline.enable_vae_slicing()
-        
+
         logger.info("✅ Pipeline LoRA chargé avec succès")
         return _lora_pipeline
-        
+
     except Exception as e:
         logger.error(f"❌ Erreur chargement pipeline LoRA: {e}")
         _lora_pipeline = None
@@ -444,54 +448,54 @@ def load_lora_pipeline():
 def generate_with_lora(prompt: str, output_path: str, num_steps: int = 20) -> bool:
     """
     Génère une image avec le pipeline LoRA
-    
+
     Args:
         prompt: Description de l'image
         output_path: Chemin de sauvegarde
         num_steps: Nombre d'étapes d'inférence (20 recommandé)
-    
+
     Returns:
         True si succès, False sinon
     """
     try:
         import traceback
-        
+
         logger.info(f"🎨 Tentative de génération LoRA pour: {prompt[:50]}...")
-        
+
         pipeline = load_lora_pipeline()
-        
+
         if pipeline is None:
             logger.error("❌ Pipeline LoRA non disponible")
             return False
-        
+
         logger.info(f"✅ Pipeline chargé, génération en cours...")
-        
+
         # Génération
         image = pipeline(
             prompt,
             num_inference_steps=num_steps,
             guidance_scale=7.5,
             height=512,
-            width=512
+            width=512,
         ).images[0]
-        
+
         # Sauvegarder
         image.save(output_path)
         logger.info(f"✅ Image LoRA générée avec succès: {output_path}")
-        
+
         return True
-        
+
     except Exception as e:
         import traceback
+
         logger.error(f"❌ Erreur génération LoRA: {e}")
         logger.error(f"Traceback complet:\n{traceback.format_exc()}")
         return False
 
 
 import os
-import numpy as np
-import tensorflow as tf
-from tensorflow import keras
+
+# Removed top-level tf/keras/numpy imports
 import pickle
 from PIL import Image
 import io
@@ -500,6 +504,7 @@ import logging
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
+
 
 class AIImageGenerator:
     def __init__(self, model_path, label_encoder_path):
@@ -516,12 +521,17 @@ class AIImageGenerator:
             return True
 
         try:
+            # Lazy imports
+            import numpy as np
+            import tensorflow as tf
+            from tensorflow import keras
+
             if not os.path.exists(self.model_path):
                 logger.error(f"Model file not found: {self.model_path}")
                 return False
 
             self.model = keras.models.load_model(self.model_path)
-            
+
             # Load label encoder
             if os.path.exists(self.label_encoder_path):
                 with open(self.label_encoder_path, "rb") as f:
@@ -530,7 +540,7 @@ class AIImageGenerator:
             else:
                 logger.warning("Label encoder not found. Using dummy labels.")
                 self.label_to_index = {}
-            
+
             logger.info("✅ AI Model loaded successfully.")
             return True
         except Exception as e:
@@ -541,28 +551,40 @@ class AIImageGenerator:
         """Finds the best matching class index for the given prompt."""
         if not self.label_to_index:
             return 0  # Default to first class if no labels
-            
+
         prompt = prompt.lower()
         best_match = None
-        
+
         # Exact match attempt
         for label in self.label_to_index:
             if label.lower() in prompt:
                 return self.label_to_index[label]
-        
+
         # Fallback: Random class (for creativity)
         import random
-        return random.choice(list(self.label_to_index.values())) if self.label_to_index else 0
+
+        return (
+            random.choice(list(self.label_to_index.values()))
+            if self.label_to_index
+            else 0
+        )
 
     def generate_image(self, prompt, steps=100, step_size=0.01):
         """
         Generates an image using Activation Maximization (DeepDream style).
         """
+        # Lazy imports needed for this method too
+        import tensorflow as tf
+        import numpy as np
+        from PIL import Image
+
         if not self.load_model():
             raise RuntimeError("Model could not be loaded.")
 
         target_class_index = self.find_target_class(prompt)
-        logger.info(f"🎨 Generating image for prompt: '{prompt}' (Target Class: {self.index_to_label.get(target_class_index, target_class_index)})")
+        logger.info(
+            f"🎨 Generating image for prompt: '{prompt}' (Target Class: {self.index_to_label.get(target_class_index, target_class_index)})"
+        )
 
         # Start with random noise
         img = tf.random.uniform((1, *self.image_size, 3))
@@ -574,16 +596,16 @@ class AIImageGenerator:
                 tape.watch(img)
                 predictions = self.model(img)
                 loss = predictions[0, target_class_index]
-            
+
             # Get gradients of the loss with respect to the input image
             gradients = tape.gradient(loss, img)
-            
+
             # Normalize gradients
             gradients /= tf.math.reduce_std(gradients) + 1e-8
-            
+
             # Update image (Gradient Ascent)
             img += gradients * step_size
-            
+
             # Clip pixel values
             img = tf.clip_by_value(img, 0.0, 1.0)
 
@@ -591,10 +613,10 @@ class AIImageGenerator:
         img_array = img[0].numpy()
         img_array = (img_array * 255).astype(np.uint8)
         pil_img = Image.fromarray(img_array)
-        
+
         # Save to buffer
         buf = io.BytesIO()
         pil_img.save(buf, format="JPEG")
         buf.seek(0)
-        
+
         return buf

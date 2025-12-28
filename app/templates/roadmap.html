@@ -482,11 +482,11 @@ Polytechnique DEFITECH{% endblock %} {% block content %}
                             </li>
                         </ul>
                     </div>
-                    <!-- <button onclick="location.href='{{ url_for('etudiant_emploi_temps') }}'"
+                    <button onclick="location.href='{{ url_for('students.emploi_temps') }}'"
                         class="bg-blue-500 p-2 rounded text-white hover:bg-blue-600 transition-colors mb-4 flex items-center gap-2">
                         Accéder à la page
                         <i class="fas fa-sign-in-alt"></i>
-                    </button> -->
+                    </button>
                 </div>
 
                 <!-- Notifications intelligentes -->
@@ -881,13 +881,13 @@ Polytechnique DEFITECH{% endblock %} {% block content %}
                         </ul>
                     </div>
                     {% if current_user.role == 'etudiant' %}
-                    <button onclick="location.href='{{ url_for('etudiant_emploi_temps') }}'"
+                    <button onclick="location.href='{{ url_for('students.emploi_temps') }}'"
                         class="bg-blue-500 p-2 rounded text-white hover:bg-blue-600 transition-colors mb-4 flex items-center gap-2">
                         Accéder à la page
                         <i class="fas fa-sign-in-alt"></i>
                     </button>
                     {% elif current_user.role == 'enseignant' %}
-                    <button onclick="location.href='{{ url_for('enseignant_emploi_temps') }}'"
+                    <button onclick="window.location.href='{{ url_for('teachers.emploi_temps') }}'"
                         class="bg-blue-500 p-2 rounded text-white hover:bg-blue-600 transition-colors mb-4 flex items-center gap-2">
                         Accéder à la page
                         <i class="fas fa-sign-in-alt"></i>

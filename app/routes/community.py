@@ -76,7 +76,7 @@ def index():
     Returns:
         Response: La réponse HTTP contenant la page d'accueil de la communauté.
     """
-    from models.filiere import Filiere, FiliereAdmin
+    from app.models.filiere import Filiere, FiliereAdmin
 
     # Récupérer les filières auxquelles l'utilisateur a accès
     if current_user.role == "admin":
@@ -112,8 +112,8 @@ def filiale(filiere_id):
     Retourne:
         Response: La réponse HTTP contenant la page des publications de la filière spécifiée.
     """
-    from models.filiere import Filiere, FiliereAdmin
-    from models.post import Post
+    from app.models.filiere import Filiere, FiliereAdmin
+    from app.models.post import Post
 
     filiere = Filiere.query.get_or_404(filiere_id)
 

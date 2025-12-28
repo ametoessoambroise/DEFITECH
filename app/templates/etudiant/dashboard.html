@@ -207,17 +207,17 @@ current_user.prenom }} | DEFITECH{% endblock %} {% block content %}
         Actions rapides
       </h3>
       <div class="space-y-2 sm:space-y-3">
-        <a href="{{ url_for('etudiant_voir_notes') }}"
+        <a href="{{ url_for('students.voir_notes') }}"
           class="flex items-center p-3 bg-green-50 rounded-lg hover:bg-green-100 transition-colors group">
           <i class="fas fa-star text-green-600 mr-3 text-sm sm:text-base"></i>
           <span class="text-sm sm:text-base text-green-900 group-hover:font-medium">Consulter mes notes</span>
         </a>
-        <a href="{{ url_for('etudiant_emploi_temps') }}"
+        <a href="{{ url_for('students.emploi_temps') }}"
           class="flex items-center p-3 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors group">
           <i class="fas fa-clock text-blue-600 mr-3 text-sm sm:text-base"></i>
           <span class="text-sm sm:text-base text-blue-900 group-hover:font-medium">Emploi du temps</span>
         </a>
-        <a href="{{ url_for('etudiant_devoirs') }}"
+        <a href="{{ url_for('students.devoirs') }}"
           class="flex items-center p-3 bg-purple-50 rounded-lg hover:bg-purple-100 transition-colors group">
           <i class="fas fa-tasks text-purple-600 mr-3 text-sm sm:text-base"></i>
           <span class="text-sm sm:text-base text-purple-900 group-hover:font-medium">Devoirs et examens</span>

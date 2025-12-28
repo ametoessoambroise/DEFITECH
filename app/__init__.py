@@ -169,6 +169,24 @@ def create_app(config_class=None):
         escaped = escape(text_val)
         return Markup(escaped.replace("\n", "<br/>"))
 
+    @app.template_filter("datetimeformat")
+    def datetimeformat_filter(value, format="%d/%m/%Y %H:%M"):
+        """Format a datetime value using the given strftime format.
+
+        Handles None and non-datetime values defensively so templates
+        like `value|datetimeformat('%d/%m/%Y')` do not crash.
+        """
+        if value is None:
+            return ""
+        try:
+            if not isinstance(value, datetime):
+                # Attempt to parse string representation if needed
+                # If parsing fails, fall back to raw string
+                return str(value)
+            return value.strftime(format)
+        except Exception:
+            return ""
+
     @app.template_filter("from_json")
     @app.template_filter("loads")
     def from_json_filter(value):

@@ -47,7 +47,14 @@ def login():
                     # Basic open redirect protection
                     if next_page and next_page.startswith("/"):
                         return redirect(next_page)
-                    return redirect(url_for("main.index"))  # Changed to main.index
+                    if user.role == 'admin':
+                        return redirect(url_for("admin.dashboard"))
+                    elif user.role == 'etudiant':
+                        return redirect(url_for("students.dashboard"))
+                    elif user.role == 'enseignant':
+                        return redirect(url_for("teachers.dashboard"))
+                    else:
+                        return redirect(url_for("main.index"))
                 else:
                     flash(
                         "Votre compte est en attente d'approbation par l'administration.",

@@ -1,9 +1,8 @@
-from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify
+from flask import Blueprint, render_template, redirect, url_for, flash, jsonify
 from flask_login import login_required, current_user
-from datetime import datetime, date
+from datetime import datetime, timedelta
 
 from app.extensions import db
-from app.models.user import User
 from app.models.etudiant import Etudiant
 from app.models.note import Note
 from app.models.presence import Presence
@@ -151,7 +150,9 @@ def emploi_temps():
     if current_user.role != "etudiant":
         flash("Accès non autorisé.", "error")
         return redirect(url_for("main.index"))
-    return render_template("etudiant/emploi_temps.html")
+    # Passer timedelta au template pour les expressions Jinja comme
+    # `(now + timedelta(days=4)).strftime('%d/%m/%Y')`
+    return render_template("etudiant/emploi_temps.html", timedelta=timedelta)
 
 
 @students_bp.route("/devoirs")

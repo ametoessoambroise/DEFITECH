@@ -23,7 +23,7 @@ def career_craft():
     Retourne:
         Un template "career_craft.html" qui affiche l'interface CareerCraft.
     """
-
+    return render_template("chat/career_craft.html")
 
 @career_craft_bp.route("/api/career-craft/preview", methods=["POST"])
 @login_required

@@ -91,6 +91,66 @@ def dashboard():
     )
 
 
+@admin_bp.route("/etudiants")
+@login_required
+def admin_etudiants():
+    """Page d'administration des étudiants.
+
+    Filtre les étudiants selon les paramètres GET (filiere, annee, nom, prenom, email, id)
+    et renvoie la page HTML correspondante.
+    """
+    if current_user.role != "admin":
+        flash("Accès non autorisé.", "error")
+        return redirect(url_for("main.index"))
+
+    filieres = Filiere.query.all()
+    annees = Annee.query.all()
+
+    # Récupérer les filtres depuis la query string
+    filiere_filter = request.args.get("filiere", "").strip()
+    annee_filter = request.args.get("annee", "").strip()
+    nom_filter = request.args.get("nom", "").strip()
+    prenom_filter = request.args.get("prenom", "").strip()
+    email_filter = request.args.get("email", "").strip()
+    id_filter = request.args.get("id", "").strip()
+
+    # Construire la requête filtrée
+    users_query = User.query.filter_by(role="etudiant")
+    if nom_filter:
+        users_query = users_query.filter(User.nom.ilike(f"%{nom_filter}%"))
+    if prenom_filter:
+        users_query = users_query.filter(User.prenom.ilike(f"%{prenom_filter}%"))
+    if email_filter:
+        users_query = users_query.filter(User.email.ilike(f"%{email_filter}%"))
+    if id_filter:
+        users_query = users_query.filter(User.id == id_filter)
+
+    etudiants = users_query.all()
+    etudiants_infos = [Etudiant.query.filter_by(user_id=e.id).first() for e in etudiants]
+
+    # Appliquer les filtres filiere/annee côté Python (car stockés dans Etudiant)
+    filtered_data = []
+    for user, info in zip(etudiants, etudiants_infos):
+        if filiere_filter and (not info or info.filiere != filiere_filter):
+            continue
+        if annee_filter and (not info or info.annee != annee_filter):
+            continue
+        filtered_data.append((user, info))
+
+    return render_template(
+        "admin/etudiants.html",
+        etudiants_data=filtered_data,
+        filieres=filieres,
+        annees=annees,
+        filiere_filter=filiere_filter,
+        annee_filter=annee_filter,
+        nom_filter=nom_filter,
+        prenom_filter=prenom_filter,
+        email_filter=email_filter,
+        id_filter=id_filter,
+    )
+
+
 @admin_bp.route("/users")
 @login_required
 def admin_users():

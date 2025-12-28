@@ -354,7 +354,7 @@
               class="w-8 h-8 rounded-full bg-primary-100 dark:bg-primary-900/30 flex items-center justify-center text-primary-600 dark:text-primary-400"
             >
               <img
-                src="{{ url_for('static', filename='uploads/profile_pics/' + current_user.photo_profil) }}"
+                src="{{ current_user.photo_profil if current_user.photo_profil else 'https://res.cloudinary.com/dmokvhpjt/image/upload/v1766894568/e4etekyaf1zlziwh60et.png' }}"
                 class="w-full h-full rounded-xl shadow-lg object-cover"
                 alt="DefAI"
               />

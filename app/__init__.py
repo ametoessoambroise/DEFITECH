@@ -1,3 +1,7 @@
+"""DEFITECH application package."""
+
+__version__ = '0.1.0'  # Version of the application
+
 from flask import Flask
 from markupsafe import Markup, escape
 import json

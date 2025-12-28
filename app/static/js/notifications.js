@@ -91,7 +91,7 @@ class NotificationManager {
 
   async loadNotifications() {
     try {
-      const response = await fetch("/api/notifications", {
+      const response = await fetch("/notifications/api", {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
@@ -426,7 +426,7 @@ class NotificationManager {
 
   async checkForNewNotifications() {
     try {
-      const response = await fetch("/api/notifications/count", {
+      const response = await fetch("/notifications/api/count", {
         method: "GET",
         headers: {
           "Content-Type": "application/json",

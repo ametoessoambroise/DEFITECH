@@ -26,8 +26,11 @@ huggingface-hub==0.19.4
 chardet
 diffusers
 tensorflow
+torch
+numpy
 pandas
 matplotlib
+email_validator
 gunicorn
 eventlet
 cloudinary

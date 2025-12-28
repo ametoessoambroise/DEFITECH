@@ -50,15 +50,9 @@
                 }
             }, 200);
             
-            // Timeout pour rediriger vers offline si pas de réponse
+            // Timeout en cas de réponse trop longue
             networkTimeout = setTimeout(() => {
-                if (navigator.onLine) {
-                    // Si on est en ligne mais toujours pas de réponse, rediriger vers offline
-                    redirectToOffline();
-                } else {
-                    // Si on est hors ligne, rediriger immédiatement
-                    redirectToOffline();
-                }
+                hideProgress();
             }, maxWaitTime);
         }
 
@@ -85,9 +79,8 @@
             currentProgress = 0;
         }
 
-        function redirectToOffline() {
+        function handleOffline() {
             hideProgress();
-            window.location.href = '/offline';
         }
 
         // Vérifier la connectivité réseau
@@ -124,7 +117,7 @@
             // Vérifier si on est déjà hors ligne
             if (!navigator.onLine) {
                 e.preventDefault();
-                redirectToOffline();
+                handleOffline();
                 return;
             }
 
@@ -146,11 +139,11 @@
                     });
                 } else {
                     // Problème de connectivité
-                    redirectToOffline();
+                    handleOffline();
                 }
             }).catch(() => {
                 // Timeout ou erreur réseau
-                redirectToOffline();
+                handleOffline();
             });
         });
 
@@ -162,7 +155,7 @@
             // Vérifier si on est hors ligne
             if (!navigator.onLine) {
                 e.preventDefault();
-                redirectToOffline();
+                handleOffline();
                 return;
             }
 
@@ -182,7 +175,7 @@
         // Gérer les changements de connectivité pendant la navigation
         window.addEventListener('offline', function () {
             if (progressBarContainer && !progressBarContainer.classList.contains('hidden')) {
-                redirectToOffline();
+                handleOffline();
             }
         });
 

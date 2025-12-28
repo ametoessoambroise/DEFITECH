@@ -13,8 +13,7 @@ const STATIC_ASSETS = [
   '/static/assets/favicon.png',
   '/static/images/icons/icon-192x192.png',
   '/static/images/icons/icon-512x512.png',
-  '/manifest.json',
-  '/offline.html'
+  '/manifest.json'
 ];
 
 // Pages importantes à mettre en cache
@@ -152,15 +151,8 @@ async function networkFirst(request) {
       return cachedResponse;
     }
 
-    // Si c'est une page HTML, retourner la page offline
-    if (request.headers.get('accept')?.includes('text/html')) {
-      const offlineResponse = await caches.match('/offline.html');
-      if (offlineResponse) {
-        return offlineResponse;
-      }
-    }
-
-    return new Response('Offline', {
+    // En dernier recours, renvoyer une réponse d'erreur simple
+    return new Response('Service indisponible hors ligne', {
       status: 503,
       headers: { 'Content-Type': 'text/plain' }
     });

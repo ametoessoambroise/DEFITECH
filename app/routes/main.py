@@ -110,14 +110,6 @@ def internal_server_error(e):
     return render_template("errors/500.html"), 500
 
 
-@main_bp.route("/offline")
-def offline():
-    """
-    Gère les erreurs de connectivité et rend le template offline.html
-    """
-    return render_template("offline.html"), 503
-
-
 @main_bp.route("/suggestions")
 def suggestions():
     """

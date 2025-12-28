@@ -10,6 +10,7 @@ import os
 import logging
 from datetime import datetime
 from dotenv import load_dotenv
+from sqlalchemy.pool import NullPool
 from app.extensions import (
     db,
     login_manager,
@@ -36,6 +37,9 @@ def create_app(config_class=None):
 
     app.config["SECRET_KEY"] = os.getenv("SECRET_KEY")
     app.config["SQLALCHEMY_DATABASE_URI"] = os.getenv("SQLALCHEMY_DATABASE_URI")
+    # Disable SQLAlchemy connection pooling to avoid Python 3.13 threading lock bug
+    # ("cannot notify on un-acquired lock") in the pool queue implementation.
+    app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {"poolclass": NullPool}
     app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
     app.config["WTF_CSRF_ENABLED"] = os.getenv("WTF_CSRF_ENABLED", "true").lower() in (

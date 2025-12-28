@@ -6,9 +6,10 @@
 const CONFIG = {
     csrfToken: document.querySelector('meta[name="csrf-token"]')?.content,
     endpoints: {
-        chat: '/ai/chat',
-        history: '/ai/conversations',
-        new: '/ai/conversations' // Keep new creation on api? No, wait.
+        // API endpoints exposed by ai_assistant_bp (url_prefix="/api/ai")
+        chat: '/api/ai/chat',
+        history: '/api/ai/conversations',
+        new: '/api/ai/conversations'
     },
     selectors: {
         messages: '#messages',
@@ -107,7 +108,8 @@ const UI = {
 
             conversations.forEach(conv => {
                 const el = document.createElement('a');
-                const linkUrl = `/ai/chat/${conv.link || conv.id}`;
+                // URL purement cosmétique: on pointe vers /defAI qui existe côté Flask
+                const linkUrl = '/defAI';
                 el.href = linkUrl;
                 el.dataset.id = conv.id;
                 el.dataset.link = conv.link || conv.id;
@@ -179,9 +181,9 @@ const UI = {
         // Load Content
         this.loadConversationHistory(id);
 
-        // Update URL
+        // Update URL (URL front uniquement, la page /defAI existe côté Flask)
         if (pushState) {
-            const url = `/ai/chat/${linkPart || id}`;
+            const url = '/defAI';
             window.history.pushState({ conversationId: id }, '', url);
         }
     },
@@ -201,7 +203,7 @@ const UI = {
         try {
             State.pagination = { page: 1, hasMore: true, isLoading: false }; // Reset pagination
 
-            const response = await fetch(`/ai/conversations/${conversationId}?page=1`);
+            const response = await fetch(`/api/ai/conversations/${conversationId}?page=1`);
             if (!response.ok) throw new Error('Failed to load conversation');
 
             const data = await response.json();
@@ -241,7 +243,7 @@ const UI = {
         const currentHeight = this.elements.messages.scrollHeight;
 
         try {
-            const response = await fetch(`/ai/conversations/${State.currentConversationId}?page=${nextPage}`);
+            const response = await fetch(`/api/ai/conversations/${State.currentConversationId}?page=${nextPage}`);
             if (!response.ok) throw new Error('Failed to load more messages');
 
             const data = await response.json();

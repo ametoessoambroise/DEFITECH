@@ -324,7 +324,7 @@ class DefAIHelper:
             "message": message,
             "user_id": user_id,
         }
-        return self.client.post_json("/ai/chat", data)
+        return self.client.post_json("/api/ai/chat", data)
 
     def get_student_grades(self, student_id: int) -> Dict[str, Any]:
         """Récupère les notes d'un étudiant"""

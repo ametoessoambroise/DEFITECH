@@ -8,13 +8,13 @@ DEFAI_ALLOWED_ENDPOINTS = {
     # Routes de l'assistant IA (accessibles par tous les rôles)
     "ai": {
         "all": [
-            "GET /ai/conversations",
-            "POST /ai/conversations", 
-            "GET /ai/conversations/<int:conversation_id>/messages",
-            "POST /ai/chat",
-            "POST /ai/upload",
-            "GET /ai/dataset/stats",
-            "DELETE /ai/conversations/<int:conversation_id>"
+            "GET /api/ai/conversations",
+            "POST /api/ai/conversations", 
+            "GET /api/ai/conversations/<int:conversation_id>/messages",
+            "POST /api/ai/chat",
+            "POST /api/ai/upload",
+            "GET /api/ai/dataset/stats",
+            "DELETE /api/ai/conversations/<int:conversation_id>"
         ]
     },
     

@@ -448,15 +448,20 @@ def import_etudiants():
     if current_user.role != "admin":
         flash("Accès non autorisé.", "error")
         return redirect(url_for("admin.admin_users"))
-    file = request.files.get("file")
-    if not file:
+    file_url = request.form.get("file_url")
+    if not file_url:
         flash("Aucun fichier sélectionné.", "error")
         return redirect(url_for("admin.admin_users"))
     try:
-        if file.filename.endswith(".csv"):
-            df = pd.read_csv(file)
+        if file_url.endswith(".csv") or "format=csv" in file_url:
+            df = pd.read_csv(file_url)
         else:
-            df = pd.read_excel(file)
+            # Fallback for Excel or unknown, try excel then csv if fails?
+            # Assuming extension is reliable or defaulting to excel if not csv
+            try:
+                df = pd.read_excel(file_url)
+            except Exception:
+                df = pd.read_csv(file_url)
         count = 0
         for _, row in df.iterrows():
             if User.query.filter_by(email=row["email"]).first():
@@ -533,17 +538,20 @@ def import_filieres():
     if current_user.role != "admin":
         flash("Accès non autorisé.", "error")
         return redirect(url_for("admin.admin_users"))
-    file = request.files.get("file")
-    if not file:
+    file_url = request.form.get("file_url")
+    if not file_url:
         flash("Aucun fichier sélectionné.", "error")
         return redirect(url_for("admin.admin_users"))
     try:
         import pandas as pd
 
-        if file.filename.endswith(".csv"):
-            df = pd.read_csv(file)
+        if file_url.endswith(".csv") or "format=csv" in file_url:
+            df = pd.read_csv(file_url)
         else:
-            df = pd.read_excel(file)
+            try:
+                df = pd.read_excel(file_url)
+            except Exception:
+                df = pd.read_csv(file_url)
         count = 0
         for _, row in df.iterrows():
             if Filiere.query.filter_by(nom=row["nom"]).first():
@@ -590,17 +598,20 @@ def import_matieres():
     if current_user.role != "admin":
         flash("Accès non autorisé.", "error")
         return redirect(url_for("admin.admin_users"))
-    file = request.files.get("file")
-    if not file:
+    file_url = request.form.get("file_url")
+    if not file_url:
         flash("Aucun fichier sélectionné.", "error")
         return redirect(url_for("admin.admin_users"))
     try:
         import pandas as pd
 
-        if file.filename.endswith(".csv"):
-            df = pd.read_csv(file)
+        if file_url.endswith(".csv") or "format=csv" in file_url:
+            df = pd.read_csv(file_url)
         else:
-            df = pd.read_excel(file)
+            try:
+                df = pd.read_excel(file_url)
+            except Exception:
+                df = pd.read_csv(file_url)
         count = 0
         for _, row in df.iterrows():
             filiere = Filiere.query.filter_by(nom=row["filiere"]).first()
@@ -661,17 +672,20 @@ def import_enseignants():
     if current_user.role != "admin":
         flash("Accès non autorisé.", "error")
         return redirect(url_for("admin.admin_users"))
-    file = request.files.get("file")
-    if not file:
+    file_url = request.form.get("file_url")
+    if not file_url:
         flash("Aucun fichier sélectionné.", "error")
         return redirect(url_for("admin.admin_users"))
     try:
         import pandas as pd
 
-        if file.filename.endswith(".csv"):
-            df = pd.read_csv(file)
+        if file_url.endswith(".csv") or "format=csv" in file_url:
+            df = pd.read_csv(file_url)
         else:
-            df = pd.read_excel(file)
+            try:
+                df = pd.read_excel(file_url)
+            except Exception:
+                df = pd.read_csv(file_url)
         count = 0
         for _, row in df.iterrows():
             if User.query.filter_by(email=row["email"]).first():
@@ -738,17 +752,20 @@ def import_annees():
     if current_user.role != "admin":
         flash("Accès non autorisé.", "error")
         return redirect(url_for("admin.admin_users"))
-    file = request.files.get("file")
-    if not file:
+    file_url = request.form.get("file_url")
+    if not file_url:
         flash("Aucun fichier sélectionné.", "error")
         return redirect(url_for("admin.admin_users"))
     try:
         import pandas as pd
 
-        if file.filename.endswith(".csv"):
-            df = pd.read_csv(file)
+        if file_url.endswith(".csv") or "format=csv" in file_url:
+            df = pd.read_csv(file_url)
         else:
-            df = pd.read_excel(file)
+            try:
+                df = pd.read_excel(file_url)
+            except Exception:
+                df = pd.read_csv(file_url)
         count = 0
         for _, row in df.iterrows():
             if Annee.query.filter_by(nom=row["nom"]).first():
@@ -900,7 +917,6 @@ def respond_suggestion(suggestion_id):
         flash("Le contenu de la réponse ne peut pas être vide.", "error")
 
     return redirect(url_for("admin.admin_suggestions"))
-
 
 
 @admin_bp.route("/export/etudiants/<format>")
@@ -2168,3 +2184,171 @@ def restore_database():
         ),
         501,
     )
+
+
+@admin_bp.route("/emploi-temps", methods=["GET", "POST"])
+@login_required
+def admin_emploi_temps():
+    """
+    Page de gestion de l'emploi du temps admin.
+    Permet d'afficher et de modifier l'emploi du temps par filière et année.
+    """
+    if current_user.role != "admin":
+        flash("Accès non autorisé.", "error")
+        return redirect(url_for("main.index"))
+
+    # Récupération des filtres
+    filiere_id = request.args.get("filiere") or request.form.get("filiere")
+    annee_id = request.args.get("annee") or request.form.get("annee")
+
+    # Récupération des données pour les listes déroulantes
+    filieres = Filiere.query.all()
+    annees = Annee.query.all()
+    matieres = Matiere.query.all()  # Pour le formulaire d'édition
+
+    selected_filiere = filiere_id
+    selected_annee = annee_id
+
+    # Structure de données pour l'emploi du temps
+    jours = ["Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi"]
+    horaires = [
+        "08:00 - 10:00",
+        "10:00 - 12:00",
+        "12:00 - 14:00",
+        "14:00 - 16:00",
+        "16:00 - 18:00",
+        "18:00 - 20:00",
+    ]
+
+    emploi_dict = {jour: {h: None for h in horaires} for jour in jours}
+
+    # Si filière et année sélectionnées, remplir emploi_dict
+    if selected_filiere:
+        query = EmploiTemps.query.filter_by(filiere_id=selected_filiere)
+        # Note: Filtrage par année si le modèle le permettait directement ou via jointure
+        # Pour l'instant on garde simple comme demandé
+        emplois = query.all()
+
+        for emp in emplois:
+            if emp.heure_debut:
+                h_debut = emp.heure_debut.strftime("%H:%M")
+                # Trouver le créneau correspondant
+                for h in horaires:
+                    # On compare juste le début pour la correspondance simple
+                    if h.startswith(h_debut):
+                        emploi_dict[emp.jour][h] = emp
+                        break
+
+    return render_template(
+        "admin/emploi_temps.html",
+        filieres=filieres,
+        annees=annees,
+        matieres=matieres,
+        selected_filiere=selected_filiere,
+        selected_annee=selected_annee,
+        jours=jours,
+        horaires=horaires,
+        emploi_dict=emploi_dict,
+    )
+
+
+@admin_bp.route("/import/emploi-temps", methods=["POST"])
+@login_required
+def admin_import_emploi_temps():
+    """
+    Importation en masse de l'emploi du temps via fichier JSON ou Excel (Cloudinary URL).
+    """
+    if current_user.role != "admin":
+        return jsonify({"error": "Accès non autorisé"}), 403
+
+    file_url = request.form.get("file_url")
+    file_type = request.form.get("type")
+    filiere_id = request.form.get("filiere")
+
+    if not file_url:
+        return jsonify({"error": "Aucun fichier fourni"}), 400
+
+    try:
+        data = []
+        if file_type == "json":
+            import requests
+
+            response = requests.get(file_url)
+            response.raise_for_status()
+            data = response.json()
+        elif file_type == "excel":
+            df = pd.read_excel(file_url)
+            data = df.to_dict(orient="records")
+
+        count = 0
+        errors = []
+
+        for row in data:
+            try:
+                jour = row.get("jour")
+                heure_debut_str = row.get("heure_debut")
+                heure_fin_str = row.get("heure_fin")
+                matiere_nom = row.get("matiere")
+                salle = row.get("salle")
+
+                if not all([jour, heure_debut_str, heure_fin_str, matiere_nom]):
+                    continue
+
+                try:
+                    # Support formats like "8:00", "08:00", "8:00:00"
+                    heure_debut = datetime.strptime(
+                        str(heure_debut_str).strip(), "%H:%M"
+                    ).time()
+                    heure_fin = datetime.strptime(
+                        str(heure_fin_str).strip(), "%H:%M"
+                    ).time()
+                except ValueError:
+                    # Try with seconds if failed
+                    try:
+                        heure_debut = datetime.strptime(
+                            str(heure_debut_str).strip(), "%H:%M:%S"
+                        ).time()
+                        heure_fin = datetime.strptime(
+                            str(heure_fin_str).strip(), "%H:%M:%S"
+                        ).time()
+                    except ValueError:
+                        continue
+
+                matiere = Matiere.query.filter(
+                    Matiere.nom.ilike(matiere_nom), Matiere.filiere_id == filiere_id
+                ).first()
+
+                if not matiere:
+                    continue
+
+                emploi = EmploiTemps.query.filter_by(
+                    filiere_id=filiere_id, jour=jour, heure_debut=heure_debut
+                ).first()
+
+                if not emploi:
+                    emploi = EmploiTemps(
+                        filiere_id=filiere_id,
+                        matiere_id=matiere.id,
+                        enseignant_id=matiere.enseignant_id,
+                        jour=jour,
+                        heure_debut=heure_debut,
+                        heure_fin=heure_fin,
+                        salle=salle or "À définir",
+                    )
+                    db.session.add(emploi)
+                    count += 1
+                else:
+                    emploi.matiere_id = matiere.id
+                    emploi.enseignant_id = matiere.enseignant_id
+                    emploi.salle = salle or emploi.salle
+            except Exception as e:
+                errors.append(str(e))
+                continue
+
+        db.session.commit()
+        return jsonify({"success": True, "message": f"{count} créneaux importés."})
+
+    except Exception as e:
+        db.session.rollback()
+        current_app.logger.error(f"Erreur import emploi temps: {str(e)}")
+        return jsonify({"error": str(e)}), 500

@@ -63,7 +63,7 @@ current_user.prenom }} | DEFITECH{% endblock %} {% block content %}
   <h1 class="text-2xl font-bold mb-6">
     Envoyer un devoir, exercice, examen ou communiqué
   </h1>
-  <form method="POST" enctype="multipart/form-data" class="bg-white rounded shadow p-6 space-y-4">
+  <form method="POST" class="bg-white rounded shadow p-6 space-y-4">
     <div>
       <label class="block text-sm font-medium text-gray-700">Type</label>
       <select name="type" required class="border rounded px-2 py-1 w-full">
@@ -93,25 +93,121 @@ current_user.prenom }} | DEFITECH{% endblock %} {% block content %}
     </div>
     <div>
       <label class="block text-sm font-medium text-gray-700">Titre</label>
-      <input type="text" name="titre" required class="border rounded px-2 py-1 w-full" />
+      <input
+        type="text"
+        name="titre"
+        required
+        class="border rounded px-2 py-1 w-full"
+      />
     </div>
     <div>
       <label class="block text-sm font-medium text-gray-700">Description</label>
-      <textarea name="description" required class="border rounded px-2 py-1 w-full" rows="3"></textarea>
+      <textarea
+        name="description"
+        required
+        class="border rounded px-2 py-1 w-full"
+        rows="3"
+      ></textarea>
     </div>
     <div>
-      <label class="block text-sm font-medium text-gray-700">Date limite (optionnel)</label>
-      <input type="date" name="date_limite" class="border rounded px-2 py-1 w-full" />
+      <label class="block text-sm font-medium text-gray-700"
+        >Date limite (optionnel)</label
+      >
+      <input
+        type="date"
+        name="date_limite"
+        class="border rounded px-2 py-1 w-full"
+      />
     </div>
+
+    <!-- Cloudinary Upload Section -->
     <div>
-      <label class="block text-sm font-medium text-gray-700">Fichier à envoyer (pdf, docx, xlsx, jpg, png, mp4,
-        etc.)</label>
-      <input type="file" name="fichier" accept=".pdf,.docx,.xlsx,.jpg,.jpeg,.png,.ico,.avif,.mp4,.avi,.mov"
-        class="border rounded px-2 py-1 w-full" />
+      <label class="block text-sm font-medium text-gray-700"
+        >Fichier à envoyer (pdf, docx, xlsx, jpg, png, mp4, etc.)</label
+      >
+      <div class="mt-1 flex items-center space-x-4">
+        <label
+          for="file-upload"
+          class="cursor-pointer bg-white py-2 px-3 border border-gray-300 rounded-md shadow-sm text-sm leading-4 font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+        >
+          <span>Choisir un fichier</span>
+          <input
+            id="file-upload"
+            type="file"
+            class="sr-only"
+            accept=".pdf,.docx,.xlsx,.jpg,.jpeg,.png,.ico,.avif,.mp4,.avi,.mov"
+          />
+        </label>
+        <span id="file-name" class="text-sm text-gray-500"
+          >Aucun fichier choisi</span
+        >
+      </div>
+
+      <!-- Hidden inputs for Cloudinary data -->
+      <input type="hidden" name="file_url" id="file_url" />
+      <input type="hidden" name="file_type" id="file_type" />
+      <input type="hidden" name="file_size" id="file_size" />
+      <input type="hidden" name="file_format" id="file_format" />
+      <input type="hidden" name="original_filename" id="original_filename" />
+
+      <div id="upload_feedback" class="mt-2 text-sm"></div>
     </div>
-    <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded">
+
+    <button
+      type="submit"
+      id="submit-btn"
+      class="bg-blue-600 text-white px-4 py-2 rounded"
+    >
       Envoyer
     </button>
   </form>
 </div>
-{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/cloudinary_uploader.js') }}"></script>
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    // Use the global helper to attach upload behavior
+    // Using 'documents_upload' preset for generic files, and 'auto' resource type
+    attachCloudinaryUpload(
+      "file-upload",
+      "file_url",
+      "documents_upload",
+      "upload_feedback",
+      "auto"
+    );
+
+    // Add specific listener to populate other metadata fields
+    const fileInput = document.getElementById("file-upload");
+    fileInput.addEventListener("change", async function () {
+      if (this.files.length > 0) {
+        document.getElementById("file-name").textContent = this.files[0].name;
+        document.getElementById("original_filename").value = this.files[0].name;
+        document.getElementById("file_size").value = this.files[0].size;
+        const extension = this.files[0].name.split(".").pop().toLowerCase();
+        document.getElementById("file_format").value = extension;
+
+        // Disable submit button during upload
+        const submitBtn = document.getElementById("submit-btn");
+        submitBtn.disabled = true;
+        submitBtn.classList.add("opacity-50", "cursor-not-allowed");
+
+        // Monitor the feedback element to re-enable
+        const observer = new MutationObserver(function (mutations) {
+          if (
+            document.getElementById("upload_feedback").innerHTML.includes("✅")
+          ) {
+            submitBtn.disabled = false;
+            submitBtn.classList.remove("opacity-50", "cursor-not-allowed");
+            // Extract the URL from the hidden input if needed, but attachCloudinaryUpload handles it
+          }
+        });
+        observer.observe(document.getElementById("upload_feedback"), {
+          childList: true,
+          subtree: true,
+        });
+      }
+    });
+  });
+</script>
+{% endblock %} {% endblock %}

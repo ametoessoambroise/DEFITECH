@@ -420,63 +420,34 @@ def upload():
         if description and len(description) > 1000:
             errors.append("La description ne doit pas dépasser 1000 caractères.")
 
-        # Validation du fichier
-        if "fichier" not in request.files:
-            errors.append("Aucun fichier sélectionné.")
-        else:
-            fichier = request.files["fichier"]
-            if fichier.filename == "":
-                errors.append("Aucun fichier sélectionné.")
-            elif not allowed_file(fichier.filename):
-                errors.append(
-                    f"Type de fichier non autorisé. Extensions acceptées: {', '.join(sorted(ALLOWED_EXTENSIONS.keys()))}"
-                )
-            elif not validate_file_size(fichier):
-                errors.append(
-                    f"Le fichier est trop volumineux. Taille maximale: {MAX_FILE_SIZE // (1024 * 1024)} MB"
-                )
+        # Validation du fichier (Cloudinary URL)
+        file_url = request.form.get("file_url")
+        if not file_url:
+            errors.append("Le fichier doit être uploadé avant de soumettre.")
 
         if errors:
             for error in errors:
                 flash(error, "error")
             return redirect(request.url)
 
-        fichier = request.files["fichier"]
-
         try:
-            # Créer les dossiers si nécessaire
-            resources_folder = create_resource_folders()
-            resource_type_folder = os.path.join(resources_folder, type_ressource)
-            os.makedirs(resource_type_folder, exist_ok=True)
+            # Récupérer les métadonnées depuis le formulaire (peuplées par JS après upload Cloudinary)
+            original_filename = request.form.get("original_filename", "unknown")
+            file_size = request.form.get("file_size", 0)
+            file_format = request.form.get("file_format", "").lower()
 
-            # Générer un nom de fichier unique et sécurisé
-            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-            filename = secure_filename(fichier.filename)
-            name, ext = os.path.splitext(filename)
-
-            # Limiter la longueur du nom
-            if len(name) > 100:
-                name = name[:100]
-
-            unique_filename = f"{timestamp}_{name}{ext}"
-            filepath = os.path.join(resource_type_folder, unique_filename)
-
-            # Sauvegarder le fichier
-            fichier.save(filepath)
-            file_size = os.path.getsize(filepath)
-
-            # Chemin relatif pour la base de données
-            relative_path = os.path.join("uploads", type_ressource, unique_filename)
-            relative_path = relative_path.replace("\\", "/")
+            # Si le format n'est pas fourni, essayer de le déduire de l'URL ou du nom original
+            if not file_format and "." in original_filename:
+                file_format = original_filename.rsplit(".", 1)[1].lower()
 
             # Créer l'enregistrement dans la base de données
             resource = Resource(
                 titre=titre,
                 description=description,
-                nom_fichier=filename,
-                chemin_fichier=relative_path,
-                type_fichier=ext[1:].lower(),  # Extension sans le point
-                taille=file_size,
+                nom_fichier=original_filename,  # On garde le nom original pour l'affichage
+                chemin_fichier=file_url,  # On stocke l'URL Cloudinary complète
+                type_fichier=file_format,
+                taille=int(file_size) if file_size else 0,
                 type_ressource=type_ressource,
                 filiere=filiere,
                 annee=annee,
@@ -487,24 +458,18 @@ def upload():
             db.session.add(resource)
             db.session.commit()
 
-            flash(f"Ressource '{titre}' uploadée avec succès !", "success")
+            flash(f"Ressource '{titre}' ajoutée avec succès !", "success")
             current_app.logger.info(
-                f"Ressource uploadée: {titre} par {current_user.prenom} {current_user.nom} ({current_user.email})"
+                f"Ressource ajoutée : {titre} par {current_user.prenom} {current_user.nom}"
             )
             return redirect(url_for("resources.index"))
 
         except Exception as e:
             db.session.rollback()
-            current_app.logger.error(f"Erreur lors de l'upload: {str(e)}")
-
-            # Supprimer le fichier si la transaction échoue
-            if "filepath" in locals() and os.path.exists(filepath):
-                try:
-                    os.remove(filepath)
-                except Exception:
-                    pass
-
-            flash(f"Erreur lors de l'upload : {str(e)}", "error")
+            current_app.logger.error(
+                f"Erreur lors de l'enregistrement de la ressource: {str(e)}"
+            )
+            flash(f"Erreur lors de l'enregistrement : {str(e)}", "error")
             return redirect(request.url)
 
     return render_template(

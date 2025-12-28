@@ -69,7 +69,7 @@
     <!-- Favicon -->
     <link
       rel="icon"
-      href="{{ url_for('static', filename='assets/favicon.ico') }}"
+      href="https://res.cloudinary.com/dmokvhpjt/image/upload/v1766894416/bijcryrbjli0daglbsim.png"
     />
     <link
       rel="icon"
@@ -194,7 +194,7 @@
               data-tooltip="Retour à l'accueil"
             >
               <img
-                src="{{ url_for('static', filename='assets/favicon.ico') }}"
+                src="https://res.cloudinary.com/dmokvhpjt/image/upload/v1766894416/bijcryrbjli0daglbsim.png"
                 alt="Logo DEFITECH"
                 class="w-8 h-8 sm:w-10 sm:h-10 rounded-full shadow-md"
               />
@@ -255,7 +255,7 @@
                 data-tooltip="Menu utilisateur"
               >
                 <img
-                  src="{{ url_for('static', filename='uploads/profile_pics/' + (current_user.photo_profil or 'default.png')) }}"
+                  src="{{ current_user.photo_profil if current_user.photo_profil else 'https://res.cloudinary.com/dmokvhpjt/image/upload/v1766894568/e4etekyaf1zlziwh60et.png' }}"
                   alt="Profil"
                   class="rounded-full shadow-md w-full h-full object-cover"
                 />
@@ -493,7 +493,7 @@
       class="w-12 h-12 z-[9996] rounded-full outline-none fixed bottom-4 right-4 shadow-lg hover:scale-110 transition-all duration-150"
     >
       <img
-        src="{{ url_for('static', filename='assets/defai.png') }}"
+        src="https://res.cloudinary.com/dmokvhpjt/image/upload/v1766894468/gep1294qd7tbddgvtmpj.png"
         alt="DefAI Logo"
         class="w-full h-full rounded-full"
       />
@@ -532,6 +532,7 @@
     </footer>
 
     <!-- Scripts -->
+    <script src="{{ url_for('static', filename='js/cloudinary_uploader.js') }}"></script>
     <script>
       // ==================== SYSTÈME DE TOOLTIPS PERSONNALISÉS ====================
       function initTooltips() {

@@ -14,6 +14,7 @@ from wtforms import (
     TextAreaField,
     ValidationError,
     FileField,
+    HiddenField,
 )
 from wtforms.validators import DataRequired, Email, Length, Optional, EqualTo
 from flask_wtf.file import FileField as WTF_FileField, FileAllowed
@@ -21,10 +22,26 @@ from werkzeug.utils import secure_filename
 
 
 class UpdateProfileForm(FlaskForm):
-    nom = StringField("Nom", validators=[DataRequired(), Length(min=2, max=100)], render_kw={"placeholder": "Nom"})
-    prenom = StringField("Prénom", validators=[DataRequired(), Length(min=2, max=100)], render_kw={"placeholder": "Prénom"})
-    email = StringField("Email", validators=[DataRequired(), Email()], render_kw={"placeholder": "Email"})
-    date_naissance = DateField("Date de naissance", validators=[DataRequired()], render_kw={"placeholder": "Date de naissance"})
+    nom = StringField(
+        "Nom",
+        validators=[DataRequired(), Length(min=2, max=100)],
+        render_kw={"placeholder": "Nom"},
+    )
+    prenom = StringField(
+        "Prénom",
+        validators=[DataRequired(), Length(min=2, max=100)],
+        render_kw={"placeholder": "Prénom"},
+    )
+    email = StringField(
+        "Email",
+        validators=[DataRequired(), Email()],
+        render_kw={"placeholder": "Email"},
+    )
+    date_naissance = DateField(
+        "Date de naissance",
+        validators=[DataRequired()],
+        render_kw={"placeholder": "Date de naissance"},
+    )
     sexe = SelectField(
         "Sexe",
         choices=[
@@ -36,37 +53,90 @@ class UpdateProfileForm(FlaskForm):
         validators=[DataRequired()],
     )
     nouveau_mot_de_passe = PasswordField(
-        "Nouveau mot de passe", validators=[Optional(), Length(min=8)], render_kw={"placeholder": "Nouveau mot de passe"}
+        "Nouveau mot de passe",
+        validators=[Optional(), Length(min=8)],
+        render_kw={"placeholder": "Nouveau mot de passe"},
     )
     confirmer_mot_de_passe = PasswordField(
         "Confirmer le mot de passe",
         validators=[Optional(), EqualTo("nouveau_mot_de_passe")],
-        render_kw={"placeholder": "Confirmer le mot de passe"}
+        render_kw={"placeholder": "Confirmer le mot de passe"},
     )
     photo_profil = FileField("Photo de profil")
+    photo_profil_url = HiddenField("URL Photo de profil")
 
     # Nouveaux champs pour les informations de contact
-    telephone = StringField("Téléphone", validators=[Optional(), Length(max=20)], render_kw={"placeholder": "Téléphone"})
-    adresse = StringField("Adresse", validators=[Optional(), Length(max=200)], render_kw={"placeholder": "Adresse"})
-    ville = StringField("Ville", validators=[Optional(), Length(max=100)], render_kw={"placeholder": "Ville"})
-    code_postal = StringField("Code postal", validators=[Optional(), Length(max=10)], render_kw={"placeholder": "Code postal"})
-    pays = StringField("Pays", validators=[Optional(), Length(max=100)], render_kw={"placeholder": "Pays"})
+    telephone = StringField(
+        "Téléphone",
+        validators=[Optional(), Length(max=20)],
+        render_kw={"placeholder": "Téléphone"},
+    )
+    adresse = StringField(
+        "Adresse",
+        validators=[Optional(), Length(max=200)],
+        render_kw={"placeholder": "Adresse"},
+    )
+    ville = StringField(
+        "Ville",
+        validators=[Optional(), Length(max=100)],
+        render_kw={"placeholder": "Ville"},
+    )
+    code_postal = StringField(
+        "Code postal",
+        validators=[Optional(), Length(max=10)],
+        render_kw={"placeholder": "Code postal"},
+    )
+    pays = StringField(
+        "Pays",
+        validators=[Optional(), Length(max=100)],
+        render_kw={"placeholder": "Pays"},
+    )
 
     # nouveaux champs pour les liens linkedin, bio et github
-    linkedin = StringField("Linkedin", validators=[Optional(), Length(max=200)], render_kw={"placeholder": "https://www.linkedin.com/in/ambroise-ametoesso-587680336/"})
-    bio = TextAreaField("Bio", validators=[Optional(), Length(max=1000, min=20)], render_kw={"placeholder": "Je suis un jeune passionné de la tech....."})
-    github = StringField("Github", validators=[Optional(), Length(max=200)], render_kw={"placeholder": "https://github.com/ton_username"})
+    linkedin = StringField(
+        "Linkedin",
+        validators=[Optional(), Length(max=200)],
+        render_kw={
+            "placeholder": "https://www.linkedin.com/in/ambroise-ametoesso-587680336/"
+        },
+    )
+    bio = TextAreaField(
+        "Bio",
+        validators=[Optional(), Length(max=1000, min=20)],
+        render_kw={"placeholder": "Je suis un jeune passionné de la tech....."},
+    )
+    github = StringField(
+        "Github",
+        validators=[Optional(), Length(max=200)],
+        render_kw={"placeholder": "https://github.com/ton_username"},
+    )
 
     # Champs spécifiques aux enseignants
-    specialite = StringField("Spécialité", validators=[Optional(), Length(max=100)], render_kw={"placeholder": "Spécialité"})
-    grade = StringField("Grade", validators=[Optional(), Length(max=50)], render_kw={"placeholder": "Grade"})
+    specialite = StringField(
+        "Spécialité",
+        validators=[Optional(), Length(max=100)],
+        render_kw={"placeholder": "Spécialité"},
+    )
+    grade = StringField(
+        "Grade",
+        validators=[Optional(), Length(max=50)],
+        render_kw={"placeholder": "Grade"},
+    )
     filieres_enseignees = SelectMultipleField(
-        "Filières enseignées", validators=[Optional()], render_kw={"placeholder": "Filières enseignées"}
+        "Filières enseignées",
+        validators=[Optional()],
+        render_kw={"placeholder": "Filières enseignées"},
     )
     annees_enseignees = SelectMultipleField(
-        "Années enseignées", validators=[Optional()], render_kw={"placeholder": "Années enseignées"}
+        "Années enseignées",
+        validators=[Optional()],
+        render_kw={"placeholder": "Années enseignées"},
     )
-    date_embauche = DateField("Date d'embauche", validators=[Optional()], render_kw={"placeholder": "Date d'embauche"})
+    date_embauche = DateField(
+        "Date d'embauche",
+        validators=[Optional()],
+        render_kw={"placeholder": "Date d'embauche"},
+    )
 
     submit = SubmitField("Valider")
 
@@ -80,7 +150,9 @@ class TeacherProfileApprovalForm(FlaskForm):
         validators=[DataRequired()],
     )
     commentaire_admin = TextAreaField(
-        "Commentaire (optionnel)", validators=[Optional()], render_kw={"placeholder": "Commentaire (optionnel)"}
+        "Commentaire (optionnel)",
+        validators=[Optional()],
+        render_kw={"placeholder": "Commentaire (optionnel)"},
     )
     submit = SubmitField("Enregistrer")
 

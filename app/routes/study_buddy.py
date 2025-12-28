@@ -183,39 +183,36 @@ def upload_document():
         Si la requête est POST, renvoie une redirection vers la page d'accueil.
     """
     if request.method == "POST":
-        # Vérifier si le fichier est présent dans la requête
-        if "file" not in request.files:
-            flash("Aucun fichier sélectionné", "error")
+        # Valider si l'URL du fichier est présente
+        file_url = request.form.get("file_url")
+        if not file_url:
+            flash("Veuillez uploader un fichier avant de soumettre.", "error")
             return redirect(request.url)
 
-        file = request.files["file"]
+        # Récupérer les métadonnées (peuplées par JS)
+        original_filename = request.form.get("original_filename", "unknown")
+        file_size = request.form.get("file_size", 0)
+        file_format = request.form.get("file_format", "").lower()
 
-        # Vérifier si un fichier a été sélectionné
-        if file.filename == "":
-            flash("Aucun fichier sélectionné", "error")
-            return redirect(request.url)
+        # Si le format n'est pas fourni, essayer de le déduire
+        if not file_format and "." in original_filename:
+            file_format = original_filename.rsplit(".", 1)[1].lower()
 
-        # Vérifier l'extension du fichier
-        if file and allowed_file(file.filename):
-            # Créer le dossier de téléchargement s'il n'existe pas
-            os.makedirs(UPLOAD_FOLDER, exist_ok=True)
-
-            # Générer un nom de fichier sécurisé
-            filename = secure_filename(file.filename)
-            filepath = os.path.join(UPLOAD_FOLDER, filename)
-
-            # Sauvegarder le fichier
-            file.save(filepath)
-
-            # Créer un nouvel enregistrement de document
+        try:
+            # Créer un nouvel enregistrement de document avec l'URL Cloudinary
             document = StudyDocument(
                 user_id=current_user.id,
-                title=os.path.splitext(filename)[0],
-                file_name=filename,
-                file_path=filepath,
-                file_type=filename.rsplit(".", 1)[1].lower(),
-                file_size=os.path.getsize(filepath),
+                title=request.form.get("title")
+                or os.path.splitext(original_filename)[0],
+                file_name=original_filename,
+                file_path=file_url,  # URL Cloudinary
+                file_type=file_format,
+                file_size=int(file_size) if file_size else 0,
+                description=request.form.get(
+                    "description", ""
+                ),  # Ajout description si dispo dans formulaire
             )
+            # Note: Le modèle peut avoir d'autres champs non gérés ici, mais on se concentre sur l'essentiel
 
             db.session.add(document)
 
@@ -229,12 +226,16 @@ def upload_document():
 
             db.session.commit()
 
-            flash("Document téléversé avec succès !", "success")
+            flash("Document ajouté avec succès !", "success")
             return redirect(
                 url_for("study_buddy.document_detail", document_id=document.id)
             )
 
-        flash("Type de fichier non autorisé", "error")
+        except Exception as e:
+            db.session.rollback()
+            current_app.logger.error(f"Erreur lors de l'ajout du document: {str(e)}")
+            flash(f"Erreur lors de l'ajout du document: {str(e)}", "error")
+            return redirect(request.url)
 
     # Récupérer ou créer la progression de l'utilisateur
     progress = StudyProgress.query.filter_by(user_id=current_user.id).first()

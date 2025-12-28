@@ -10,15 +10,14 @@ from flask import (
     send_from_directory,
 )
 from flask_login import login_required, current_user
-from werkzeug.utils import secure_filename
 import os
 from datetime import datetime
 from functools import wraps
+import json
 
 # Utilisation de current_app pour accéder à db
 from app.extensions import db
 
-from app.utils.utils import allowed_file
 from app.services.notification_service import NotificationService
 
 # Création du blueprint
@@ -265,33 +264,26 @@ def create_post(filiere_id):
         db.session.add(post)
         db.session.flush()  # Pour obtenir l'ID du post
 
-        # Gérer les pièces jointes
-        if "pieces_jointes" in request.files:
-            for fichier in request.files.getlist("pieces_jointes"):
-                if fichier.filename == "":
-                    continue
-
-                # Sauvegarder le fichier
-                filename = secure_filename(fichier.filename)
-                filepath = os.path.join(
-                    current_app.config["UPLOAD_FOLDER"], "pieces_jointes", str(post.id)
-                )
-                os.makedirs(filepath, exist_ok=True)
-                fichier.save(os.path.join(filepath, filename))
-
-                # Ajouter la pièce jointe
-                piece_jointe = PieceJointe(
-                    nom_fichier=filename,
-                    chemin=os.path.join(
-                        "pieces_jointes", str(post.id), filename
-                    ).replace("\\", "/"),
-                    type_mime=fichier.content_type,
-                    taille=os.path.getsize(
-                        os.path.join(filepath, filename)
-                    ),  # Taille en octets
-                    post_id=post.id,
-                )
-                db.session.add(piece_jointe)
+        # Gérer les pièces jointes (Cloudinary Refactor)
+        uploaded_files_json = request.form.get("uploaded_files_json")
+        if uploaded_files_json:
+            try:
+                uploaded_files = json.loads(uploaded_files_json)
+                for file_data in uploaded_files:
+                    # Ajouter la pièce jointe
+                    piece_jointe = PieceJointe(
+                        nom_fichier=file_data.get("original_name"),
+                        chemin_fichier=file_data.get("url"),  # Cloudinary URL
+                        type_fichier=file_data.get("type", "document"),
+                        type_mime=file_data.get(
+                            "format"
+                        ),  # Ou deviner depuis l'URL si manquant
+                        taille=file_data.get("size"),
+                        post_id=post.id,
+                    )
+                    db.session.add(piece_jointe)
+            except json.JSONDecodeError:
+                flash("Erreur lors du traitement des pièces jointes", "error")
 
         db.session.commit()
         flash("Votre publication a été créée avec succès !", "success")
@@ -369,42 +361,24 @@ def edit_post(post_id):
                 "community/edit_post.html", post=post, filiere=post.filiere
             )
 
-        # Gérer les pièces jointes
-        if "pieces_jointes" in request.files:
-            for file in request.files.getlist("pieces_jointes"):
-                if file and allowed_file(file.filename):
-                    filename = secure_filename(file.filename)
-                    # Créer un nom de fichier unique
-                    unique_filename = (
-                        f"{datetime.now().strftime('%Y%m%d%H%M%S')}_{filename}"
-                    )
-                    filepath = os.path.join(
-                        current_app.config["UPLOAD_FOLDER"],
-                        "community",
-                        unique_filename,
-                    )
-
-                    # Créer le dossier s'il n'existe pas
-                    os.makedirs(os.path.dirname(filepath), exist_ok=True)
-
-                    # Sauvegarder le fichier
-                    file.save(filepath)
-
-                    # Déterminer le type de fichier
-                    file_type = (
-                        "image"
-                        if filename.lower().endswith(("png", "jpg", "jpeg", "gif"))
-                        else "document"
-                    )
-
+        # Gérer les pièces jointes (Cloudinary Refactor)
+        uploaded_files_json = request.form.get("uploaded_files_json")
+        if uploaded_files_json:
+            try:
+                uploaded_files = json.loads(uploaded_files_json)
+                for file_data in uploaded_files:
                     # Ajouter la pièce jointe
                     piece = PieceJointe(
-                        nom_fichier=filename,
-                        chemin_fichier=os.path.join("community", unique_filename),
-                        type_fichier=file_type,
+                        nom_fichier=file_data.get("original_name"),
+                        chemin_fichier=file_data.get("url"),
+                        type_fichier=file_data.get("type", "document"),
+                        type_mime=file_data.get("format"),
+                        taille=file_data.get("size"),
                         post_id=post.id,
                     )
                     db.session.add(piece)
+            except json.JSONDecodeError:
+                flash("Erreur lors du traitement des nouvelles pièces jointes", "error")
 
         db.session.commit()
         flash("Publication mise à jour avec succès!", "success")

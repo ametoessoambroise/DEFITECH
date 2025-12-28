@@ -1363,24 +1363,19 @@ def chat():
                     conversation = create_conversation(current_user.id, user_role)
                     conversation_id = conversation["id"]
 
-                # Traiter les pièces jointes si présentes
+                # Traiter les pièces jointes si présentes (Cloudinary metadata)
                 processed_attachments = []
                 if attachments:
-                    # Pour l'instant, les pièces jointes sont envoyées en base64 dans le JSON
-                    # Plus tard, nous pourrons implémenter l'upload multipart
                     for attachment in attachments:
-                        if attachment.get("type") == "image" and attachment.get("data"):
-                            # Valider et traiter l'image base64
-                            processed_attachments.append(
-                                {
-                                    "type": "image",
-                                    "name": attachment.get("name", "image"),
-                                    "size": len(attachment.get("data", "")),
-                                    "mime_type": attachment.get(
-                                        "mime_type", "image/png"
-                                    ),
-                                }
-                            )
+                        # On attend maintenant des objets avec {url, name, type, size, mime_type}
+                        if attachment.get("url"):
+                            processed_attachments.append({
+                                "type": attachment.get("type", "file"),
+                                "name": attachment.get("name", "unknown"),
+                                "url": attachment.get("url"),
+                                "size": attachment.get("size", 0),
+                                "mime_type": attachment.get("mime_type", "application/octet-stream")
+                            })
 
                 # Sauvegarder le message utilisateur avec pièces jointes
                 save_message(

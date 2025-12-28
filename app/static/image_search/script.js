@@ -200,11 +200,29 @@ function processImage(file) {
     }
 
     const reader = new FileReader();
-    reader.onload = function (e) {
+    reader.onload = async function (e) {
         elements.previewImage.src = e.target.result;
         elements.previewContainer.classList.remove('hidden');
-        elements.analyzeBtn.disabled = false;
-        state.fileToAnalyze = file;
+        elements.analyzeBtn.disabled = true; // Disable until upload complete
+        elements.analyzeBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> <span>Mise en ligne...</span>';
+
+        try {
+            // Upload to Cloudinary
+            const result = await uploadToCloudinary(file, 'documents_upload', 'auto'); // Use appropriate preset
+            state.fileToAnalyze = result.secure_url; // Store URL instead of file object
+            showToast('Image chargée avec succès', 'success');
+
+            elements.analyzeBtn.innerHTML = '<i class="fas fa-search"></i> <span>Analyser l\'image</span>';
+            elements.analyzeBtn.disabled = false;
+        } catch (error) {
+            console.error(error);
+            showToast('Erreur upload Cloudinary: ' + error.message, 'error');
+            state.fileToAnalyze = null;
+            elements.analyzeBtn.innerHTML = '<i class="fas fa-search"></i> <span>Analyser l\'image</span>';
+            elements.analyzeBtn.disabled = false; // Allow retry or cancel
+            return;
+        }
+
         elements.analysisResults.classList.add('hidden');
 
         setTimeout(() => {
@@ -226,7 +244,7 @@ async function analyzeImage() {
         elements.analyzeBtn.disabled = true;
         elements.analyzeBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> <span>Analyse en cours...</span>';
 
-        const analysisResult = await simulateImageAnalysis(URL.createObjectURL(state.fileToAnalyze));
+        const analysisResult = await simulateImageAnalysis(state.fileToAnalyze);
         displayAnalysisResults(analysisResult);
 
     } catch (error) {
@@ -239,6 +257,7 @@ async function analyzeImage() {
 }
 
 async function simulateImageAnalysis(imageUrl) {
+    // imageUrl is now a robust Cloudinary URL or local data URL
     await new Promise(resolve => setTimeout(resolve, 1500));
 
     const categories = {

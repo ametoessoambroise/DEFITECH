@@ -1,223 +1,378 @@
-{% extends "community/base.html" %}
-
-{% block title %}{{ 'Modifier' if post else 'Nouvelle' }} publication - {{ filiere.nom }}{% endblock %}
-
-{% block community_content %}
+{% extends "community/base.html" %} {% block title %}{{ 'Modifier' if post else
+'Nouvelle' }} publication - {{ filiere.nom }}{% endblock %} {% block
+community_content %}
 <div class="max-w-4xl mx-auto">
-    <div class="mb-6">
-        <h1 class="text-2xl font-bold text-gray-900 mt-2">
-            {{ 'Modifier la publication' if post else 'Nouvelle publication' }}
-        </h1>
-        <p class="text-sm text-gray-500 mt-1">
-            {{ filiere.nom }} • {{ filiere.type_formation }}
-        </p>
-    </div>
-    
-    <div class="bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden">
-        <form method="post" enctype="multipart/form-data" class="p-6">
-            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-            {% with messages = get_flashed_messages(with_categories=true) %}
-                {% if messages %}
-                    {% for category, message in messages %}
-                        <div class="mb-4 p-4 rounded-md {% if category == 'success' %}bg-green-100 text-green-700{% else %}bg-red-100 text-red-700{% endif %}">
-                            {{ message }}
-                        </div>
-                    {% endfor %}
-                {% endif %}
-            {% endwith %}
-            
-            <div class="space-y-6">
-                <!-- Titre -->
-                <div>
-                    <label for="titre" class="block text-sm font-medium text-gray-700 mb-1">
-                        Titre <span class="text-red-500">*</span>
-                    </label>
-                    <input type="text" id="titre" name="titre" required
-                           class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                           value="{{ post.titre if post else '' }}"
-                           placeholder="Donnez un titre clair à votre publication">
-                </div>
-                
-                <!-- Contenu -->
-                <div>
-                    <label for="contenu" class="block text-sm font-medium text-gray-700 mb-1">
-                        Contenu <span class="text-red-500">*</span>
-                    </label>
-                    <textarea id="contenu" name="contenu" rows="10" required
-                              class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                              placeholder="Décrivez votre publication en détail...">{{ post.contenu if post else '' }}</textarea>
-                    <p class="mt-1 text-xs text-gray-500">
-                        Le formatage Markdown est supporté. Utilisez # pour les titres, **gras**, *italique*, etc.
-                    </p>
-                </div>
-                
-                <!-- Pièces jointes -->
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">
-                        Pièces jointes
-                    </label>
-                    
-                    <!-- Liste des pièces jointes existantes -->
-                    {% if post and post.pieces_jointes %}
-                    <div class="mb-3 p-3 bg-gray-50 rounded-md border border-gray-200">
-                        <h4 class="text-sm font-medium text-gray-700 mb-2">Fichiers joints</h4>
-                        <ul class="space-y-2">
-                            {% for piece in post.pieces_jointes %}
-                            <li class="flex items-center justify-between bg-white p-2 rounded border border-gray-200">
-                                <div class="flex items-center">
-                                    {% if piece.type_fichier == 'image' %}
-                                    <i class="far fa-image text-blue-500 mr-2"></i>
-                                    {% else %}
-                                    <i class="far fa-file-alt text-gray-500 mr-2"></i>
-                                    {% endif %}
-                                    <span class="text-sm text-gray-700 truncate max-w-xs">{{ piece.nom_fichier }}</span>
-                                </div>
-                                <a href="{{ url_for('community.download_attachment', attachment_id=piece.id) }}" 
-                                   class="text-blue-600 hover:text-blue-800 text-sm"
-                                   download>
-                                    <i class="fas fa-download"></i>
-                                </a>
-                            </li>
-                            {% endfor %}
-                        </ul>
-                    </div>
-                    {% endif %}
-                    
-                    <!-- Téléversement de nouveaux fichiers -->
-                    <div class="mt-2 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-md">
-                        <div class="space-y-1 text-center">
-                            <svg class="mx-auto h-12 w-12 text-gray-400" stroke="currentColor" fill="none" viewBox="0 0 48 48" aria-hidden="true">
-                                <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
-                            </svg>
-                            <div class="flex text-sm text-gray-600">
-                                <label for="pieces_jointes" class="relative cursor-pointer bg-white rounded-md font-medium text-blue-600 hover:text-blue-500 focus-within:outline-none">
-                                    <span>Téléverser des fichiers</span>
-                                    <input id="pieces_jointes" name="pieces_jointes" type="file" class="sr-only" multiple>
-                                </label>
-                                <p class="pl-1">ou glissez-déposez</p>
-                            </div>
-                            <p class="text-xs text-gray-500">
-                                PNG, JPG, PDF, DOCX, XLSX jusqu'à 10MB
-                            </p>
-                        </div>
-                    </div>
-                </div>
-                
-                <!-- Options avancées -->
-                <div x-data="{ showAdvanced: false }" class="border-t border-gray-200 pt-4 mt-4">
-                    <button type="button" 
-                            @click="showAdvanced = !showAdvanced"
-                            class="text-sm font-medium text-blue-600 hover:text-blue-500 focus:outline-none">
-                        <span x-show="!showAdvanced">
-                            <i class="fas fa-plus-circle mr-1"></i> Options avancées
-                        </span>
-                        <span x-show="showAdvanced">
-                            <i class="fas fa-minus-circle mr-1"></i> Masquer les options
-                        </span>
-                    </button>
-                    
-                    <div x-show="showAdvanced" class="mt-3 space-y-3 pl-2 border-l-2 border-gray-200">
-                        <div class="flex items-start">
-                            <div class="flex items-center h-5">
-                                <input id="est_public" name="est_public" type="checkbox" 
-                                       class="focus:ring-blue-500 h-4 w-4 text-blue-600 border-gray-300 rounded"
-                                       {% if post is none or post.est_public %}checked{% endif %}>
-                            </div>
-                            <div class="ml-3 text-sm">
-                                <label for="est_public" class="font-medium text-gray-700">Publier immédiatement</label>
-                                <p class="text-gray-500">Si désactivé, la publication sera enregistrée comme brouillon</p>
-                            </div>
-                        </div>
-                        
-                        {% if current_user.role in ['admin', 'enseignant'] %}
-                        <div class="flex items-start">
-                            <div class="flex items-center h-5">
-                                <input id="est_epingle" name="est_epingle" type="checkbox"
-                                       class="focus:ring-blue-500 h-4 w-4 text-blue-600 border-gray-300 rounded"
-                                       {% if post and post.est_epingle %}checked{% endif %}>
-                            </div>
-                            <div class="ml-3 text-sm">
-                                <label for="est_epingle" class="font-medium text-gray-700">Épingler cette publication</label>
-                                <p class="text-gray-500">Les publications épinglées restent en haut de la liste</p>
-                            </div>
-                        </div>
-                        {% endif %}
-                    </div>
-                </div>
-                
-                <!-- Boutons d'action -->
-                <div class="pt-5 border-t border-gray-200">
-                    <div class="flex justify-end space-x-3">
-                        <a href="{% if post %}{{ url_for('community.view_post', post_id=post.id) }}{% else %}{{ url_for('community.filiale', filiere_id=filiere.id) }}{% endif %}" 
-                           class="bg-white py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
-                            Annuler
-                        </a>
-                        <button type="submit" name="action" value="save_draft"
-                                class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-gray-600 hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500">
-                            <i class="far fa-save mr-2"></i> Enregistrer le brouillon
-                        </button>
-                        <button type="submit" name="action" value="publish"
-                                class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
-                            <i class="far fa-paper-plane mr-2"></i>
-                            {{ 'Mettre à jour' if post else 'Publier' }}
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </form>
-    </div>
-</div>
-{% endblock %}
+  <div class="mb-6">
+    <h1 class="text-2xl font-bold text-gray-900 mt-2">
+      {{ 'Modifier la publication' if post else 'Nouvelle publication' }}
+    </h1>
+    <p class="text-sm text-gray-500 mt-1">
+      {{ filiere.nom }} • {{ filiere.type_formation }}
+    </p>
+  </div>
 
-{% block extra_js %}
+  <div
+    class="bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden"
+  >
+    <form method="post" class="p-6">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+      {% with messages = get_flashed_messages(with_categories=true) %} {% if
+      messages %} {% for category, message in messages %}
+      <div
+        class="mb-4 p-4 rounded-md {% if category == 'success' %}bg-green-100 text-green-700{% else %}bg-red-100 text-red-700{% endif %}"
+      >
+        {{ message }}
+      </div>
+      {% endfor %} {% endif %} {% endwith %}
+
+      <div class="space-y-6">
+        <!-- Titre -->
+        <div>
+          <label
+            for="titre"
+            class="block text-sm font-medium text-gray-700 mb-1"
+          >
+            Titre <span class="text-red-500">*</span>
+          </label>
+          <input
+            type="text"
+            id="titre"
+            name="titre"
+            required
+            class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+            value="{{ post.titre if post else '' }}"
+            placeholder="Donnez un titre clair à votre publication"
+          />
+        </div>
+
+        <!-- Contenu -->
+        <div>
+          <label
+            for="contenu"
+            class="block text-sm font-medium text-gray-700 mb-1"
+          >
+            Contenu <span class="text-red-500">*</span>
+          </label>
+          <textarea
+            id="contenu"
+            name="contenu"
+            rows="10"
+            required
+            class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+            placeholder="Décrivez votre publication en détail..."
+          >
+{{ post.contenu if post else '' }}</textarea
+          >
+          <p class="mt-1 text-xs text-gray-500">
+            Le formatage Markdown est supporté. Utilisez # pour les titres,
+            **gras**, *italique*, etc.
+          </p>
+        </div>
+
+        <!-- Pièces jointes (Cloudinary Refactor) -->
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">
+            Pièces jointes
+          </label>
+
+          <!-- Liste des pièces jointes existantes -->
+          {% if post and post.pieces_jointes %}
+          <div class="mb-3 p-3 bg-gray-50 rounded-md border border-gray-200">
+            <h4 class="text-sm font-medium text-gray-700 mb-2">
+              Fichiers joints existants
+            </h4>
+            <ul class="space-y-2">
+              {% for piece in post.pieces_jointes %}
+              <li
+                class="flex items-center justify-between bg-white p-2 rounded border border-gray-200"
+              >
+                <div class="flex items-center">
+                  {% if piece.type_fichier == 'image' %}
+                  <i class="far fa-image text-blue-500 mr-2"></i>
+                  {% else %}
+                  <i class="far fa-file-alt text-gray-500 mr-2"></i>
+                  {% endif %}
+                  <span class="text-sm text-gray-700 truncate max-w-xs"
+                    >{{ piece.nom_fichier }}</span
+                  >
+                </div>
+                <div class="flex items-center space-x-2">
+                  <a
+                    href="{{ url_for('community.download_attachment', attachment_id=piece.id) }}"
+                    class="text-blue-600 hover:text-blue-800 text-sm"
+                    download
+                  >
+                    <i class="fas fa-download"></i>
+                  </a>
+                  <!-- Optional: Add delete existing attachment button if needed -->
+                </div>
+              </li>
+              {% endfor %}
+            </ul>
+          </div>
+          {% endif %}
+
+          <!-- Téléversement de nouveaux fichiers -->
+          <div
+            class="mt-2 flex justify-center px-6 pt-5 pb-6 border-2 border-dashed border-gray-300 rounded-md bg-gray-50 hover:bg-white transition-colors"
+          >
+            <div class="space-y-1 text-center">
+              <div class="flex flex-col items-center">
+                <i
+                  class="fas fa-cloud-upload-alt text-4xl text-gray-400 mb-3"
+                ></i>
+                <div class="flex text-sm text-gray-600">
+                  <label
+                    for="file-upload-community"
+                    class="relative cursor-pointer bg-white rounded-md font-medium text-blue-600 hover:text-blue-500 focus-within:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 px-2"
+                  >
+                    <span>Sélectionner des fichiers</span>
+                    <input
+                      id="file-upload-community"
+                      type="file"
+                      class="sr-only"
+                      multiple
+                      accept=".pdf,.docx,.xlsx,.jpg,.jpeg,.png,.gif"
+                    />
+                  </label>
+                  <p class="pl-1">ou glissez-déposez</p>
+                </div>
+                <p class="text-xs text-gray-500 mt-1">
+                  PNG, JPG, PDF, DOCX, XLSX jusqu'à 10MB
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Zone de feedback et liste des nouveaux fichiers -->
+          <div id="upload_feedback_community" class="mt-3 space-y-2"></div>
+
+          <!-- Hidden inputs container for Cloudinary data (JSON array) -->
+          <input
+            type="hidden"
+            name="uploaded_files_json"
+            id="uploaded_files_json"
+          />
+
+          <button
+            type="button"
+            id="clear-files-btn"
+            class="hidden text-xs text-red-500 mt-2 hover:underline"
+          >
+            Effacer la sélection
+          </button>
+        </div>
+
+        <!-- Options avancées -->
+        <div
+          x-data="{ showAdvanced: false }"
+          class="border-t border-gray-200 pt-4 mt-4"
+        >
+          <button
+            type="button"
+            @click="showAdvanced = !showAdvanced"
+            class="text-sm font-medium text-blue-600 hover:text-blue-500 focus:outline-none"
+          >
+            <span x-show="!showAdvanced">
+              <i class="fas fa-plus-circle mr-1"></i> Options avancées
+            </span>
+            <span x-show="showAdvanced">
+              <i class="fas fa-minus-circle mr-1"></i> Masquer les options
+            </span>
+          </button>
+
+          <div
+            x-show="showAdvanced"
+            class="mt-3 space-y-3 pl-2 border-l-2 border-gray-200"
+          >
+            <div class="flex items-start">
+              <div class="flex items-center h-5">
+                <input
+                  id="est_public"
+                  name="est_public"
+                  type="checkbox"
+                  class="focus:ring-blue-500 h-4 w-4 text-blue-600 border-gray-300 rounded"
+                  {%
+                  if
+                  post
+                  is
+                  none
+                  or
+                  post.est_public
+                  %}checked{%
+                  endif
+                  %}
+                />
+              </div>
+              <div class="ml-3 text-sm">
+                <label for="est_public" class="font-medium text-gray-700"
+                  >Publier immédiatement</label
+                >
+                <p class="text-gray-500">
+                  Si désactivé, la publication sera enregistrée comme brouillon
+                </p>
+              </div>
+            </div>
+
+            {% if current_user.role in ['admin', 'enseignant'] %}
+            <div class="flex items-start">
+              <div class="flex items-center h-5">
+                <input
+                  id="est_epingle"
+                  name="est_epingle"
+                  type="checkbox"
+                  class="focus:ring-blue-500 h-4 w-4 text-blue-600 border-gray-300 rounded"
+                  {%
+                  if
+                  post
+                  and
+                  post.est_epingle
+                  %}checked{%
+                  endif
+                  %}
+                />
+              </div>
+              <div class="ml-3 text-sm">
+                <label for="est_epingle" class="font-medium text-gray-700"
+                  >Épingler cette publication</label
+                >
+                <p class="text-gray-500">
+                  Les publications épinglées restent en haut de la liste
+                </p>
+              </div>
+            </div>
+            {% endif %}
+          </div>
+        </div>
+
+        <!-- Boutons d'action -->
+        <div class="pt-5 border-t border-gray-200">
+          <div class="flex justify-end space-x-3">
+            <a
+              href="{% if post %}{{ url_for('community.view_post', post_id=post.id) }}{% else %}{{ url_for('community.filiale', filiere_id=filiere.id) }}{% endif %}"
+              class="bg-white py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+            >
+              Annuler
+            </a>
+            <button
+              type="submit"
+              name="action"
+              id="draft-btn"
+              value="save_draft"
+              class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-gray-600 hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500"
+            >
+              <i class="far fa-save mr-2"></i> Enregistrer le brouillon
+            </button>
+            <button
+              type="submit"
+              name="action"
+              id="publish-btn"
+              value="publish"
+              class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+            >
+              <i class="far fa-paper-plane mr-2"></i>
+              {{ 'Mettre à jour' if post else 'Publier' }}
+            </button>
+          </div>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %} {% block extra_js %}
+<script src="{{ url_for('static', filename='js/cloudinary_uploader.js') }}"></script>
 <script>
-// Gestion du glisser-déposer de fichiers
-document.addEventListener('DOMContentLoaded', function() {
-    const dropArea = document.querySelector('.border-dashed');
-    const fileInput = document.getElementById('pieces_jointes');
-    
-    if (dropArea && fileInput) {
-        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
-            dropArea.addEventListener(eventName, preventDefaults, false);
-        });
-        
-        function preventDefaults(e) {
-            e.preventDefault();
-            e.stopPropagation();
+  document.addEventListener("DOMContentLoaded", function () {
+    // Custom logic for multiple files upload
+    const fileInput = document.getElementById("file-upload-community");
+    const feedbackArea = document.getElementById("upload_feedback_community");
+    const hiddenInput = document.getElementById("uploaded_files_json");
+    const clearBtn = document.getElementById("clear-files-btn");
+    const submitBtns = [
+      document.getElementById("draft-btn"),
+      document.getElementById("publish-btn"),
+    ];
+
+    let uploadedFiles = [];
+
+    fileInput.addEventListener("change", async function () {
+      const files = Array.from(this.files);
+      if (files.length === 0) return;
+
+      // Disable buttons
+      submitBtns.forEach((btn) => {
+        if (btn) {
+          btn.disabled = true;
+          btn.classList.add("opacity-50", "cursor-not-allowed");
         }
-        
-        ['dragenter', 'dragover'].forEach(eventName => {
-            dropArea.addEventListener(eventName, highlight, false);
-        });
-        
-        ['dragleave', 'drop'].forEach(eventName => {
-            dropArea.addEventListener(eventName, unhighlight, false);
-        });
-        
-        function highlight() {
-            dropArea.classList.add('border-blue-500', 'bg-blue-50');
+      });
+
+      feedbackArea.innerHTML = "";
+
+      const uploads = files.map(async (file) => {
+        const item = document.createElement("div");
+        item.className =
+          "flex items-center justify-between text-sm p-2 bg-gray-50 rounded";
+        item.innerHTML = `<span><i class="fas fa-spinner fa-spin mr-2"></i> ${file.name}</span> <span class="text-xs text-gray-500">En cours...</span>`;
+        feedbackArea.appendChild(item);
+
+        try {
+          // Determine preset. Default to documents, check if image
+          let preset = "documents_upload"; // Default
+          let resourceType = "auto"; // Default
+
+          const result = await uploadToCloudinary(file, preset, resourceType);
+
+          item.innerHTML = `<span><i class="fas fa-check text-green-500 mr-2"></i> ${file.name}</span> <span class="text-xs text-green-600">Prêt</span>`;
+
+          return {
+            original_name: file.name,
+            url: result.secure_url,
+            public_id: result.public_id,
+            format: result.format,
+            size: result.bytes,
+            type: file.type.startsWith("image/") ? "image" : "document",
+          };
+        } catch (error) {
+          item.innerHTML = `<span><i class="fas fa-times text-red-500 mr-2"></i> ${file.name}</span> <span class="text-xs text-red-600">Erreur</span>`;
+          console.error(error);
+          return null;
         }
-        
-        function unhighlight() {
-            dropArea.classList.remove('border-blue-500', 'bg-blue-50');
+      });
+
+      const results = await Promise.all(uploads);
+      const successfulUploads = results.filter((r) => r !== null);
+
+      uploadedFiles = [...uploadedFiles, ...successfulUploads];
+      hiddenInput.value = JSON.stringify(uploadedFiles);
+
+      // Enable buttons
+      submitBtns.forEach((btn) => {
+        if (btn) {
+          btn.disabled = false;
+          btn.classList.remove("opacity-50", "cursor-not-allowed");
         }
-        
-        dropArea.addEventListener('drop', handleDrop, false);
-        
-        function handleDrop(e) {
-            const dt = e.dataTransfer;
-            const files = dt.files;
-            fileInput.files = files;
-        }
-    }
-    
+      });
+
+      if (uploadedFiles.length > 0) {
+        clearBtn.classList.remove("hidden");
+      }
+    });
+
+    clearBtn.addEventListener("click", function () {
+      uploadedFiles = [];
+      hiddenInput.value = "";
+      feedbackArea.innerHTML = "";
+      fileInput.value = ""; // Reset file input
+      this.classList.add("hidden");
+    });
+
     // Aperçu Markdown en direct
-    const contenuTextarea = document.getElementById('contenu');
+    const contenuTextarea = document.getElementById("contenu");
     if (contenuTextarea) {
-        contenuTextarea.addEventListener('input', function() {
-            // Vous pourriez ajouter un aperçu Markdown en direct ici
-        });
+      contenuTextarea.addEventListener("input", function () {
+        // Vous pourriez ajouter un aperçu Markdown en direct ici
+      });
     }
-});
+  });
 </script>
-{% endblock %}

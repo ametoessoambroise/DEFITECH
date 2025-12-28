@@ -630,14 +630,55 @@ const UI = {
             this.elements.voiceBtn.addEventListener('click', () => this.toggleRecording());
         }
 
-        // Handle attachment button (visual only for now as backend support details are vague)
+        // Handle attachment button & file input
         if (this.elements.attachBtn && this.elements.fileInput) {
             this.elements.attachBtn.addEventListener('click', () => this.elements.fileInput.click());
-            this.elements.fileInput.addEventListener('change', (e) => {
-                if (e.target.files.length > 0) {
-                    // alert('File attachment functionality is coming soon.');
-                    // Or implement if backend supports it. For now, visual feedback.
-                    this.elements.attachBtn.classList.add('text-primary-600');
+            
+            this.elements.fileInput.addEventListener('change', async (e) => {
+                const files = e.target.files;
+                if (!files || files.length === 0) return;
+
+                // Initialize pending attachments if not exists
+                if (!State.pendingAttachments) State.pendingAttachments = [];
+
+                // Visual feedback of upload start
+                this.elements.attachBtn.classList.add('text-blue-500', 'animate-pulse');
+                this.showToast('Upload en cours...', 'info');
+
+                try {
+                    for (let i = 0; i < files.length; i++) {
+                        const file = files[i];
+                        // Determine preset based on type, defaulting to 'documents_upload' for generic files
+                        // But since chat accepts images too, we might need logic.
+                        // cloudinary_uploader.js has specific presets: profiles_upload, documents_upload, html_upload, assets_upload.
+                        // 'auto' resource type usually works well with a generic unsigned preset if enabled.
+                        // Assuming 'documents_upload' works for general files or use 'auto' logic if backend expects it.
+                        // Let's use 'documents_upload' which seemed to be the general one, or 'auto' if configured.
+                        // Actually, 'documents_upload' was for resources.
+                        // Let's check file type.
+                        let preset = 'documents_upload';
+                        let resourceType = 'auto';
+                        
+                        // Proceed with upload
+                        const result = await uploadToCloudinary(file, preset, resourceType);
+                        
+                        State.pendingAttachments.push({
+                            type: file.type.startsWith('image/') ? 'image' : 'file',
+                            name: file.name,
+                            url: result.secure_url,
+                            size: result.bytes,
+                            mime_type: file.type || result.format || 'application/octet-stream'
+                        });
+                    }
+                    
+                    this.showToast(`${files.length} fichier(s) prêt(s) à l'envoi`, 'success');
+                    this.elements.attachBtn.classList.remove('animate-pulse');
+                    this.elements.attachBtn.classList.add('text-green-500'); // Indicate success
+                    
+                } catch (error) {
+                    console.error('Upload failed:', error);
+                    this.showToast("Erreur lors de l'upload: " + error.message, 'error');
+                    this.elements.attachBtn.classList.remove('text-blue-500', 'animate-pulse');
                 }
             });
         }
@@ -659,22 +700,35 @@ const UI = {
 
         const input = this.elements.input;
         const message = input.value.trim();
+        const attachments = State.pendingAttachments || [];
 
-        if (!message) return;
+        if (!message && attachments.length === 0) return;
 
         // Hide welcome screen
         if (this.elements.welcome) {
             this.elements.welcome.style.display = 'none';
         }
 
-        // Add User Message
-        this.elements.messages.appendChild(this.createMessageElement(message, true));
+        // Add User Message (Text)
+        if (message) {
+            this.elements.messages.appendChild(this.createMessageElement(message, true));
+        }
+        
+        // Add User Message (Attachments Visual feedback - optional, or just let backend echo)
+        // For better UX, we could show them. For now, we trust the backend echo/confirmation.
+
         this.scrollToBottom();
 
         // Clear Input
         input.value = '';
         this.adjustTextareaHeight();
-        if (this.elements.attachBtn) this.elements.attachBtn.classList.remove('text-primary-600');
+        if (this.elements.attachBtn) {
+            this.elements.attachBtn.classList.remove('text-green-500', 'text-blue-500');
+            this.elements.attachBtn.classList.add('text-gray-400');
+        }
+        // Clear pending attachments
+        State.pendingAttachments = [];
+        if (this.elements.fileInput) this.elements.fileInput.value = '';
 
         State.isTyping = true;
 
@@ -687,7 +741,8 @@ const UI = {
             // Construct payload
             const payload = {
                 message: message,
-                conversation_id: State.currentConversationId
+                conversation_id: State.currentConversationId,
+                attachments: attachments
             };
 
             const response = await fetch(CONFIG.endpoints.chat, {

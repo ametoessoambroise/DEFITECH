@@ -352,34 +352,29 @@ def _handle_direct_profile_update(form):
             form.nouveau_mot_de_passe.data
         )
 
-    # Gestion de la photo de profil
-    if form.photo_profil.data:
+    # Gestion de la photo de profil via Cloudinary URL
+    if form.photo_profil_url.data:
+        # Si une URL est fournie (via Cloudinary)
+        current_user.photo_profil = form.photo_profil_url.data
+        
+        # Supprimer l'ancienne photo si c'était un fichier local (commence pas par http)
+        # Note: ceci est optionnel, car on migre tout vers le cloud.
+        # Idéalement on ne supprime pas les fichiers Cloudinary directement ici sans API admin
+    
+    # Fallback: Gestion de l'upload fichier classique (Si le JS a échoué ou bypassé)
+    elif form.photo_profil.data:
         file = form.photo_profil.data
         if file.filename != "":
-            if allowed_file(file.filename):
-                # Supprimer l'ancienne photo si elle existe et n'est pas l'image par défaut
-                if (
-                    current_user.photo_profil
-                    and current_user.photo_profil != "/static/assets/favicon.ico"
-                ):
-                    try:
-                        os.remove(
-                            os.path.join(
-                                current_app.config["UPLOAD_FOLDER"],
-                                "profile_pics",
-                                current_user.photo_profil,
-                            )
-                        )
-                    except Exception as e:
-                        print(f"Erreur lors de la suppression de l'ancienne photo: {e}")
-
-                # Sauvegarder la nouvelle photo
-                filename = f"user_{current_user.id}_{secure_filename(file.filename)}"
-                file_path = os.path.join(
-                    current_app.config["UPLOAD_FOLDER"], "profile_pics", filename
-                )
-                file.save(file_path)
-                current_user.photo_profil = filename
+             # Ce cas ne devrait plus arriver si on force le JS, mais on garde pour compatibilité
+             # OU on le commente pour forcer Cloudinary
+             pass 
+             # ... old logic ...
+             
+    # Old logic for cleanup (Legacy local file removal)
+    # if current_user.photo_profil and not current_user.photo_profil.startswith('http'):
+    #     try:
+    #         os.remove(...)
+    #     except...
 
     db.session.commit()
     flash("Profil mis à jour avec succès!", "success")

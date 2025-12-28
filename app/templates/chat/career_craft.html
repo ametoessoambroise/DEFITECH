@@ -1,714 +1,858 @@
 <!DOCTYPE html>
 <html lang="fr">
-
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+    />
     <title>CareerCraft - Générateur de CV IA</title>
-    <meta name="csrf-token" content="{{ csrf_token }}">
-    <link rel="shortcut icon" href="{{ url_for('static', filename='assets/favicon.ico') }}" type="image/x-icon">
+    <meta name="csrf-token" content="{{ csrf_token }}" />
+    <link
+      rel="shortcut icon"
+      href="https://res.cloudinary.com/dmokvhpjt/image/upload/v1766894416/bijcryrbjli0daglbsim.png"
+      type="image/x-icon"
+    />
 
     <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
+    />
 
     <style>
-        * {
-            -webkit-tap-highlight-color: transparent;
+      * {
+        -webkit-tap-highlight-color: transparent;
+      }
+
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+          "Helvetica Neue", Arial, sans-serif;
+        overscroll-behavior: none;
+        touch-action: manipulation;
+      }
+
+      /* Custom scrollbar */
+      .custom-scrollbar::-webkit-scrollbar {
+        width: 4px;
+      }
+
+      .custom-scrollbar::-webkit-scrollbar-track {
+        background: #f1f5f9;
+      }
+
+      .custom-scrollbar::-webkit-scrollbar-thumb {
+        background: #cbd5e0;
+        border-radius: 2px;
+      }
+
+      /* Animations */
+      @keyframes slideUp {
+        from {
+          opacity: 0;
+          transform: translateY(10px);
         }
 
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-            overscroll-behavior: none;
-            touch-action: manipulation;
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      @keyframes spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+
+      .animate-slide-up {
+        animation: slideUp 0.3s ease-out;
+      }
+
+      .animate-spin {
+        animation: spin 1s linear infinite;
+      }
+
+      /* Safe area for iOS */
+      @supports (padding: max(0px)) {
+        .safe-top {
+          padding-top: max(1rem, env(safe-area-inset-top));
         }
 
-        /* Custom scrollbar */
-        .custom-scrollbar::-webkit-scrollbar {
-            width: 4px;
+        .safe-bottom {
+          padding-bottom: max(1rem, env(safe-area-inset-bottom));
         }
 
-        .custom-scrollbar::-webkit-scrollbar-track {
-            background: #f1f5f9;
+        .safe-left {
+          padding-left: max(1rem, env(safe-area-inset-left));
         }
 
-        .custom-scrollbar::-webkit-scrollbar-thumb {
-            background: #cbd5e0;
-            border-radius: 2px;
+        .safe-right {
+          padding-right: max(1rem, env(safe-area-inset-right));
         }
+      }
 
-        /* Animations */
-        @keyframes slideUp {
-            from {
-                opacity: 0;
-                transform: translateY(10px);
-            }
+      /* Preview container */
+      #cvPreview {
+        min-height: 400px;
+      }
 
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        @keyframes spin {
-            to {
-                transform: rotate(360deg);
-            }
-        }
-
-        .animate-slide-up {
-            animation: slideUp 0.3s ease-out;
-        }
-
-        .animate-spin {
-            animation: spin 1s linear infinite;
-        }
-
-        /* Safe area for iOS */
-        @supports (padding: max(0px)) {
-            .safe-top {
-                padding-top: max(1rem, env(safe-area-inset-top));
-            }
-
-            .safe-bottom {
-                padding-bottom: max(1rem, env(safe-area-inset-bottom));
-            }
-
-            .safe-left {
-                padding-left: max(1rem, env(safe-area-inset-left));
-            }
-
-            .safe-right {
-                padding-right: max(1rem, env(safe-area-inset-right));
-            }
-        }
-
-        /* Preview container */
+      @media (min-width: 768px) {
         #cvPreview {
-            min-height: 400px;
+          min-height: 600px;
+        }
+      }
+
+      @media (min-width: 1024px) {
+        #cvPreview {
+          min-height: 800px;
+        }
+      }
+
+      /* Mobile touch targets */
+      @media (max-width: 768px) {
+        .touch-target {
+          min-height: 44px;
+          min-width: 44px;
         }
 
-        @media (min-width: 768px) {
-            #cvPreview {
-                min-height: 600px;
-            }
+        .mobile-padding {
+          padding-left: clamp(0.75rem, 4vw, 1rem);
+          padding-right: clamp(0.75rem, 4vw, 1rem);
         }
 
-        @media (min-width: 1024px) {
-            #cvPreview {
-                min-height: 800px;
-            }
+        .mobile-py {
+          padding-top: clamp(0.75rem, 3vw, 1rem);
+          padding-bottom: clamp(0.75rem, 3vw, 1rem);
         }
+      }
 
-        /* Mobile touch targets */
-        @media (max-width: 768px) {
-            .touch-target {
-                min-height: 44px;
-                min-width: 44px;
-            }
+      /* Responsive text sizes */
+      .text-responsive-xs {
+        font-size: clamp(0.75rem, 2.5vw, 0.875rem);
+      }
 
-            .mobile-padding {
-                padding-left: clamp(0.75rem, 4vw, 1rem);
-                padding-right: clamp(0.75rem, 4vw, 1rem);
-            }
+      .text-responsive-sm {
+        font-size: clamp(0.875rem, 3vw, 1rem);
+      }
 
-            .mobile-py {
-                padding-top: clamp(0.75rem, 3vw, 1rem);
-                padding-bottom: clamp(0.75rem, 3vw, 1rem);
-            }
-        }
+      .text-responsive-base {
+        font-size: clamp(1rem, 3.5vw, 1.125rem);
+      }
 
-        /* Responsive text sizes */
-        .text-responsive-xs {
-            font-size: clamp(0.75rem, 2.5vw, 0.875rem);
-        }
+      /* Smooth transitions */
+      .smooth-transition {
+        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+      }
 
-        .text-responsive-sm {
-            font-size: clamp(0.875rem, 3vw, 1rem);
-        }
+      /* iOS momentum scrolling */
+      .ios-scroll {
+        -webkit-overflow-scrolling: touch;
+      }
 
-        .text-responsive-base {
-            font-size: clamp(1rem, 3.5vw, 1.125rem);
-        }
+      /* Better touch feedback */
+      .touch-feedback:active {
+        transform: scale(0.98);
+      }
 
-        /* Smooth transitions */
-        .smooth-transition {
-            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-        }
+      /* Responsive grid */
+      .responsive-grid {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: clamp(0.75rem, 3vw, 1.5rem);
+      }
 
-        /* iOS momentum scrolling */
-        .ios-scroll {
-            -webkit-overflow-scrolling: touch;
-        }
-
-        /* Better touch feedback */
-        .touch-feedback:active {
-            transform: scale(0.98);
-        }
-
-        /* Responsive grid */
+      @media (min-width: 1024px) {
         .responsive-grid {
-            display: grid;
-            grid-template-columns: 1fr;
-            gap: clamp(0.75rem, 3vw, 1.5rem);
+          grid-template-columns: 1fr 2fr;
         }
+      }
 
-        @media (min-width: 1024px) {
-            .responsive-grid {
-                grid-template-columns: 1fr 2fr;
-            }
-        }
+      /* Mobile modal animation */
+      .modal-slide-up {
+        animation: slideUp 0.3s ease-out;
+      }
 
-        /* Mobile modal animation */
-        .modal-slide-up {
-            animation: slideUp 0.3s ease-out;
-        }
+      /* Responsive spacing utilities */
+      .px-responsive {
+        padding-left: clamp(0.75rem, 4vw, 1rem);
+        padding-right: clamp(0.75rem, 4vw, 1rem);
+      }
 
-        /* Responsive spacing utilities */
-        .px-responsive {
-            padding-left: clamp(0.75rem, 4vw, 1rem);
-            padding-right: clamp(0.75rem, 4vw, 1rem);
-        }
+      .py-responsive {
+        padding-top: clamp(0.5rem, 3vw, 0.75rem);
+        padding-bottom: clamp(0.5rem, 3vw, 0.75rem);
+      }
 
-        .py-responsive {
-            padding-top: clamp(0.5rem, 3vw, 0.75rem);
-            padding-bottom: clamp(0.5rem, 3vw, 0.75rem);
-        }
-
-        /* Button responsive sizing */
-        .btn-responsive {
-            padding: clamp(0.5rem, 2.5vw, 0.75rem) clamp(0.75rem, 3vw, 1rem);
-            font-size: clamp(0.875rem, 2.5vw, 1rem);
-        }
+      /* Button responsive sizing */
+      .btn-responsive {
+        padding: clamp(0.5rem, 2.5vw, 0.75rem) clamp(0.75rem, 3vw, 1rem);
+        font-size: clamp(0.875rem, 2.5vw, 1rem);
+      }
     </style>
-</head>
+  </head>
 
-<body class="bg-gray-50">
-
+  <body class="bg-gray-50">
     <!-- Header -->
-    <header class="bg-white border-b border-gray-200 sticky top-0 z-10 safe-top shadow-sm mobile-padding">
-        <div class="mobile-py">
-            <div class="flex items-center justify-between">
-                <div class="flex items-center justify-center gap-3 sm:gap-4">
-
-                    <img src="{{ url_for('static', filename='assets/career.png') }}" alt="logo"
-                        class="w-10 h-10 sm:w-12 sm:h-12 rounded-full object-cover">
-                    <div>
-
-                        <h1 class="text-lg sm:text-xl lg:text-2xl font-bold text-gray-900 leading-tight">CareerCraft
-                        </h1>
-                        <p class="text-xs sm:text-sm text-gray-500 mt-0.5">Générateur de CV IA</p>
-                    </div>
-                </div>
-
-                <div class="flex items-center gap-2">
-                    <button onclick="window.history.back()"
-                        class="bg-blue-500 text-white px-3 py-2 rounded-md hover:bg-blue-600 active:bg-blue-700 transition-colors touch-target touch-feedback btn-responsive">
-                        <i class="fas fa-arrow-left mr-1 sm:mr-2"></i>
-                        <span class="hidden sm:inline">Retour</span>
-                    </button>
-
-                    <!-- Template selector (mobile) -->
-                    <select id="templateSelect"
-                        class="lg:hidden px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 touch-target">
-                        <option value="modern">Moderne</option>
-                        <option value="classic">Classique</option>
-                        <option value="creative">Créatif</option>
-                    </select>
-                </div>
+    <header
+      class="bg-white border-b border-gray-200 sticky top-0 z-10 safe-top shadow-sm mobile-padding"
+    >
+      <div class="mobile-py">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center justify-center gap-3 sm:gap-4">
+            <img
+              src="https://res.cloudinary.com/dmokvhpjt/image/upload/v1766894504/dl6awojzn5wcjheacxbf.png"
+              alt="logo"
+              class="w-10 h-10 sm:w-12 sm:h-12 rounded-full object-cover"
+            />
+            <div>
+              <h1
+                class="text-lg sm:text-xl lg:text-2xl font-bold text-gray-900 leading-tight"
+              >
+                CareerCraft
+              </h1>
+              <p class="text-xs sm:text-sm text-gray-500 mt-0.5">
+                Générateur de CV IA
+              </p>
             </div>
+          </div>
+
+          <div class="flex items-center gap-2">
+            <button
+              onclick="window.history.back()"
+              class="bg-blue-500 text-white px-3 py-2 rounded-md hover:bg-blue-600 active:bg-blue-700 transition-colors touch-target touch-feedback btn-responsive"
+            >
+              <i class="fas fa-arrow-left mr-1 sm:mr-2"></i>
+              <span class="hidden sm:inline">Retour</span>
+            </button>
+
+            <!-- Template selector (mobile) -->
+            <select
+              id="templateSelect"
+              class="lg:hidden px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 touch-target"
+            >
+              <option value="modern">Moderne</option>
+              <option value="classic">Classique</option>
+              <option value="creative">Créatif</option>
+            </select>
+          </div>
         </div>
+      </div>
     </header>
 
     <!-- Main Content -->
     <main class="pb-20 lg:pb-8">
-        <div class="max-w-7xl mx-auto mobile-padding py-responsive">
-            <div class="responsive-grid">
-
-                <!-- Sidebar (Desktop only) -->
-                <aside class="hidden lg:block lg:col-span-3 space-y-4">
-
-                    <!-- Template Selection -->
-                    <div class="bg-white rounded-xl p-4 border border-gray-200 shadow-sm">
-                        <h2 class="text-sm font-semibold text-gray-900 mb-3">Modèle de CV</h2>
-                        <select id="templateSelectDesktop"
-                            class="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 smooth-transition">
-                            <option value="modern">Moderne</option>
-                            <option value="classic">Classique</option>
-                            <option value="creative">Créatif</option>
-                        </select>
-                    </div>
-
-                    <!-- Data Summary -->
-                    <div class="bg-white rounded-xl p-4 border border-gray-200 shadow-sm">
-                        <h2 class="text-sm font-semibold text-gray-900 mb-3">Vos données</h2>
-                        <div class="space-y-2 text-sm">
-                            <div class="flex items-center justify-between py-1">
-                                <span class="text-gray-600">Expériences</span>
-                                <span id="expCount" class="font-semibold text-gray-900">0</span>
-                            </div>
-                            <div class="flex items-center justify-between py-1">
-                                <span class="text-gray-600">Formations</span>
-                                <span id="eduCount" class="font-semibold text-gray-900">0</span>
-                            </div>
-                            <div class="flex items-center justify-between py-1">
-                                <span class="text-gray-600">Compétences</span>
-                                <span id="skillsCount" class="font-semibold text-gray-900">0</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Export Options -->
-                    <div class="bg-white rounded-xl p-4 border border-gray-200 shadow-sm">
-                        <h2 class="text-sm font-semibold text-gray-900 mb-3">Exporter</h2>
-                        <div class="space-y-2">
-                            <button id="exportPdfDesktop"
-                                class="w-full bg-red-500 hover:bg-red-600 active:bg-red-700 text-white py-2.5 px-4 rounded-lg text-sm font-medium transition-colors flex items-center justify-center touch-target touch-feedback smooth-transition">
-                                <i class="fas fa-file-pdf mr-2"></i>
-                                PDF
-                            </button>
-                            <button id="exportDocxDesktop"
-                                class="w-full bg-blue-500 hover:bg-blue-600 active:bg-blue-700 text-white py-2.5 px-4 rounded-lg text-sm font-medium transition-colors flex items-center justify-center touch-target touch-feedback smooth-transition">
-                                <i class="fas fa-file-word mr-2"></i>
-                                Word
-                            </button>
-                            <button id="exportLinkedInDesktop"
-                                class="w-full bg-blue-700 hover:bg-blue-800 active:bg-blue-900 text-white py-2.5 px-4 rounded-lg text-sm font-medium transition-colors flex items-center justify-center touch-target touch-feedback smooth-transition">
-                                <i class="fab fa-linkedin mr-2"></i>
-                                LinkedIn
-                            </button>
-                        </div>
-                    </div>
-                </aside>
-
-                <!-- CV Preview -->
-                <div class="lg:col-span-9">
-                    <div class="bg-white rounded-xl border border-gray-200 overflow-hidden shadow-sm">
-
-                        <!-- Preview Header -->
-                        <div
-                            class="flex items-center justify-between mobile-padding py-responsive border-b border-gray-200">
-                            <h2 class="text-base sm:text-lg font-semibold text-gray-900">Aperçu du CV</h2>
-                            <button id="refreshPreview"
-                                class="flex items-center space-x-2 px-3 py-1.5 sm:px-4 sm:py-2 text-sm text-blue-600 hover:bg-blue-50 rounded-lg transition-colors touch-target touch-feedback smooth-transition">
-                                <i class="fas fa-sync-alt"></i>
-                                <span class="hidden sm:inline">Actualiser</span>
-                            </button>
-                        </div>
-
-                        <!-- Preview Content -->
-                        <div class="p-4 lg:p-6 custom-scrollbar overflow-y-auto ios-scroll"
-                            style="max-height: calc(100vh - 280px);">
-                            <div id="cvPreview" class="bg-gray-50 rounded-lg">
-                                <!-- Empty State -->
-                                <div
-                                    class="flex flex-col items-center justify-center h-full py-16 sm:py-20 text-center px-4">
-                                    <i class="fas fa-file-alt text-gray-300 text-4xl sm:text-5xl mb-3 sm:mb-4"></i>
-                                    <p class="text-gray-600 font-medium mb-1 text-responsive-sm">Votre CV s'affichera
-                                        ici</p>
-                                    <p class="text-sm text-gray-400 text-responsive-xs">Cliquez sur Actualiser pour
-                                        générer</p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+      <div class="max-w-7xl mx-auto mobile-padding py-responsive">
+        <div class="responsive-grid">
+          <!-- Sidebar (Desktop only) -->
+          <aside class="hidden lg:block lg:col-span-3 space-y-4">
+            <!-- Template Selection -->
+            <div
+              class="bg-white rounded-xl p-4 border border-gray-200 shadow-sm"
+            >
+              <h2 class="text-sm font-semibold text-gray-900 mb-3">
+                Modèle de CV
+              </h2>
+              <select
+                id="templateSelectDesktop"
+                class="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 smooth-transition"
+              >
+                <option value="modern">Moderne</option>
+                <option value="classic">Classique</option>
+                <option value="creative">Créatif</option>
+              </select>
             </div>
+
+            <!-- Data Summary -->
+            <div
+              class="bg-white rounded-xl p-4 border border-gray-200 shadow-sm"
+            >
+              <h2 class="text-sm font-semibold text-gray-900 mb-3">
+                Vos données
+              </h2>
+              <div class="space-y-2 text-sm">
+                <div class="flex items-center justify-between py-1">
+                  <span class="text-gray-600">Expériences</span>
+                  <span id="expCount" class="font-semibold text-gray-900"
+                    >0</span
+                  >
+                </div>
+                <div class="flex items-center justify-between py-1">
+                  <span class="text-gray-600">Formations</span>
+                  <span id="eduCount" class="font-semibold text-gray-900"
+                    >0</span
+                  >
+                </div>
+                <div class="flex items-center justify-between py-1">
+                  <span class="text-gray-600">Compétences</span>
+                  <span id="skillsCount" class="font-semibold text-gray-900"
+                    >0</span
+                  >
+                </div>
+              </div>
+            </div>
+
+            <!-- Export Options -->
+            <div
+              class="bg-white rounded-xl p-4 border border-gray-200 shadow-sm"
+            >
+              <h2 class="text-sm font-semibold text-gray-900 mb-3">Exporter</h2>
+              <div class="space-y-2">
+                <button
+                  id="exportPdfDesktop"
+                  class="w-full bg-red-500 hover:bg-red-600 active:bg-red-700 text-white py-2.5 px-4 rounded-lg text-sm font-medium transition-colors flex items-center justify-center touch-target touch-feedback smooth-transition"
+                >
+                  <i class="fas fa-file-pdf mr-2"></i>
+                  PDF
+                </button>
+                <button
+                  id="exportDocxDesktop"
+                  class="w-full bg-blue-500 hover:bg-blue-600 active:bg-blue-700 text-white py-2.5 px-4 rounded-lg text-sm font-medium transition-colors flex items-center justify-center touch-target touch-feedback smooth-transition"
+                >
+                  <i class="fas fa-file-word mr-2"></i>
+                  Word
+                </button>
+                <button
+                  id="exportLinkedInDesktop"
+                  class="w-full bg-blue-700 hover:bg-blue-800 active:bg-blue-900 text-white py-2.5 px-4 rounded-lg text-sm font-medium transition-colors flex items-center justify-center touch-target touch-feedback smooth-transition"
+                >
+                  <i class="fab fa-linkedin mr-2"></i>
+                  LinkedIn
+                </button>
+              </div>
+            </div>
+          </aside>
+
+          <!-- CV Preview -->
+          <div class="lg:col-span-9">
+            <div
+              class="bg-white rounded-xl border border-gray-200 overflow-hidden shadow-sm"
+            >
+              <!-- Preview Header -->
+              <div
+                class="flex items-center justify-between mobile-padding py-responsive border-b border-gray-200"
+              >
+                <h2 class="text-base sm:text-lg font-semibold text-gray-900">
+                  Aperçu du CV
+                </h2>
+                <button
+                  id="refreshPreview"
+                  class="flex items-center space-x-2 px-3 py-1.5 sm:px-4 sm:py-2 text-sm text-blue-600 hover:bg-blue-50 rounded-lg transition-colors touch-target touch-feedback smooth-transition"
+                >
+                  <i class="fas fa-sync-alt"></i>
+                  <span class="hidden sm:inline">Actualiser</span>
+                </button>
+              </div>
+
+              <!-- Preview Content -->
+              <div
+                class="p-4 lg:p-6 custom-scrollbar overflow-y-auto ios-scroll"
+                style="max-height: calc(100vh - 280px)"
+              >
+                <div id="cvPreview" class="bg-gray-50 rounded-lg">
+                  <!-- Empty State -->
+                  <div
+                    class="flex flex-col items-center justify-center h-full py-16 sm:py-20 text-center px-4"
+                  >
+                    <i
+                      class="fas fa-file-alt text-gray-300 text-4xl sm:text-5xl mb-3 sm:mb-4"
+                    ></i>
+                    <p
+                      class="text-gray-600 font-medium mb-1 text-responsive-sm"
+                    >
+                      Votre CV s'affichera ici
+                    </p>
+                    <p class="text-sm text-gray-400 text-responsive-xs">
+                      Cliquez sur Actualiser pour générer
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
+      </div>
     </main>
 
     <!-- Mobile Bottom Bar -->
-    <div class="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 safe-bottom z-20 shadow-lg">
-        <div class="mobile-padding py-responsive">
-            <div class="grid grid-cols-3 gap-2 sm:gap-3">
-                <button id="exportPdf"
-                    class="bg-red-500 hover:bg-red-600 active:bg-red-700 text-white py-2.5 px-3 rounded-lg text-xs sm:text-sm font-medium transition-colors flex items-center justify-center touch-target touch-feedback smooth-transition">
-                    <i class="fas fa-file-pdf mr-1.5"></i>
-                    PDF
-                </button>
-                <button id="exportDocx"
-                    class="bg-blue-500 hover:bg-blue-600 active:bg-blue-700 text-white py-2.5 px-3 rounded-lg text-xs sm:text-sm font-medium transition-colors flex items-center justify-center touch-target touch-feedback smooth-transition">
-                    <i class="fas fa-file-word mr-1.5"></i>
-                    Word
-                </button>
-                <button id="exportLinkedIn"
-                    class="bg-blue-700 hover:bg-blue-800 active:bg-blue-900 text-white py-2.5 px-3 rounded-lg text-xs sm:text-sm font-medium transition-colors flex items-center justify-center touch-target touch-feedback smooth-transition">
-                    <i class="fab fa-linkedin mr-1.5"></i>
-                    LinkedIn
-                </button>
-            </div>
+    <div
+      class="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 safe-bottom z-20 shadow-lg"
+    >
+      <div class="mobile-padding py-responsive">
+        <div class="grid grid-cols-3 gap-2 sm:gap-3">
+          <button
+            id="exportPdf"
+            class="bg-red-500 hover:bg-red-600 active:bg-red-700 text-white py-2.5 px-3 rounded-lg text-xs sm:text-sm font-medium transition-colors flex items-center justify-center touch-target touch-feedback smooth-transition"
+          >
+            <i class="fas fa-file-pdf mr-1.5"></i>
+            PDF
+          </button>
+          <button
+            id="exportDocx"
+            class="bg-blue-500 hover:bg-blue-600 active:bg-blue-700 text-white py-2.5 px-3 rounded-lg text-xs sm:text-sm font-medium transition-colors flex items-center justify-center touch-target touch-feedback smooth-transition"
+          >
+            <i class="fas fa-file-word mr-1.5"></i>
+            Word
+          </button>
+          <button
+            id="exportLinkedIn"
+            class="bg-blue-700 hover:bg-blue-800 active:bg-blue-900 text-white py-2.5 px-3 rounded-lg text-xs sm:text-sm font-medium transition-colors flex items-center justify-center touch-target touch-feedback smooth-transition"
+          >
+            <i class="fab fa-linkedin mr-1.5"></i>
+            LinkedIn
+          </button>
         </div>
+      </div>
     </div>
 
     <!-- Data Summary Modal (Mobile) -->
-    <button id="showDataModal"
-        class="lg:hidden fixed right-4 bottom-24 w-12 h-12 bg-blue-600 hover:bg-blue-700 text-white rounded-full shadow-lg flex items-center justify-center z-10 touch-target touch-feedback smooth-transition">
-        <i class="fas fa-info"></i>
+    <button
+      id="showDataModal"
+      class="lg:hidden fixed right-4 bottom-24 w-12 h-12 bg-blue-600 hover:bg-blue-700 text-white rounded-full shadow-lg flex items-center justify-center z-10 touch-target touch-feedback smooth-transition"
+    >
+      <i class="fas fa-info"></i>
     </button>
 
-    <div id="dataModal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-30 lg:hidden">
-        <div class="absolute bottom-0 left-0 right-0 bg-white rounded-t-2xl p-4 sm:p-6 modal-slide-up safe-bottom">
-            <div class="flex items-center justify-between mb-4">
-                <h2 class="text-lg font-semibold text-gray-900">Vos données</h2>
-                <button id="closeDataModal"
-                    class="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 touch-target touch-feedback">
-                    <i class="fas fa-times text-gray-500"></i>
-                </button>
-            </div>
-            <div class="space-y-3">
-                <div class="flex items-center justify-between py-2 border-b border-gray-100">
-                    <span class="text-gray-600">Expériences</span>
-                    <span id="expCountMobile" class="font-semibold text-gray-900">0</span>
-                </div>
-                <div class="flex items-center justify-between py-2 border-b border-gray-100">
-                    <span class="text-gray-600">Formations</span>
-                    <span id="eduCountMobile" class="font-semibold text-gray-900">0</span>
-                </div>
-                <div class="flex items-center justify-between py-2">
-                    <span class="text-gray-600">Compétences</span>
-                    <span id="skillsCountMobile" class="font-semibold text-gray-900">0</span>
-                </div>
-            </div>
+    <div
+      id="dataModal"
+      class="hidden fixed inset-0 bg-black bg-opacity-50 z-30 lg:hidden"
+    >
+      <div
+        class="absolute bottom-0 left-0 right-0 bg-white rounded-t-2xl p-4 sm:p-6 modal-slide-up safe-bottom"
+      >
+        <div class="flex items-center justify-between mb-4">
+          <h2 class="text-lg font-semibold text-gray-900">Vos données</h2>
+          <button
+            id="closeDataModal"
+            class="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 touch-target touch-feedback"
+          >
+            <i class="fas fa-times text-gray-500"></i>
+          </button>
         </div>
+        <div class="space-y-3">
+          <div
+            class="flex items-center justify-between py-2 border-b border-gray-100"
+          >
+            <span class="text-gray-600">Expériences</span>
+            <span id="expCountMobile" class="font-semibold text-gray-900"
+              >0</span
+            >
+          </div>
+          <div
+            class="flex items-center justify-between py-2 border-b border-gray-100"
+          >
+            <span class="text-gray-600">Formations</span>
+            <span id="eduCountMobile" class="font-semibold text-gray-900"
+              >0</span
+            >
+          </div>
+          <div class="flex items-center justify-between py-2">
+            <span class="text-gray-600">Compétences</span>
+            <span id="skillsCountMobile" class="font-semibold text-gray-900"
+              >0</span
+            >
+          </div>
+        </div>
+      </div>
     </div>
 
     <!-- Loading Overlay -->
-    <div id="loadingOverlay" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-        <div class="bg-white p-4 sm:p-6 rounded-xl shadow-2xl text-center mx-4 max-w-xs sm:max-w-sm">
-            <div
-                class="w-10 h-10 sm:w-12 sm:h-12 border-4 border-gray-200 border-t-blue-600 rounded-full animate-spin mx-auto mb-3 sm:mb-4">
-            </div>
-            <p id="loadingText" class="text-sm sm:text-base font-medium text-gray-900">Génération en cours...</p>
-        </div>
+    <div
+      id="loadingOverlay"
+      class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+    >
+      <div
+        class="bg-white p-4 sm:p-6 rounded-xl shadow-2xl text-center mx-4 max-w-xs sm:max-w-sm"
+      >
+        <div
+          class="w-10 h-10 sm:w-12 sm:h-12 border-4 border-gray-200 border-t-blue-600 rounded-full animate-spin mx-auto mb-3 sm:mb-4"
+        ></div>
+        <p
+          id="loadingText"
+          class="text-sm sm:text-base font-medium text-gray-900"
+        >
+          Génération en cours...
+        </p>
+      </div>
     </div>
 
     <!-- Toast Notification -->
-    <div id="toast"
-        class="hidden fixed top-4 left-1/2 -translate-x-1/2 bg-gray-900 text-white px-4 py-3 rounded-lg shadow-lg z-50 text-sm max-w-xs sm:max-w-sm mx-4 animate-slide-up">
-        <div class="flex items-center space-x-2">
-            <i class="fas fa-check-circle"></i>
-            <span id="toastMessage">Action réussie</span>
-        </div>
+    <div
+      id="toast"
+      class="hidden fixed top-4 left-1/2 -translate-x-1/2 bg-gray-900 text-white px-4 py-3 rounded-lg shadow-lg z-50 text-sm max-w-xs sm:max-w-sm mx-4 animate-slide-up"
+    >
+      <div class="flex items-center space-x-2">
+        <i class="fas fa-check-circle"></i>
+        <span id="toastMessage">Action réussie</span>
+      </div>
     </div>
 
-    <button id="defaiBtn" onclick="window.location.href='/ai/chat'" title="Defai Votre Assistant"
-        class="w-12 h-12 z-[9999] rounded-full outline-none fixed bottom-4 right-4 shadow-lg hover:scale-110 transition-all duration-150"><img
-            src="{{ url_for('static', filename='assets/defai.png') }}" alt="logo"></button>
+    <button
+      id="defaiBtn"
+      onclick="window.location.href='/ai/chat'"
+      title="Defai Votre Assistant"
+      class="w-12 h-12 z-[9999] rounded-full outline-none fixed bottom-4 right-4 shadow-lg hover:scale-110 transition-all duration-150"
+    >
+      <img
+        src="https://res.cloudinary.com/dmokvhpjt/image/upload/v1766894468/gep1294qd7tbddgvtmpj.png"
+        alt="logo"
+      />
+    </button>
 
     <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            // DOM Elements
-            const exportPdfBtn = document.getElementById('exportPdf');
-            const exportDocxBtn = document.getElementById('exportDocx');
-            const exportLinkedInBtn = document.getElementById('exportLinkedIn');
-            const exportPdfDesktopBtn = document.getElementById('exportPdfDesktop');
-            const exportDocxDesktopBtn = document.getElementById('exportDocxDesktop');
-            const exportLinkedInDesktopBtn = document.getElementById('exportLinkedInDesktop');
-            const refreshPreviewBtn = document.getElementById('refreshPreview');
-            const templateSelect = document.getElementById('templateSelect');
-            const templateSelectDesktop = document.getElementById('templateSelectDesktop');
-            const loadingOverlay = document.getElementById('loadingOverlay');
-            const loadingText = document.getElementById('loadingText');
-            const cvPreview = document.getElementById('cvPreview');
-            const showDataModalBtn = document.getElementById('showDataModal');
-            const closeDataModalBtn = document.getElementById('closeDataModal');
-            const dataModal = document.getElementById('dataModal');
-            const toast = document.getElementById('toast');
-            const toastMessage = document.getElementById('toastMessage');
+      document.addEventListener("DOMContentLoaded", function () {
+        // DOM Elements
+        const exportPdfBtn = document.getElementById("exportPdf");
+        const exportDocxBtn = document.getElementById("exportDocx");
+        const exportLinkedInBtn = document.getElementById("exportLinkedIn");
+        const exportPdfDesktopBtn = document.getElementById("exportPdfDesktop");
+        const exportDocxDesktopBtn =
+          document.getElementById("exportDocxDesktop");
+        const exportLinkedInDesktopBtn = document.getElementById(
+          "exportLinkedInDesktop"
+        );
+        const refreshPreviewBtn = document.getElementById("refreshPreview");
+        const templateSelect = document.getElementById("templateSelect");
+        const templateSelectDesktop = document.getElementById(
+          "templateSelectDesktop"
+        );
+        const loadingOverlay = document.getElementById("loadingOverlay");
+        const loadingText = document.getElementById("loadingText");
+        const cvPreview = document.getElementById("cvPreview");
+        const showDataModalBtn = document.getElementById("showDataModal");
+        const closeDataModalBtn = document.getElementById("closeDataModal");
+        const dataModal = document.getElementById("dataModal");
+        const toast = document.getElementById("toast");
+        const toastMessage = document.getElementById("toastMessage");
 
-            const btn = document.getElementById("defaiBtn");
+        const btn = document.getElementById("defaiBtn");
 
-            let dragging = false;
-            let offsetX = 0;
-            let offsetY = 0;
+        let dragging = false;
+        let offsetX = 0;
+        let offsetY = 0;
 
-            function startDrag(x, y) {
-                dragging = true;
-                offsetX = x - btn.offsetLeft;
-                offsetY = y - btn.offsetTop;
-                btn.style.transition = "none";
-                btn.style.cursor = "grabbing";
-            }
+        function startDrag(x, y) {
+          dragging = true;
+          offsetX = x - btn.offsetLeft;
+          offsetY = y - btn.offsetTop;
+          btn.style.transition = "none";
+          btn.style.cursor = "grabbing";
+        }
 
-            function moveDrag(x, y) {
-                if (!dragging) return;
+        function moveDrag(x, y) {
+          if (!dragging) return;
 
-                btn.style.left = (x - offsetX) + "px";
-                btn.style.top = (y - offsetY) + "px";
-            }
+          btn.style.left = x - offsetX + "px";
+          btn.style.top = y - offsetY + "px";
+        }
 
-            function endDrag() {
-                if (!dragging) return;
-                dragging = false;
-                btn.style.cursor = "grab";
-                btn.style.transition = "all 0.25s ease";
+        function endDrag() {
+          if (!dragging) return;
+          dragging = false;
+          btn.style.cursor = "grab";
+          btn.style.transition = "all 0.25s ease";
 
-                snapToCorner();
-            }
+          snapToCorner();
+        }
 
-            function snapToCorner() {
-                const vw = window.innerWidth;
-                const vh = window.innerHeight;
-                const bw = btn.offsetWidth;
-                const bh = btn.offsetHeight;
+        function snapToCorner() {
+          const vw = window.innerWidth;
+          const vh = window.innerHeight;
+          const bw = btn.offsetWidth;
+          const bh = btn.offsetHeight;
 
-                const x = btn.offsetLeft;
-                const y = btn.offsetTop;
+          const x = btn.offsetLeft;
+          const y = btn.offsetTop;
 
-                const dist = {
-                    tl: Math.hypot(x, y),
-                    tr: Math.hypot(vw - x - bw, y),
-                    bl: Math.hypot(x, vh - y - bh),
-                    br: Math.hypot(vw - x - bw, vh - y - bh)
-                };
+          const dist = {
+            tl: Math.hypot(x, y),
+            tr: Math.hypot(vw - x - bw, y),
+            bl: Math.hypot(x, vh - y - bh),
+            br: Math.hypot(vw - x - bw, vh - y - bh),
+          };
 
-                const nearest = Object.entries(dist).sort((a, b) => a[1] - b[1])[0][0];
+          const nearest = Object.entries(dist).sort(
+            (a, b) => a[1] - b[1]
+          )[0][0];
 
-                switch (nearest) {
-                    case "tl":
-                        btn.style.left = "10px";
-                        btn.style.top = "10px";
-                        break;
-                    case "tr":
-                        btn.style.left = (vw - bw - 10) + "px";
-                        btn.style.top = "10px";
-                        break;
-                    case "bl":
-                        btn.style.left = "10px";
-                        btn.style.top = (vh - bh - 10) + "px";
-                        break;
-                    case "br":
-                        btn.style.left = (vw - bw - 10) + "px";
-                        btn.style.top = (vh - bh - 10) + "px";
-                        break;
-                }
-            }
+          switch (nearest) {
+            case "tl":
+              btn.style.left = "10px";
+              btn.style.top = "10px";
+              break;
+            case "tr":
+              btn.style.left = vw - bw - 10 + "px";
+              btn.style.top = "10px";
+              break;
+            case "bl":
+              btn.style.left = "10px";
+              btn.style.top = vh - bh - 10 + "px";
+              break;
+            case "br":
+              btn.style.left = vw - bw - 10 + "px";
+              btn.style.top = vh - bh - 10 + "px";
+              break;
+          }
+        }
 
-            /* -------------------- PC (mouse) -------------------- */
-            btn.addEventListener("mousedown", e => startDrag(e.clientX, e.clientY));
-            document.addEventListener("mousemove", e => moveDrag(e.clientX, e.clientY));
-            document.addEventListener("mouseup", endDrag);
+        /* -------------------- PC (mouse) -------------------- */
+        btn.addEventListener("mousedown", (e) =>
+          startDrag(e.clientX, e.clientY)
+        );
+        document.addEventListener("mousemove", (e) =>
+          moveDrag(e.clientX, e.clientY)
+        );
+        document.addEventListener("mouseup", endDrag);
 
-            /* -------------------- Mobile (touch) -------------------- */
-            btn.addEventListener("touchstart", e => {
-                const t = e.touches[0];
-                startDrag(t.clientX, t.clientY);
-            });
-
-            document.addEventListener("touchmove", e => {
-                const t = e.touches[0];
-                moveDrag(t.clientX, t.clientY);
-            });
-
-            document.addEventListener("touchend", endDrag);
-
-            // Sync template selectors
-            if (templateSelect && templateSelectDesktop) {
-                templateSelect.addEventListener('change', function () {
-                    templateSelectDesktop.value = this.value;
-                });
-                templateSelectDesktop.addEventListener('change', function () {
-                    templateSelect.value = this.value;
-                });
-            }
-
-            // Modal handlers
-            if (showDataModalBtn) {
-                showDataModalBtn.addEventListener('click', function () {
-                    dataModal.classList.remove('hidden');
-                });
-            }
-
-            if (closeDataModalBtn) {
-                closeDataModalBtn.addEventListener('click', function () {
-                    dataModal.classList.add('hidden');
-                });
-            }
-
-            if (dataModal) {
-                dataModal.addEventListener('click', function (e) {
-                    if (e.target === dataModal) {
-                        dataModal.classList.add('hidden');
-                    }
-                });
-            }
-
-            function getCSRFToken() {
-                const token = document.querySelector('meta[name="csrf-token"]');
-                return token ? token.getAttribute('content') : '';
-            }
-
-            // Show loading
-            function showLoading(message = 'Traitement en cours...') {
-                loadingText.textContent = message;
-                loadingOverlay.classList.remove('hidden');
-            }
-
-            // Hide loading
-            function hideLoading() {
-                loadingOverlay.classList.add('hidden');
-            }
-
-            // Show toast
-            function showToast(message, type = 'success') {
-                toastMessage.textContent = message;
-                toast.classList.remove('hidden');
-
-                if (type === 'error') {
-                    toast.classList.remove('bg-gray-900');
-                    toast.classList.add('bg-red-500');
-                } else {
-                    toast.classList.remove('bg-red-500');
-                    toast.classList.add('bg-gray-900');
-                }
-
-                setTimeout(() => {
-                    toast.style.opacity = '0';
-                    setTimeout(() => {
-                        toast.classList.add('hidden');
-                        toast.style.opacity = '1';
-                    }, 300);
-                }, 3000);
-            }
-
-            // Update data counts
-            async function updateDataCounts() {
-                try {
-                    const response = await fetch('/career-craft/api/career-craft/preview', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'X-CSRFToken': getCSRFToken()
-
-                        },
-                        credentials: 'same-origin'
-                    });
-
-                    if (!response.ok) throw new Error('Erreur lors de la récupération des données');
-
-                    const data = await response.json();
-                    if (data.success && data.data) {
-                        const expCount = data.data.experiences?.length || 0;
-                        const eduCount = data.data.formations?.length || 0;
-                        const skillsCount = (data.data.competences?.length || 0) + (data.data.competences_techniques?.length || 0);
-
-                        // Update all counters
-                        document.getElementById('expCount').textContent = expCount;
-                        document.getElementById('eduCount').textContent = eduCount;
-                        document.getElementById('skillsCount').textContent = skillsCount;
-
-                        const expCountMobile = document.getElementById('expCountMobile');
-                        const eduCountMobile = document.getElementById('eduCountMobile');
-                        const skillsCountMobile = document.getElementById('skillsCountMobile');
-
-                        if (expCountMobile) expCountMobile.textContent = expCount;
-                        if (eduCountMobile) eduCountMobile.textContent = eduCount;
-                        if (skillsCountMobile) skillsCountMobile.textContent = skillsCount;
-                    }
-                } catch (error) {
-                    console.error('Erreur:', error);
-                }
-            }
-
-            // Generate preview
-            async function generatePreview() {
-                showLoading('Génération de l\'aperçu...');
-                const template = templateSelect ? templateSelect.value : templateSelectDesktop.value;
-
-                try {
-                    const response = await fetch('/career-craft/api/career-craft/generate', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'X-CSRFToken': getCSRFToken()
-
-                        },
-                        body: JSON.stringify({
-                            format: 'preview',
-                            template: template
-                        }),
-                        credentials: 'same-origin'
-                    });
-
-                    if (!response.ok) throw new Error('Erreur lors de la génération de l\'aperçu');
-
-                    const data = await response.json();
-                    if (data.success && data.preview) {
-                        cvPreview.innerHTML = data.preview;
-                        showToast('Aperçu généré avec succès');
-                    }
-                } catch (error) {
-                    console.error('Erreur:', error);
-                    showToast('Erreur lors de la génération', 'error');
-                } finally {
-                    hideLoading();
-                }
-            }
-
-            // Export CV
-            async function exportCV(format) {
-                showLoading(`Génération du CV en ${format.toUpperCase()}...`);
-                const template = templateSelect ? templateSelect.value : templateSelectDesktop.value;
-
-                try {
-                    const response = await fetch(`/career-craft/api/career-craft/generate`, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'X-CSRFToken': getCSRFToken()
-
-                        },
-                        body: JSON.stringify({
-                            format: format,
-                            template: template
-                        }),
-                        credentials: 'same-origin'
-                    });
-
-                    if (!response.ok) throw new Error(`Erreur lors de la génération du ${format}`);
-
-                    if (format === 'linkedin') {
-                        const data = await response.json();
-                        if (data.success && data.url) {
-                            window.open(data.url, '_blank');
-                            showToast('CV LinkedIn généré avec succès');
-                        }
-                    } else {
-                        const blob = await response.blob();
-                        const url = window.URL.createObjectURL(blob);
-                        const a = document.createElement('a');
-                        a.href = url;
-                        a.download = `mon_cv.${format}`;
-                        document.body.appendChild(a);
-                        a.click();
-                        window.URL.revokeObjectURL(url);
-                        a.remove();
-                        showToast(`CV ${format.toUpperCase()} téléchargé`);
-                    }
-                } catch (error) {
-                    console.error('Erreur:', error);
-                    showToast(`Erreur lors de l'export en ${format}`, 'error');
-                } finally {
-                    hideLoading();
-                }
-            }
-
-            // Event listeners
-            refreshPreviewBtn.addEventListener('click', generatePreview);
-
-            // Mobile buttons
-            if (exportPdfBtn) exportPdfBtn.addEventListener('click', () => exportCV('pdf'));
-            if (exportDocxBtn) exportDocxBtn.addEventListener('click', () => exportCV('docx'));
-            if (exportLinkedInBtn) exportLinkedInBtn.addEventListener('click', () => exportCV('linkedin'));
-
-            // Desktop buttons
-            if (exportPdfDesktopBtn) exportPdfDesktopBtn.addEventListener('click', () => exportCV('pdf'));
-            if (exportDocxDesktopBtn) exportDocxDesktopBtn.addEventListener('click', () => exportCV('docx'));
-            if (exportLinkedInDesktopBtn) exportLinkedInDesktopBtn.addEventListener('click', () => exportCV('linkedin'));
-
-            // Initial load
-            updateDataCounts();
+        /* -------------------- Mobile (touch) -------------------- */
+        btn.addEventListener("touchstart", (e) => {
+          const t = e.touches[0];
+          startDrag(t.clientX, t.clientY);
         });
-    </script>
-</body>
 
+        document.addEventListener("touchmove", (e) => {
+          const t = e.touches[0];
+          moveDrag(t.clientX, t.clientY);
+        });
+
+        document.addEventListener("touchend", endDrag);
+
+        // Sync template selectors
+        if (templateSelect && templateSelectDesktop) {
+          templateSelect.addEventListener("change", function () {
+            templateSelectDesktop.value = this.value;
+          });
+          templateSelectDesktop.addEventListener("change", function () {
+            templateSelect.value = this.value;
+          });
+        }
+
+        // Modal handlers
+        if (showDataModalBtn) {
+          showDataModalBtn.addEventListener("click", function () {
+            dataModal.classList.remove("hidden");
+          });
+        }
+
+        if (closeDataModalBtn) {
+          closeDataModalBtn.addEventListener("click", function () {
+            dataModal.classList.add("hidden");
+          });
+        }
+
+        if (dataModal) {
+          dataModal.addEventListener("click", function (e) {
+            if (e.target === dataModal) {
+              dataModal.classList.add("hidden");
+            }
+          });
+        }
+
+        function getCSRFToken() {
+          const token = document.querySelector('meta[name="csrf-token"]');
+          return token ? token.getAttribute("content") : "";
+        }
+
+        // Show loading
+        function showLoading(message = "Traitement en cours...") {
+          loadingText.textContent = message;
+          loadingOverlay.classList.remove("hidden");
+        }
+
+        // Hide loading
+        function hideLoading() {
+          loadingOverlay.classList.add("hidden");
+        }
+
+        // Show toast
+        function showToast(message, type = "success") {
+          toastMessage.textContent = message;
+          toast.classList.remove("hidden");
+
+          if (type === "error") {
+            toast.classList.remove("bg-gray-900");
+            toast.classList.add("bg-red-500");
+          } else {
+            toast.classList.remove("bg-red-500");
+            toast.classList.add("bg-gray-900");
+          }
+
+          setTimeout(() => {
+            toast.style.opacity = "0";
+            setTimeout(() => {
+              toast.classList.add("hidden");
+              toast.style.opacity = "1";
+            }, 300);
+          }, 3000);
+        }
+
+        // Update data counts
+        async function updateDataCounts() {
+          try {
+            const response = await fetch(
+              "/career-craft/api/career-craft/preview",
+              {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                  "X-CSRFToken": getCSRFToken(),
+                },
+                credentials: "same-origin",
+              }
+            );
+
+            if (!response.ok)
+              throw new Error("Erreur lors de la récupération des données");
+
+            const data = await response.json();
+            if (data.success && data.data) {
+              const expCount = data.data.experiences?.length || 0;
+              const eduCount = data.data.formations?.length || 0;
+              const skillsCount =
+                (data.data.competences?.length || 0) +
+                (data.data.competences_techniques?.length || 0);
+
+              // Update all counters
+              document.getElementById("expCount").textContent = expCount;
+              document.getElementById("eduCount").textContent = eduCount;
+              document.getElementById("skillsCount").textContent = skillsCount;
+
+              const expCountMobile = document.getElementById("expCountMobile");
+              const eduCountMobile = document.getElementById("eduCountMobile");
+              const skillsCountMobile =
+                document.getElementById("skillsCountMobile");
+
+              if (expCountMobile) expCountMobile.textContent = expCount;
+              if (eduCountMobile) eduCountMobile.textContent = eduCount;
+              if (skillsCountMobile)
+                skillsCountMobile.textContent = skillsCount;
+            }
+          } catch (error) {
+            console.error("Erreur:", error);
+          }
+        }
+
+        // Generate preview
+        async function generatePreview() {
+          showLoading("Génération de l'aperçu...");
+          const template = templateSelect
+            ? templateSelect.value
+            : templateSelectDesktop.value;
+
+          try {
+            const response = await fetch(
+              "/career-craft/api/career-craft/generate",
+              {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                  "X-CSRFToken": getCSRFToken(),
+                },
+                body: JSON.stringify({
+                  format: "preview",
+                  template: template,
+                }),
+                credentials: "same-origin",
+              }
+            );
+
+            if (!response.ok)
+              throw new Error("Erreur lors de la génération de l'aperçu");
+
+            const data = await response.json();
+            if (data.success && data.preview) {
+              cvPreview.innerHTML = data.preview;
+              showToast("Aperçu généré avec succès");
+            }
+          } catch (error) {
+            console.error("Erreur:", error);
+            showToast("Erreur lors de la génération", "error");
+          } finally {
+            hideLoading();
+          }
+        }
+
+        // Export CV
+        async function exportCV(format) {
+          showLoading(`Génération du CV en ${format.toUpperCase()}...`);
+          const template = templateSelect
+            ? templateSelect.value
+            : templateSelectDesktop.value;
+
+          try {
+            const response = await fetch(
+              `/career-craft/api/career-craft/generate`,
+              {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                  "X-CSRFToken": getCSRFToken(),
+                },
+                body: JSON.stringify({
+                  format: format,
+                  template: template,
+                }),
+                credentials: "same-origin",
+              }
+            );
+
+            if (!response.ok)
+              throw new Error(`Erreur lors de la génération du ${format}`);
+
+            if (format === "linkedin") {
+              const data = await response.json();
+              if (data.success && data.url) {
+                window.open(data.url, "_blank");
+                showToast("CV LinkedIn généré avec succès");
+              }
+            } else {
+              const blob = await response.blob();
+              const url = window.URL.createObjectURL(blob);
+              const a = document.createElement("a");
+              a.href = url;
+              a.download = `mon_cv.${format}`;
+              document.body.appendChild(a);
+              a.click();
+              window.URL.revokeObjectURL(url);
+              a.remove();
+              showToast(`CV ${format.toUpperCase()} téléchargé`);
+            }
+          } catch (error) {
+            console.error("Erreur:", error);
+            showToast(`Erreur lors de l'export en ${format}`, "error");
+          } finally {
+            hideLoading();
+          }
+        }
+
+        // Event listeners
+        refreshPreviewBtn.addEventListener("click", generatePreview);
+
+        // Mobile buttons
+        if (exportPdfBtn)
+          exportPdfBtn.addEventListener("click", () => exportCV("pdf"));
+        if (exportDocxBtn)
+          exportDocxBtn.addEventListener("click", () => exportCV("docx"));
+        if (exportLinkedInBtn)
+          exportLinkedInBtn.addEventListener("click", () =>
+            exportCV("linkedin")
+          );
+
+        // Desktop buttons
+        if (exportPdfDesktopBtn)
+          exportPdfDesktopBtn.addEventListener("click", () => exportCV("pdf"));
+        if (exportDocxDesktopBtn)
+          exportDocxDesktopBtn.addEventListener("click", () =>
+            exportCV("docx")
+          );
+        if (exportLinkedInDesktopBtn)
+          exportLinkedInDesktopBtn.addEventListener("click", () =>
+            exportCV("linkedin")
+          );
+
+        // Initial load
+        updateDataCounts();
+      });
+    </script>
+  </body>
 </html>

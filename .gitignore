@@ -27,7 +27,7 @@ instance/
 .webassets-cache
 
 # Environment
-# .env
+.env
 .venv
 venv/
 ENV/
@@ -45,13 +45,13 @@ static/uploads/*
 !static/uploads/.gitkeep
 scripts/
 uploads/
-fine-tuning_defAI/
+fine-Tuning_defAI/
 emploi-temps/
 dataset/
 data/
 DefAI/
 fineTuning_defAI/
 ImageSearch/
-atabase/
+database/
 docs/
 migrations/

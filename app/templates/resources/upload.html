@@ -98,12 +98,21 @@ endblock %} {% block content %}
 
           <!-- Fichier -->
           <div>
-            <label
-              for="fichier"
-              class="block text-sm font-medium text-gray-700 mb-1"
-            >
+            <label class="block text-sm font-medium text-gray-700 mb-1">
               Fichier <span class="text-red-500">*</span>
             </label>
+
+            <!-- Hidden inputs for Cloudinary data -->
+            <input type="hidden" name="file_url" id="file_url" />
+            <input type="hidden" name="file_type" id="file_type" />
+            <input type="hidden" name="file_size" id="file_size" />
+            <input type="hidden" name="file_format" id="file_format" />
+            <input
+              type="hidden"
+              name="original_filename"
+              id="original_filename"
+            />
+
             <div
               class="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-md"
             >
@@ -111,18 +120,16 @@ endblock %} {% block content %}
                 <i
                   class="fas fa-cloud-upload-alt text-gray-400 text-3xl mb-2"
                 ></i>
-                <div class="flex text-sm text-gray-600">
+                <div class="flex text-sm text-gray-600 justify-center">
                   <label
-                    for="fichier"
+                    for="fichier_input"
                     class="relative cursor-pointer bg-white rounded-md font-medium text-blue-600 hover:text-blue-500 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-blue-500"
                   >
                     <span>Cliquez pour sélectionner</span>
                     <input
-                      id="fichier"
-                      name="fichier"
+                      id="fichier_input"
                       type="file"
                       class="sr-only"
-                      required
                       accept=".pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.txt,.zip,.rar,.7z,.jpg,.jpeg,.png"
                     />
                   </label>
@@ -131,10 +138,73 @@ endblock %} {% block content %}
                 <p class="text-xs text-gray-500">
                   PDF, DOC, PPT, XLS, TXT, ZIP jusqu'à 50MB
                 </p>
+                <div
+                  id="upload_feedback"
+                  class="mt-2 text-sm text-blue-600 font-medium"
+                ></div>
               </div>
             </div>
           </div>
         </div>
+
+        <script>
+          document.addEventListener("DOMContentLoaded", () => {
+            // Attach Cloudinary upload with 'documents_upload' preset
+            // We'll use a custom callback to populate extra fields
+            const fileInput = document.getElementById("fichier_input");
+            const urlInput = document.getElementById("file_url");
+            const feedback = document.getElementById("upload_feedback");
+
+            if (fileInput) {
+              fileInput.addEventListener("change", async (e) => {
+                const file = e.target.files[0];
+                if (!file) return;
+
+                try {
+                  feedback.innerHTML =
+                    '<i class="fas fa-spinner fa-spin"></i> Upload en cours...';
+                  feedback.className = "mt-2 text-sm text-blue-600 font-medium";
+
+                  const formData = new FormData();
+                  formData.append("file", file);
+                  formData.append("upload_preset", "documents_upload"); // Unsigned preset
+
+                  const response = await fetch(
+                    `https://api.cloudinary.com/v1_1/defitech/auto/upload`,
+                    {
+                      method: "POST",
+                      body: formData,
+                    }
+                  );
+
+                  if (!response.ok) throw new Error("Upload failed");
+
+                  const data = await response.json();
+
+                  // Populate hidden fields
+                  document.getElementById("file_url").value = data.secure_url;
+                  document.getElementById("file_type").value =
+                    data.resource_type; // 'image', 'raw', 'auto'
+                  document.getElementById("file_size").value = data.bytes;
+                  document.getElementById("file_format").value =
+                    data.format || file.name.split(".").pop();
+                  document.getElementById("original_filename").value =
+                    file.name;
+
+                  feedback.innerHTML =
+                    '<i class="fas fa-check"></i> Fichier prêt';
+                  feedback.className =
+                    "mt-2 text-sm text-green-600 font-medium";
+                } catch (error) {
+                  console.error("Error:", error);
+                  feedback.innerHTML =
+                    '<i class="fas fa-times"></i> Erreur lors de l\'upload';
+                  feedback.className = "mt-2 text-sm text-red-600 font-medium";
+                }
+              });
+            }
+          });
+        </script>
 
         <!-- Cible (filière et année) -->
         <div class="grid grid-cols-1 gap-6 sm:grid-cols-2">

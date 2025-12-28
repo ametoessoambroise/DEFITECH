@@ -22,15 +22,8 @@ requests==2.31.0
 transformers==4.36.2
 accelerate==0.22.0
 PyPDF2==3.0.1
-pytorch==2.1.2
-tensorflow==2.12.0
 huggingface-hub==0.16.0
-pandas
 matplotlib 
-seaborn
-scikit-learn
-scipy
-nltk
-spacy
 gunicorn
 eventlet
+cloudinary

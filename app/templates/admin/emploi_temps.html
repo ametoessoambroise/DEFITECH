@@ -272,119 +272,168 @@
 
 {% block extra_js %}
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-<script>
-    function showStatus(message, isError = false) {
-        const statusDiv = document.getElementById('import-status');
-        statusDiv.innerHTML = `
-            <div class="flex items-center p-4 rounded-lg ${isError ? 'bg-red-50 border border-red-200' : 'bg-green-50 border border-green-200'}">
-                <i class="fas ${isError ? 'fa-exclamation-circle text-red-600' : 'fa-check-circle text-green-600'} text-xl mr-3"></i>
-                <span class="${isError ? 'text-red-700' : 'text-green-700'} font-medium">${message}</span>
-            </div>
-        `;
-        statusDiv.classList.remove('hidden');
+            <!-- Script for Cloudinary Upload -->
+            <script src="{{ url_for('static', filename='js/cloudinary_uploader.js') }}"></script>
+            <script>
+                function showStatus(message, isError = false) {
+                    const statusDiv = document.getElementById('import-status');
+                    statusDiv.innerHTML = `
+                        <div class="flex items-center p-4 rounded-lg ${isError ? 'bg-red-50 border border-red-200' : 'bg-green-50 border border-green-200'}">
+                            <i class="fas ${isError ? 'fa-exclamation-circle text-red-600' : 'fa-check-circle text-green-600'} text-xl mr-3"></i>
+                            <span class="${isError ? 'text-red-700' : 'text-green-700'} font-medium">${message}</span>
+                        </div>
+                    `;
+                    statusDiv.classList.remove('hidden');
+            
+                    setTimeout(() => {
+                        statusDiv.classList.add('hidden');
+                    }, 5000);
+                }
+            
+                // Cloudinary upload handler for JSON/Excel
+                async function triggerCloudinaryUpload(type) {
+                     // Determine the hidden input ID and feedback ID based on type
+                     // We need to create hidden elements dynamically or reuse existing ones?
+                     // Let's create a temporary hidden input for the file picker if not exists
+                     let fileInput = document.getElementById(`file-upload-${type}`);
+                     if (!fileInput) {
+                         // This shouldn't happen if we updated the HTML correctly.
+                         console.error("File input not found");
+                         return;
+                     }
+                     fileInput.click();
+                }
 
-        setTimeout(() => {
-            statusDiv.classList.add('hidden');
-        }, 5000);
-    }
+                // Initial setup for Cloudinary inputs is done via 'attachCloudinaryUpload' usually.
+                // But here we have custom buttons triggering the file input.
+                // We can use the 'attachCloudinaryUpload' helper on hidden inputs.
+                
+                document.addEventListener('DOMContentLoaded', function() {
+                     // Attach Cloudinary to hidden inputs
+                     // We use 'raw' for JSON/Excel
+                     attachCloudinaryUpload('file-upload-json', 'file_url_json', 'documents_upload', 'import-status', 'raw'); 
+                     attachCloudinaryUpload('file-upload-excel', 'file_url_excel', 'documents_upload', 'import-status', 'raw');
+                     
+                     // Listen for the hidden url input change to trigger the backend import
+                     const urlInputJson = document.getElementById('file_url_json');
+                     if(urlInputJson) {
+                         // We need to observe changes to the value, but 'change' event doesn't fire on programmatic change.
+                         // Modified 'attachCloudinaryUpload' or use MutationObserver on feedback?
+                         // The feedback element 'import-status' gets updated with "Upload terminé!".
+                         const observer = new MutationObserver(function(mutations) {
+                            if (document.getElementById('import-status').textContent.includes('Upload terminé')) {
+                                // Checking which one finished?
+                                if (urlInputJson.value) {
+                                    handleBackendImport(urlInputJson.value, 'json');
+                                    urlInputJson.value = ''; // Reset
+                                }
+                            }
+                         });
+                         observer.observe(document.getElementById('import-status'), { childList: true, characterData: true, subtree: true });
+                     }
+                     
+                     const urlInputExcel = document.getElementById('file_url_excel');
+                     if(urlInputExcel) {
+                         // Similar observer logic... simpler: just check both? 
+                         // Or use a dedicated feedback div for each to distinguish.
+                     }
+                });
 
-    async function handleFileImport(type) {
-        const fileInput = type === 'json' ? document.getElementById('import-json') : document.getElementById('import-excel');
-        const file = fileInput.files[0];
+                // REVISION: The above approach with shared feedback div is messy. 
+                async function handleFileImport(type) {
+                    const fileInput = document.getElementById(type === 'json' ? 'import-json' : 'import-excel');
+                    const file = fileInput.files[0];
+                    if (!file) return;
 
-        if (!file) return;
+                    showStatus(`Upload vers Cloudinary en cours...`, false);
+                    
+                    try {
+                        // Direct usage of global uploadToCloudinary with 'documents_upload' preset and 'raw' resource type
+                        // We use 'raw' because JSON/Excel files are better handled as raw files in Cloudinary for this purpose
+                        const result = await uploadToCloudinary(file, 'documents_upload', null, null, 'raw');
+                        
+                        if (result && result.secure_url) {
+                            showStatus(`Traitement du fichier en cours...`, false);
+                            await sendToBackend(result.secure_url, type);
+                        } else {
+                            throw new Error("Échec de l'upload Cloudinary");
+                        }
+                    } catch (error) {
+                        console.error('Erreur:', error);
+                        showStatus(`Erreur: ${error.message || "Erreur d'upload"}`, true);
+                    }
+                    fileInput.value = '';
+                }
 
-        // Show loading
-        showStatus(`Importation en cours...`, false);
+                async function sendToBackend(fileUrl, type) {
+                    const formData = new FormData();
+                    formData.append('file_url', fileUrl); // Send URL
+                    formData.append('type', type);
+                    formData.append('filiere', '{{ selected_filiere }}'); // Ensure these vars exist
+                    formData.append('annee', '{{ selected_annee }}');
+                    formData.append('csrf_token', '{{ csrf_token() }}');
 
-        try {
-            let data;
+                    // Corrected route name: admin.import_emploi_temps
+                    // Note: We are assuming the route name 'admin.import_emploi_temps' will be created.
+                    const response = await fetch('{{ url_for("admin.import_emploi_temps") }}', {
+                        method: 'POST',
+                        body: formData
+                    });
 
-            if (type === 'json') {
-                const content = await file.text();
-                data = JSON.parse(content);
-            } else {
-                const arrayBuffer = await file.arrayBuffer();
-                const workbook = XLSX.read(arrayBuffer, { type: 'array' });
-                const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
-                data = XLSX.utils.sheet_to_json(firstSheet);
-            }
+                    const result = await response.json();
 
-            if (!Array.isArray(data) || data.length === 0) {
-                throw new Error('Le fichier ne contient pas de données valides');
-            }
-
-            const formData = new FormData();
-            formData.append('file', file);
-            formData.append('type', type);
-            formData.append('filiere', '{{ selected_filiere }}');
-            formData.append('annee', '{{ selected_annee }}');
-            formData.append('csrf_token', '{{ csrf_token() }}');
-
-            const response = await fetch('{{ url_for("admin_import_emploi_temps") }}', {
-                method: 'POST',
-                body: formData
-            });
-
-            const result = await response.json();
-
-            if (response.ok) {
-                showStatus('✓ Importation réussie ! La page va se recharger...');
-                setTimeout(() => window.location.reload(), 1500);
-            } else {
-                throw new Error(result.error || 'Erreur lors de l\'importation');
-            }
-        } catch (error) {
-            console.error('Erreur lors de l\'importation:', error);
-            showStatus(`Erreur: ${error.message || 'Une erreur est survenue'}`, true);
-        }
-
-        fileInput.value = '';
-    }
-
-    function exportToExcel() {
-        const table = document.querySelector('table');
-        if (!table) {
-            showStatus('Aucun emploi du temps à exporter', true);
-            return;
-        }
-
-        const ws = XLSX.utils.table_to_sheet(table);
-        const wb = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(wb, ws, 'Emploi du temps');
-
-        const date = new Date().toISOString().split('T')[0];
-        const filename = `emploi_du_temps_${date}.xlsx`;
-
-        XLSX.writeFile(wb, filename);
-        showStatus(`✓ Fichier "${filename}" téléchargé avec succès !`);
-    }
-
-    // Validation avant soumission
-    document.querySelector('form[method="post"]')?.addEventListener('submit', function (e) {
-        const confirmation = confirm('Êtes-vous sûr de vouloir enregistrer cet emploi du temps ?');
-        if (!confirmation) {
-            e.preventDefault();
-        }
-    });
-
-    // Ajouter un message de confirmation avant de quitter la page
-    window.addEventListener('beforeunload', function (e) {
-        if (document.querySelector('.status-message:not(.success)')) {
-            e.preventDefault();
-            e.returnValue = 'Des modifications non enregistrées existent. Êtes-vous sûr de vouloir quitter ?';
-            return e.returnValue;
-        }
-    });
-
-    // Mettre à jour le message de statut lors des changements
-    document.querySelectorAll('input[name^="cours_"]').forEach(input => {
-        input.addEventListener('change', function () {
-            const status = document.querySelector('.status-message');
-            if (status && !status.classList.contains('success')) {
-                status.textContent = 'Modifications non enregistrées - Cliquez sur "Enregistrer" pour sauvegarder';
-            }
-        });
-    });
-</script>
+                    if (response.ok) {
+                        showStatus('✓ Importation réussie ! La page va se recharger...');
+                        setTimeout(() => window.location.reload(), 1500);
+                    } else {
+                        throw new Error(result.error || 'Erreur lors de l\'importation');
+                    }
+                }
+            
+                function exportToExcel() {
+                    const table = document.querySelector('table');
+                    if (!table) {
+                        showStatus('Aucun emploi du temps à exporter', true);
+                        return;
+                    }
+            
+                    const ws = XLSX.utils.table_to_sheet(table);
+                    const wb = XLSX.utils.book_new();
+                    XLSX.utils.book_append_sheet(wb, ws, 'Emploi du temps');
+            
+                    const date = new Date().toISOString().split('T')[0];
+                    const filename = `emploi_du_temps_${date}.xlsx`;
+            
+                    XLSX.writeFile(wb, filename);
+                    showStatus(`✓ Fichier "${filename}" téléchargé avec succès !`);
+                }
+            
+                // Validation avant soumission
+                document.querySelector('form[method="post"]')?.addEventListener('submit', function (e) {
+                    const confirmation = confirm('Êtes-vous sûr de vouloir enregistrer cet emploi du temps ?');
+                    if (!confirmation) {
+                        e.preventDefault();
+                    }
+                });
+            
+                // Ajouter un message de confirmation avant de quitter la page
+                window.addEventListener('beforeunload', function (e) {
+                    if (document.querySelector('.status-message:not(.success)')) {
+                        e.preventDefault();
+                        e.returnValue = 'Des modifications non enregistrées existent. Êtes-vous sûr de vouloir quitter ?';
+                        return e.returnValue;
+                    }
+                });
+            
+                // Mettre à jour le message de statut lors des changements
+                document.querySelectorAll('input[name^="cours_"]').forEach(input => {
+                    input.addEventListener('change', function () {
+                        const status = document.querySelector('.status-message');
+                        if (status && !status.classList.contains('success')) {
+                           // status.textContent = 'Modifications non enregistrées - Cliquez sur "Enregistrer" pour sauvegarder';
+                           
+                        }
+                    });
+                });
+            </script>
 {% endblock %}

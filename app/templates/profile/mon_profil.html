@@ -1,765 +1,868 @@
-{% extends "base.html" %}
-{% block title %}Mon Profil | DEFITECH{% endblock %}
+{% extends "base.html" %} {% block title %}Mon Profil | DEFITECH{% endblock %}
 {% block content %}
 
 <div class="min-h-screen bg-gray-50 pb-20 lg:pb-8">
-    <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-
-        <!-- Header -->
-        <div class="pt-6 pb-4 lg:pt-8 lg:pb-6">
-            <h1 class="text-2xl sm:text-3xl font-bold text-gray-900">Mon Profil</h1>
-            <p class="mt-1 text-sm sm:text-base text-gray-500">
-                Gérez vos informations personnelles
-            </p>
-        </div>
-
-        <!-- Photo de profil -->
-        <div class="bg-white rounded-xl border border-gray-200 mb-4 overflow-hidden">
-            <div class="px-4 py-3 sm:px-6 sm:py-4 border-b border-gray-100">
-                <h2 class="text-base sm:text-lg font-semibold text-gray-900">Photo de profil</h2>
-            </div>
-            <div class="px-4 py-4 sm:px-6 sm:py-5">
-                <div class="flex items-center space-x-4">
-                    <div
-                        class="h-16 w-16 sm:h-20 sm:w-20 rounded-full bg-gray-100 flex items-center justify-center overflow-hidden flex-shrink-0">
-                        {% if current_user.photo_profil %}
-                        <img src="{{ url_for('static', filename='uploads/profile_pics/' + current_user.photo_profil) }}"
-                            alt="Photo de profil" class="h-full w-full object-cover" />
-                        {% else %}
-                        <i class="fas fa-user text-2xl sm:text-3xl text-gray-400"></i>
-                        {% endif %}
-                    </div>
-                    <div class="flex-1 min-w-0">
-                        <p class="text-xs sm:text-sm text-gray-600">
-                            PNG, JPG, JPEG, GIF, WebP
-                        </p>
-                        <p class="text-xs text-gray-400 mt-0.5">Max 5MB</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Formulaire -->
-        <form method="POST" enctype="multipart/form-data" class="space-y-4">
-            {{ form.hidden_tag() }}
-            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-
-            <!-- Informations personnelles -->
-            <div class="bg-white rounded-xl border border-gray-200 overflow-hidden">
-                <div class="px-4 py-3 sm:px-6 sm:py-4 border-b border-gray-100">
-                    <h2 class="text-base sm:text-lg font-semibold text-gray-900">
-                        Informations personnelles
-                    </h2>
-                </div>
-
-                <div class="px-4 py-4 sm:px-6 sm:py-5">
-                    <div class="space-y-4 sm:space-y-5">
-
-                        <!-- Nom & Prénom -->
-                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                            <div>
-                                {{ form.nom.label(class="block text-sm font-medium text-gray-700 mb-1.5") }}
-                                {{ form.nom(class="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm
-                                focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent
-                                transition-all") }}
-                                {% if form.nom.errors %}
-                                {% for error in form.nom.errors %}
-                                <p class="mt-1 text-xs text-red-600">{{ error }}</p>
-                                {% endfor %}
-                                {% endif %}
-                            </div>
-
-                            <div>
-                                {{ form.prenom.label(class="block text-sm font-medium text-gray-700 mb-1.5") }}
-                                {{ form.prenom(class="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg
-                                text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent
-                                transition-all") }}
-                                {% if form.prenom.errors %}
-                                {% for error in form.prenom.errors %}
-                                <p class="mt-1 text-xs text-red-600">{{ error }}</p>
-                                {% endfor %}
-                                {% endif %}
-                            </div>
-                        </div>
-
-                        <!-- Email -->
-                        <div>
-                            {{ form.email.label(class="block text-sm font-medium text-gray-700 mb-1.5") }}
-                            {{ form.email(class="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm
-                            focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent
-                            transition-all") }}
-                            {% if form.email.errors %}
-                            {% for error in form.email.errors %}
-                            <p class="mt-1 text-xs text-red-600">{{ error }}</p>
-                            {% endfor %}
-                            {% endif %}
-                        </div>
-
-                        <!-- Date de naissance & Sexe -->
-                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                            <div>
-                                {{ form.date_naissance.label(class="block text-sm font-medium text-gray-700 mb-1.5") }}
-                                {{ form.date_naissance(class="w-full px-3 py-2 bg-gray-50 border border-gray-200
-                                rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500
-                                focus:border-transparent transition-all") }}
-                                {% if form.date_naissance.errors %}
-                                {% for error in form.date_naissance.errors %}
-                                <p class="mt-1 text-xs text-red-600">{{ error }}</p>
-                                {% endfor %}
-                                {% endif %}
-                            </div>
-
-                            <div>
-                                {{ form.sexe.label(class="block text-sm font-medium text-gray-700 mb-1.5") }}
-                                {{ form.sexe(class="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg
-                                text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent
-                                transition-all") }}
-                                {% if form.sexe.errors %}
-                                {% for error in form.sexe.errors %}
-                                <p class="mt-1 text-xs text-red-600">{{ error }}</p>
-                                {% endfor %}
-                                {% endif %}
-                            </div>
-                        </div>
-
-                        <!-- Téléphone & LinkedIn -->
-                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                            <div>
-                                {{ form.telephone.label(class="block text-sm font-medium text-gray-700 mb-1.5") }}
-                                {{ form.telephone(class="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg
-                                text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent
-                                transition-all") }}
-                                {% if form.telephone.errors %}
-                                {% for error in form.telephone.errors %}
-                                <p class="mt-1 text-xs text-red-600">{{ error }}</p>
-                                {% endfor %}
-                                {% endif %}
-                            </div>
-
-                            <div>
-                                {{ form.linkedin.label(class="block text-sm font-medium text-gray-700 mb-1.5") }}
-                                {{ form.linkedin(class="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg
-                                text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent
-                                transition-all") }}
-                                {% if form.linkedin.errors %}
-                                {% for error in form.linkedin.errors %}
-                                <p class="mt-1 text-xs text-red-600">{{ error }}</p>
-                                {% endfor %}
-                                {% endif %}
-                            </div>
-                        </div>
-
-                        <!-- GitHub -->
-                        <div>
-                            {{ form.github.label(class="block text-sm font-medium text-gray-700 mb-1.5") }}
-                            {{ form.github(class="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm
-                            focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent
-                            transition-all") }}
-                            {% if form.github.errors %}
-                            {% for error in form.github.errors %}
-                            <p class="mt-1 text-xs text-red-600">{{ error }}</p>
-                            {% endfor %}
-                            {% endif %}
-                        </div>
-
-                        <!-- Bio -->
-                        <div>
-                            {{ form.bio.label(class="block text-sm font-medium text-gray-700 mb-1.5") }}
-                            {{ form.bio(class="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm
-                            focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all
-                            resize-none", rows="3") }}
-                            {% if form.bio.errors %}
-                            {% for error in form.bio.errors %}
-                            <p class="mt-1 text-xs text-red-600">{{ error }}</p>
-                            {% endfor %}
-                            {% endif %}
-                        </div>
-
-                        <!-- Adresse -->
-                        <div>
-                            {{ form.adresse.label(class="block text-sm font-medium text-gray-700 mb-1.5") }}
-                            {{ form.adresse(class="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm
-                            focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent
-                            transition-all") }}
-                            {% if form.adresse.errors %}
-                            {% for error in form.adresse.errors %}
-                            <p class="mt-1 text-xs text-red-600">{{ error }}</p>
-                            {% endfor %}
-                            {% endif %}
-                        </div>
-
-                        <!-- Ville & Code postal -->
-                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                            <div>
-                                {{ form.ville.label(class="block text-sm font-medium text-gray-700 mb-1.5") }}
-                                {{ form.ville(class="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg
-                                text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent
-                                transition-all") }}
-                                {% if form.ville.errors %}
-                                {% for error in form.ville.errors %}
-                                <p class="mt-1 text-xs text-red-600">{{ error }}</p>
-                                {% endfor %}
-                                {% endif %}
-                            </div>
-
-                            <div>
-                                {{ form.code_postal.label(class="block text-sm font-medium text-gray-700 mb-1.5") }}
-                                {{ form.code_postal(class="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg
-                                text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent
-                                transition-all") }}
-                                {% if form.code_postal.errors %}
-                                {% for error in form.code_postal.errors %}
-                                <p class="mt-1 text-xs text-red-600">{{ error }}</p>
-                                {% endfor %}
-                                {% endif %}
-                            </div>
-                        </div>
-
-                        <!-- Pays -->
-                        <div>
-                            {{ form.pays.label(class="block text-sm font-medium text-gray-700 mb-1.5") }}
-                            {{ form.pays(class="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm
-                            focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent
-                            transition-all") }}
-                            {% if form.pays.errors %}
-                            {% for error in form.pays.errors %}
-                            <p class="mt-1 text-xs text-red-600">{{ error }}</p>
-                            {% endfor %}
-                            {% endif %}
-                        </div>
-
-                        <!-- Upload Photo -->
-                        <div>
-                            {{ form.photo_profil.label(class="block text-sm font-medium text-gray-700 mb-1.5") }}
-                            {{ form.photo_profil(class="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg
-                            text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent
-                            transition-all file:mr-4 file:py-1 file:px-3 file:rounded-md file:border-0 file:text-sm
-                            file:bg-blue-50 file:text-blue-600 hover:file:bg-blue-100") }}
-                            {% if form.photo_profil.errors %}
-                            {% for error in form.photo_profil.errors %}
-                            <p class="mt-1 text-xs text-red-600">{{ error }}</p>
-                            {% endfor %}
-                            {% endif %}
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Sécurité -->
-            <div class="bg-white rounded-xl border border-gray-200 overflow-hidden">
-                <div class="px-4 py-3 sm:px-6 sm:py-4 border-b border-gray-100">
-                    <h2 class="text-base sm:text-lg font-semibold text-gray-900">Sécurité</h2>
-                    <p class="text-xs sm:text-sm text-gray-500 mt-0.5">Laissez vide pour conserver l'actuel</p>
-                </div>
-
-                <div class="px-4 py-4 sm:px-6 sm:py-5">
-                    <div class="space-y-4">
-                        <div>
-                            {{ form.nouveau_mot_de_passe.label(class="block text-sm font-medium text-gray-700 mb-1.5")
-                            }}
-                            {{ form.nouveau_mot_de_passe(class="w-full px-3 py-2 bg-gray-50 border border-gray-200
-                            rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500
-                            focus:border-transparent transition-all") }}
-                            {% if form.nouveau_mot_de_passe.errors %}
-                            {% for error in form.nouveau_mot_de_passe.errors %}
-                            <p class="mt-1 text-xs text-red-600">{{ error }}</p>
-                            {% endfor %}
-                            {% endif %}
-                        </div>
-
-                        <div>
-                            {{ form.confirmer_mot_de_passe.label(class="block text-sm font-medium text-gray-700 mb-1.5")
-                            }}
-                            {{ form.confirmer_mot_de_passe(class="w-full px-3 py-2 bg-gray-50 border border-gray-200
-                            rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500
-                            focus:border-transparent transition-all") }}
-                            {% if form.confirmer_mot_de_passe.errors %}
-                            {% for error in form.confirmer_mot_de_passe.errors %}
-                            <p class="mt-1 text-xs text-red-600">{{ error }}</p>
-                            {% endfor %}
-                            {% endif %}
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Section Enseignant -->
-            {% if current_user.role == 'enseignant' and current_user.enseignant %}
-            <div class="bg-white rounded-xl border border-gray-200 overflow-hidden">
-                <div class="px-4 py-3 sm:px-6 sm:py-4 border-b border-gray-100">
-                    <h2 class="text-base sm:text-lg font-semibold text-gray-900">
-                        Informations professionnelles
-                    </h2>
-                </div>
-
-                <div class="px-4 py-4 sm:px-6 sm:py-5">
-                    <div class="space-y-4 sm:space-y-5">
-
-                        <!-- Spécialité & Grade -->
-                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                            <div>
-                                {{ form.specialite.label(class="block text-sm font-medium text-gray-700 mb-1.5") }}
-                                {{ form.specialite(class="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg
-                                text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent
-                                transition-all") }}
-                                {% if form.specialite.errors %}
-                                {% for error in form.specialite.errors %}
-                                <p class="mt-1 text-xs text-red-600">{{ error }}</p>
-                                {% endfor %}
-                                {% endif %}
-                            </div>
-
-                            <div>
-                                {{ form.grade.label(class="block text-sm font-medium text-gray-700 mb-1.5") }}
-                                {{ form.grade(class="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg
-                                text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent
-                                transition-all") }}
-                                {% if form.grade.errors %}
-                                {% for error in form.grade.errors %}
-                                <p class="mt-1 text-xs text-red-600">{{ error }}</p>
-                                {% endfor %}
-                                {% endif %}
-                            </div>
-                        </div>
-
-                        <!-- Date d'embauche -->
-                        <div>
-                            {{ form.date_embauche.label(class="block text-sm font-medium text-gray-700 mb-1.5") }}
-                            {{ form.date_embauche(class="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg
-                            text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent
-                            transition-all") }}
-                            {% if form.date_embauche.errors %}
-                            {% for error in form.date_embauche.errors %}
-                            <p class="mt-1 text-xs text-red-600">{{ error }}</p>
-                            {% endfor %}
-                            {% endif %}
-                        </div>
-
-                        <!-- Filières -->
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">
-                                {{ form.filieres_enseignees.label.text }}
-                            </label>
-
-                            {% set filieres_choices = form.filieres_enseignees.choices %}
-                            {% set selected_filieres = form.filieres_enseignees.data or [] %}
-
-                            <div class="grid grid-cols-1 xs:grid-cols-2 lg:grid-cols-3 gap-2">
-                                {% for value, label in filieres_choices %}
-                                <label
-                                    class="flex items-center space-x-2 p-2 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors">
-                                    <input type="checkbox" id="filiere_{{ value }}" name="filieres_enseignees"
-                                        value="{{ value }}" {% if value in selected_filieres %}checked{% endif %}
-                                        class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded" />
-                                    <span class="text-sm text-gray-700">{{ label }}</span>
-                                </label>
-                                {% endfor %}
-                            </div>
-
-                            {% if form.filieres_enseignees.errors %}
-                            {% for error in form.filieres_enseignees.errors %}
-                            <p class="mt-1 text-xs text-red-600">{{ error }}</p>
-                            {% endfor %}
-                            {% endif %}
-                        </div>
-
-                        <!-- Années -->
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">
-                                {{ form.annees_enseignees.label.text }}
-                            </label>
-
-                            {% set annees_choices = form.annees_enseignees.choices %}
-                            {% set selected_annees = form.annees_enseignees.data or [] %}
-
-                            <div class="grid grid-cols-1 xs:grid-cols-2 lg:grid-cols-3 gap-2">
-                                {% for value, label in annees_choices %}
-                                <label
-                                    class="flex items-center space-x-2 p-2 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors">
-                                    <input type="checkbox" id="annee_{{ value }}" name="annees_enseignees"
-                                        value="{{ value }}" {% if value in selected_annees %}checked{% endif %}
-                                        class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded" />
-                                    <span class="text-sm text-gray-700">{{ label }}</span>
-                                </label>
-                                {% endfor %}
-                            </div>
-
-                            {% if form.annees_enseignees.errors %}
-                            {% for error in form.annees_enseignees.errors %}
-                            <p class="mt-1 text-xs text-red-600">{{ error }}</p>
-                            {% endfor %}
-                            {% endif %}
-                        </div>
-
-                        <!-- Info Notice -->
-                        <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-3 sm:p-4">
-                            <div class="flex">
-                                <i class="fas fa-info-circle text-yellow-600 mt-0.5 flex-shrink-0"></i>
-                                <div class="ml-3">
-                                    <h3 class="text-sm font-medium text-yellow-800">
-                                        Approbation requise
-                                    </h3>
-                                    <p class="mt-1 text-xs sm:text-sm text-yellow-700">
-                                        Les modifications professionnelles nécessitent l'approbation de
-                                        l'administration.
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            {% endif %}
-
-            <!-- Boutons d'action (Desktop) -->
-            <div class="hidden lg:flex items-center justify-center space-x-4 pt-2">
-                <a href="{{ url_for('main.index') }}"
-                    class="px-4 py-2 border border-gray-200 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors">
-                    Annuler
-                </a>
-                {% if current_user.role == 'enseignant' and current_user.enseignant %}
-                <button type="submit"
-                    class="px-6 py-2 bg-yellow-600 hover:bg-yellow-700 text-white rounded-lg text-sm font-medium transition-colors">
-                    <i class="fas fa-clock mr-2"></i>Soumettre
-                </button>
-                {% else %}
-                {{ form.submit(class="px-12 text-center py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm
-                font-medium transition-colors cursor-pointer") }}
-                {% endif %}
-            </div>
-        </form>
-
-        <!-- Informations du compte -->
-        <div class="bg-white rounded-xl border border-gray-200 overflow-hidden mt-4">
-            <div class="px-4 py-3 sm:px-6 sm:py-4 border-b border-gray-100">
-                <h2 class="text-base sm:text-lg font-semibold text-gray-900">
-                    Informations du compte
-                </h2>
-            </div>
-            <div class="px-4 py-4 sm:px-6 sm:py-5">
-                <div class="grid grid-cols-1 xs:grid-cols-2 gap-4 sm:gap-6">
-                    <div>
-                        <p class="text-xs sm:text-sm font-medium text-gray-500">Rôle</p>
-                        <p class="mt-1 text-sm sm:text-base text-gray-900 capitalize">
-                            {{ current_user.role }}
-                        </p>
-                    </div>
-                    <div>
-                        <p class="text-xs sm:text-sm font-medium text-gray-500">Statut</p>
-                        <span class="inline-flex mt-1 px-2 py-1 text-xs font-medium rounded-full 
-                            {% if current_user.statut == 'approuve' %}bg-green-100 text-green-800
-                            {% elif current_user.statut == 'en_attente' %}bg-yellow-100 text-yellow-800
-                            {% else %}bg-red-100 text-red-800{% endif %}">
-                            {{ current_user.statut|title }}
-                        </span>
-                    </div>
-                    <div>
-                        <p class="text-xs sm:text-sm font-medium text-gray-500">Inscription</p>
-                        <p class="mt-1 text-sm sm:text-base text-gray-900">
-                            {{ current_user.date_creation }}
-                        </p>
-                    </div>
-                    <div>
-                        <p class="text-xs sm:text-sm font-medium text-gray-500">Âge</p>
-                        <p class="mt-1 text-sm sm:text-base text-gray-900">
-                            {{ current_user.age }} ans
-                        </p>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Demandes en attente (Enseignant) -->
-        {% if current_user.role == 'enseignant' and current_user.enseignant and pending_requests %}
-        <div class="bg-white rounded-xl border border-yellow-200 overflow-hidden mt-4">
-            <div class="px-4 py-3 sm:px-6 sm:py-4 bg-yellow-50 border-b border-yellow-200">
-                <h2 class="text-base sm:text-lg font-semibold text-yellow-900">
-                    Demandes en attente
-                </h2>
-            </div>
-            <div class="px-4 py-4 sm:px-6 sm:py-5">
-                <div class="space-y-3">
-                    {% for request in pending_requests %}
-                    <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-3 sm:p-4">
-                        <div class="flex items-start">
-                            <i class="fas fa-clock text-yellow-600 mt-1 flex-shrink-0"></i>
-                            <div class="ml-3 flex-1 min-w-0">
-                                <p class="text-xs sm:text-sm font-medium text-yellow-900">
-                                    {{ request.date_creation.strftime('%d/%m/%Y à %H:%M') }}
-                                </p>
-                                <p class="mt-1 text-xs sm:text-sm text-yellow-700">
-                                    En cours d'examen
-                                </p>
-                            </div>
-                        </div>
-                    </div>
-                    {% endfor %}
-                </div>
-            </div>
-        </div>
-        {% endif %}
-
-        <!-- Zone de danger -->
-        <div class="bg-red-50 border border-red-200 rounded-xl p-4 sm:p-6 mt-4">
-            <div class="flex items-start mb-3">
-                <i class="fas fa-exclamation-triangle text-red-600 mt-0.5 flex-shrink-0"></i>
-                <div class="ml-3">
-                    <h3 class="text-sm sm:text-base font-semibold text-red-900">Zone de danger</h3>
-                    <p class="mt-1 text-xs sm:text-sm text-red-700">
-                        Action irréversible
-                    </p>
-                </div>
-            </div>
-            <form method="POST" action="{{ url_for('profile.supprimer_compte') }}"
-                onsubmit="return confirm('Êtes-vous sûr de vouloir supprimer votre compte ?');">
-                <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
-                <button type="submit"
-                    class="w-full sm:w-auto px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg text-sm font-medium transition-colors">
-                    <i class="fas fa-trash mr-2"></i>Supprimer mon compte
-                </button>
-            </form>
-        </div>
-
+  <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+    <!-- Header -->
+    <div class="pt-6 pb-4 lg:pt-8 lg:pb-6">
+      <h1 class="text-2xl sm:text-3xl font-bold text-gray-900">Mon Profil</h1>
+      <p class="mt-1 text-sm sm:text-base text-gray-500">
+        Gérez vos informations personnelles
+      </p>
     </div>
+
+    <!-- Photo de profil -->
+    <div
+      class="bg-white rounded-xl border border-gray-200 mb-4 overflow-hidden"
+    >
+      <div class="px-4 py-3 sm:px-6 sm:py-4 border-b border-gray-100">
+        <h2 class="text-base sm:text-lg font-semibold text-gray-900">
+          Photo de profil
+        </h2>
+      </div>
+      <div class="px-4 py-4 sm:px-6 sm:py-5">
+        <div class="flex items-center space-x-4">
+          <div
+            class="h-16 w-16 sm:h-20 sm:w-20 rounded-full bg-gray-100 flex items-center justify-center overflow-hidden flex-shrink-0"
+          >
+            {% if current_user.photo_profil %}
+            <img
+              src="{{ url_for('static', filename='uploads/profile_pics/' + current_user.photo_profil) }}"
+              alt="Photo de profil"
+              class="h-full w-full object-cover"
+            />
+            {% else %}
+            <i class="fas fa-user text-2xl sm:text-3xl text-gray-400"></i>
+            {% endif %}
+          </div>
+          <div class="flex-1 min-w-0">
+            <p class="text-xs sm:text-sm text-gray-600">
+              PNG, JPG, JPEG, GIF, WebP
+            </p>
+            <p class="text-xs text-gray-400 mt-0.5">Max 5MB</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Formulaire -->
+    <form method="POST" enctype="multipart/form-data" class="space-y-4">
+      {{ form.hidden_tag() }}
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+
+      <!-- Informations personnelles -->
+      <div class="bg-white rounded-xl border border-gray-200 overflow-hidden">
+        <div class="px-4 py-3 sm:px-6 sm:py-4 border-b border-gray-100">
+          <h2 class="text-base sm:text-lg font-semibold text-gray-900">
+            Informations personnelles
+          </h2>
+        </div>
+
+        <div class="px-4 py-4 sm:px-6 sm:py-5">
+          <div class="space-y-4 sm:space-y-5">
+            <!-- Nom & Prénom -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                {{ form.nom.label(class="block text-sm font-medium text-gray-700
+                mb-1.5") }} {{ form.nom(class="w-full px-3 py-2 bg-gray-50
+                border border-gray-200 rounded-lg text-sm focus:outline-none
+                focus:ring-2 focus:ring-blue-500 focus:border-transparent
+                transition-all") }} {% if form.nom.errors %} {% for error in
+                form.nom.errors %}
+                <p class="mt-1 text-xs text-red-600">{{ error }}</p>
+                {% endfor %} {% endif %}
+              </div>
+
+              <div>
+                {{ form.prenom.label(class="block text-sm font-medium
+                text-gray-700 mb-1.5") }} {{ form.prenom(class="w-full px-3 py-2
+                bg-gray-50 border border-gray-200 rounded-lg text-sm
+                focus:outline-none focus:ring-2 focus:ring-blue-500
+                focus:border-transparent transition-all") }} {% if
+                form.prenom.errors %} {% for error in form.prenom.errors %}
+                <p class="mt-1 text-xs text-red-600">{{ error }}</p>
+                {% endfor %} {% endif %}
+              </div>
+            </div>
+
+            <!-- Email -->
+            <div>
+              {{ form.email.label(class="block text-sm font-medium text-gray-700
+              mb-1.5") }} {{ form.email(class="w-full px-3 py-2 bg-gray-50
+              border border-gray-200 rounded-lg text-sm focus:outline-none
+              focus:ring-2 focus:ring-blue-500 focus:border-transparent
+              transition-all") }} {% if form.email.errors %} {% for error in
+              form.email.errors %}
+              <p class="mt-1 text-xs text-red-600">{{ error }}</p>
+              {% endfor %} {% endif %}
+            </div>
+
+            <!-- Date de naissance & Sexe -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                {{ form.date_naissance.label(class="block text-sm font-medium
+                text-gray-700 mb-1.5") }} {{ form.date_naissance(class="w-full
+                px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm
+                focus:outline-none focus:ring-2 focus:ring-blue-500
+                focus:border-transparent transition-all") }} {% if
+                form.date_naissance.errors %} {% for error in
+                form.date_naissance.errors %}
+                <p class="mt-1 text-xs text-red-600">{{ error }}</p>
+                {% endfor %} {% endif %}
+              </div>
+
+              <div>
+                {{ form.sexe.label(class="block text-sm font-medium
+                text-gray-700 mb-1.5") }} {{ form.sexe(class="w-full px-3 py-2
+                bg-gray-50 border border-gray-200 rounded-lg text-sm
+                focus:outline-none focus:ring-2 focus:ring-blue-500
+                focus:border-transparent transition-all") }} {% if
+                form.sexe.errors %} {% for error in form.sexe.errors %}
+                <p class="mt-1 text-xs text-red-600">{{ error }}</p>
+                {% endfor %} {% endif %}
+              </div>
+            </div>
+
+            <!-- Téléphone & LinkedIn -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                {{ form.telephone.label(class="block text-sm font-medium
+                text-gray-700 mb-1.5") }} {{ form.telephone(class="w-full px-3
+                py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm
+                focus:outline-none focus:ring-2 focus:ring-blue-500
+                focus:border-transparent transition-all") }} {% if
+                form.telephone.errors %} {% for error in form.telephone.errors
+                %}
+                <p class="mt-1 text-xs text-red-600">{{ error }}</p>
+                {% endfor %} {% endif %}
+              </div>
+
+              <div>
+                {{ form.linkedin.label(class="block text-sm font-medium
+                text-gray-700 mb-1.5") }} {{ form.linkedin(class="w-full px-3
+                py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm
+                focus:outline-none focus:ring-2 focus:ring-blue-500
+                focus:border-transparent transition-all") }} {% if
+                form.linkedin.errors %} {% for error in form.linkedin.errors %}
+                <p class="mt-1 text-xs text-red-600">{{ error }}</p>
+                {% endfor %} {% endif %}
+              </div>
+            </div>
+
+            <!-- GitHub -->
+            <div>
+              {{ form.github.label(class="block text-sm font-medium
+              text-gray-700 mb-1.5") }} {{ form.github(class="w-full px-3 py-2
+              bg-gray-50 border border-gray-200 rounded-lg text-sm
+              focus:outline-none focus:ring-2 focus:ring-blue-500
+              focus:border-transparent transition-all") }} {% if
+              form.github.errors %} {% for error in form.github.errors %}
+              <p class="mt-1 text-xs text-red-600">{{ error }}</p>
+              {% endfor %} {% endif %}
+            </div>
+
+            <!-- Bio -->
+            <div>
+              {{ form.bio.label(class="block text-sm font-medium text-gray-700
+              mb-1.5") }} {{ form.bio(class="w-full px-3 py-2 bg-gray-50 border
+              border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2
+              focus:ring-blue-500 focus:border-transparent transition-all
+              resize-none", rows="3") }} {% if form.bio.errors %} {% for error
+              in form.bio.errors %}
+              <p class="mt-1 text-xs text-red-600">{{ error }}</p>
+              {% endfor %} {% endif %}
+            </div>
+
+            <!-- Adresse -->
+            <div>
+              {{ form.adresse.label(class="block text-sm font-medium
+              text-gray-700 mb-1.5") }} {{ form.adresse(class="w-full px-3 py-2
+              bg-gray-50 border border-gray-200 rounded-lg text-sm
+              focus:outline-none focus:ring-2 focus:ring-blue-500
+              focus:border-transparent transition-all") }} {% if
+              form.adresse.errors %} {% for error in form.adresse.errors %}
+              <p class="mt-1 text-xs text-red-600">{{ error }}</p>
+              {% endfor %} {% endif %}
+            </div>
+
+            <!-- Ville & Code postal -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                {{ form.ville.label(class="block text-sm font-medium
+                text-gray-700 mb-1.5") }} {{ form.ville(class="w-full px-3 py-2
+                bg-gray-50 border border-gray-200 rounded-lg text-sm
+                focus:outline-none focus:ring-2 focus:ring-blue-500
+                focus:border-transparent transition-all") }} {% if
+                form.ville.errors %} {% for error in form.ville.errors %}
+                <p class="mt-1 text-xs text-red-600">{{ error }}</p>
+                {% endfor %} {% endif %}
+              </div>
+
+              <div>
+                {{ form.code_postal.label(class="block text-sm font-medium
+                text-gray-700 mb-1.5") }} {{ form.code_postal(class="w-full px-3
+                py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm
+                focus:outline-none focus:ring-2 focus:ring-blue-500
+                focus:border-transparent transition-all") }} {% if
+                form.code_postal.errors %} {% for error in
+                form.code_postal.errors %}
+                <p class="mt-1 text-xs text-red-600">{{ error }}</p>
+                {% endfor %} {% endif %}
+              </div>
+            </div>
+
+            <!-- Pays -->
+            <div>
+              {{ form.pays.label(class="block text-sm font-medium text-gray-700
+              mb-1.5") }} {{ form.pays(class="w-full px-3 py-2 bg-gray-50 border
+              border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2
+              focus:ring-blue-500 focus:border-transparent transition-all") }}
+              {% if form.pays.errors %} {% for error in form.pays.errors %}
+              <p class="mt-1 text-xs text-red-600">{{ error }}</p>
+              {% endfor %} {% endif %}
+            </div>
+
+            <!-- Upload Photo -->
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1.5"
+                >Photo de profil</label
+              >
+              <!-- Hidden input for URL -->
+              {{ form.photo_profil_url(id="photo_profil_url") }}
+
+              <div class="mt-1 flex items-center gap-4">
+                <input
+                  type="file"
+                  id="photo_profil_input"
+                  accept="image/*"
+                  class="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all file:mr-4 file:py-1 file:px-3 file:rounded-md file:border-0 file:text-sm file:bg-blue-50 file:text-blue-600 hover:file:bg-blue-100"
+                />
+
+                <div
+                  id="upload_feedback"
+                  class="text-sm font-medium text-blue-600"
+                ></div>
+              </div>
+              <!-- Existing FileField is ignored/hidden or we just don't render it since we use custom input -->
+              <p class="mt-1 text-xs text-gray-500">
+                Changer la photo (PNG, JPG, max 5MB)
+              </p>
+
+              {% if form.photo_profil.errors %} {% for error in
+              form.photo_profil.errors %}
+              <p class="mt-1 text-xs text-red-600">{{ error }}</p>
+              {% endfor %} {% endif %}
+            </div>
+            <script>
+              document.addEventListener("DOMContentLoaded", () => {
+                // preset: 'profiles_upload' (unsigned)
+                attachCloudinaryUpload(
+                  "photo_profil_input",
+                  "photo_profil_url",
+                  "profiles_upload",
+                  "upload_feedback",
+                  "image"
+                );
+              });
+            </script>
+          </div>
+        </div>
+      </div>
+
+      <!-- Sécurité -->
+      <div class="bg-white rounded-xl border border-gray-200 overflow-hidden">
+        <div class="px-4 py-3 sm:px-6 sm:py-4 border-b border-gray-100">
+          <h2 class="text-base sm:text-lg font-semibold text-gray-900">
+            Sécurité
+          </h2>
+          <p class="text-xs sm:text-sm text-gray-500 mt-0.5">
+            Laissez vide pour conserver l'actuel
+          </p>
+        </div>
+
+        <div class="px-4 py-4 sm:px-6 sm:py-5">
+          <div class="space-y-4">
+            <div>
+              {{ form.nouveau_mot_de_passe.label(class="block text-sm
+              font-medium text-gray-700 mb-1.5") }} {{
+              form.nouveau_mot_de_passe(class="w-full px-3 py-2 bg-gray-50
+              border border-gray-200 rounded-lg text-sm focus:outline-none
+              focus:ring-2 focus:ring-blue-500 focus:border-transparent
+              transition-all") }} {% if form.nouveau_mot_de_passe.errors %} {%
+              for error in form.nouveau_mot_de_passe.errors %}
+              <p class="mt-1 text-xs text-red-600">{{ error }}</p>
+              {% endfor %} {% endif %}
+            </div>
+
+            <div>
+              {{ form.confirmer_mot_de_passe.label(class="block text-sm
+              font-medium text-gray-700 mb-1.5") }} {{
+              form.confirmer_mot_de_passe(class="w-full px-3 py-2 bg-gray-50
+              border border-gray-200 rounded-lg text-sm focus:outline-none
+              focus:ring-2 focus:ring-blue-500 focus:border-transparent
+              transition-all") }} {% if form.confirmer_mot_de_passe.errors %} {%
+              for error in form.confirmer_mot_de_passe.errors %}
+              <p class="mt-1 text-xs text-red-600">{{ error }}</p>
+              {% endfor %} {% endif %}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Section Enseignant -->
+      {% if current_user.role == 'enseignant' and current_user.enseignant %}
+      <div class="bg-white rounded-xl border border-gray-200 overflow-hidden">
+        <div class="px-4 py-3 sm:px-6 sm:py-4 border-b border-gray-100">
+          <h2 class="text-base sm:text-lg font-semibold text-gray-900">
+            Informations professionnelles
+          </h2>
+        </div>
+
+        <div class="px-4 py-4 sm:px-6 sm:py-5">
+          <div class="space-y-4 sm:space-y-5">
+            <!-- Spécialité & Grade -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                {{ form.specialite.label(class="block text-sm font-medium
+                text-gray-700 mb-1.5") }} {{ form.specialite(class="w-full px-3
+                py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm
+                focus:outline-none focus:ring-2 focus:ring-blue-500
+                focus:border-transparent transition-all") }} {% if
+                form.specialite.errors %} {% for error in form.specialite.errors
+                %}
+                <p class="mt-1 text-xs text-red-600">{{ error }}</p>
+                {% endfor %} {% endif %}
+              </div>
+
+              <div>
+                {{ form.grade.label(class="block text-sm font-medium
+                text-gray-700 mb-1.5") }} {{ form.grade(class="w-full px-3 py-2
+                bg-gray-50 border border-gray-200 rounded-lg text-sm
+                focus:outline-none focus:ring-2 focus:ring-blue-500
+                focus:border-transparent transition-all") }} {% if
+                form.grade.errors %} {% for error in form.grade.errors %}
+                <p class="mt-1 text-xs text-red-600">{{ error }}</p>
+                {% endfor %} {% endif %}
+              </div>
+            </div>
+
+            <!-- Date d'embauche -->
+            <div>
+              {{ form.date_embauche.label(class="block text-sm font-medium
+              text-gray-700 mb-1.5") }} {{ form.date_embauche(class="w-full px-3
+              py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm
+              focus:outline-none focus:ring-2 focus:ring-blue-500
+              focus:border-transparent transition-all") }} {% if
+              form.date_embauche.errors %} {% for error in
+              form.date_embauche.errors %}
+              <p class="mt-1 text-xs text-red-600">{{ error }}</p>
+              {% endfor %} {% endif %}
+            </div>
+
+            <!-- Filières -->
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">
+                {{ form.filieres_enseignees.label.text }}
+              </label>
+
+              {% set filieres_choices = form.filieres_enseignees.choices %} {%
+              set selected_filieres = form.filieres_enseignees.data or [] %}
+
+              <div class="grid grid-cols-1 xs:grid-cols-2 lg:grid-cols-3 gap-2">
+                {% for value, label in filieres_choices %}
+                <label
+                  class="flex items-center space-x-2 p-2 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors"
+                >
+                  <input
+                    type="checkbox"
+                    id="filiere_{{ value }}"
+                    name="filieres_enseignees"
+                    value="{{ value }}"
+                    {%
+                    if
+                    value
+                    in
+                    selected_filieres
+                    %}checked{%
+                    endif
+                    %}
+                    class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                  />
+                  <span class="text-sm text-gray-700">{{ label }}</span>
+                </label>
+                {% endfor %}
+              </div>
+
+              {% if form.filieres_enseignees.errors %} {% for error in
+              form.filieres_enseignees.errors %}
+              <p class="mt-1 text-xs text-red-600">{{ error }}</p>
+              {% endfor %} {% endif %}
+            </div>
+
+            <!-- Années -->
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">
+                {{ form.annees_enseignees.label.text }}
+              </label>
+
+              {% set annees_choices = form.annees_enseignees.choices %} {% set
+              selected_annees = form.annees_enseignees.data or [] %}
+
+              <div class="grid grid-cols-1 xs:grid-cols-2 lg:grid-cols-3 gap-2">
+                {% for value, label in annees_choices %}
+                <label
+                  class="flex items-center space-x-2 p-2 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors"
+                >
+                  <input
+                    type="checkbox"
+                    id="annee_{{ value }}"
+                    name="annees_enseignees"
+                    value="{{ value }}"
+                    {%
+                    if
+                    value
+                    in
+                    selected_annees
+                    %}checked{%
+                    endif
+                    %}
+                    class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                  />
+                  <span class="text-sm text-gray-700">{{ label }}</span>
+                </label>
+                {% endfor %}
+              </div>
+
+              {% if form.annees_enseignees.errors %} {% for error in
+              form.annees_enseignees.errors %}
+              <p class="mt-1 text-xs text-red-600">{{ error }}</p>
+              {% endfor %} {% endif %}
+            </div>
+
+            <!-- Info Notice -->
+            <div
+              class="bg-yellow-50 border border-yellow-200 rounded-lg p-3 sm:p-4"
+            >
+              <div class="flex">
+                <i
+                  class="fas fa-info-circle text-yellow-600 mt-0.5 flex-shrink-0"
+                ></i>
+                <div class="ml-3">
+                  <h3 class="text-sm font-medium text-yellow-800">
+                    Approbation requise
+                  </h3>
+                  <p class="mt-1 text-xs sm:text-sm text-yellow-700">
+                    Les modifications professionnelles nécessitent l'approbation
+                    de l'administration.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      {% endif %}
+
+      <!-- Boutons d'action (Desktop) -->
+      <div class="hidden lg:flex items-center justify-center space-x-4 pt-2">
+        <a
+          href="{{ url_for('main.index') }}"
+          class="px-4 py-2 border border-gray-200 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
+        >
+          Annuler
+        </a>
+        {% if current_user.role == 'enseignant' and current_user.enseignant %}
+        <button
+          type="submit"
+          class="px-6 py-2 bg-yellow-600 hover:bg-yellow-700 text-white rounded-lg text-sm font-medium transition-colors"
+        >
+          <i class="fas fa-clock mr-2"></i>Soumettre
+        </button>
+        {% else %} {{ form.submit(class="px-12 text-center py-2 bg-blue-600
+        hover:bg-blue-700 text-white rounded-lg text-sm font-medium
+        transition-colors cursor-pointer") }} {% endif %}
+      </div>
+    </form>
+
+    <!-- Informations du compte -->
+    <div
+      class="bg-white rounded-xl border border-gray-200 overflow-hidden mt-4"
+    >
+      <div class="px-4 py-3 sm:px-6 sm:py-4 border-b border-gray-100">
+        <h2 class="text-base sm:text-lg font-semibold text-gray-900">
+          Informations du compte
+        </h2>
+      </div>
+      <div class="px-4 py-4 sm:px-6 sm:py-5">
+        <div class="grid grid-cols-1 xs:grid-cols-2 gap-4 sm:gap-6">
+          <div>
+            <p class="text-xs sm:text-sm font-medium text-gray-500">Rôle</p>
+            <p class="mt-1 text-sm sm:text-base text-gray-900 capitalize">
+              {{ current_user.role }}
+            </p>
+          </div>
+          <div>
+            <p class="text-xs sm:text-sm font-medium text-gray-500">Statut</p>
+            <span
+              class="inline-flex mt-1 px-2 py-1 text-xs font-medium rounded-full {% if current_user.statut == 'approuve' %}bg-green-100 text-green-800 {% elif current_user.statut == 'en_attente' %}bg-yellow-100 text-yellow-800 {% else %}bg-red-100 text-red-800{% endif %}"
+            >
+              {{ current_user.statut|title }}
+            </span>
+          </div>
+          <div>
+            <p class="text-xs sm:text-sm font-medium text-gray-500">
+              Inscription
+            </p>
+            <p class="mt-1 text-sm sm:text-base text-gray-900">
+              {{ current_user.date_creation }}
+            </p>
+          </div>
+          <div>
+            <p class="text-xs sm:text-sm font-medium text-gray-500">Âge</p>
+            <p class="mt-1 text-sm sm:text-base text-gray-900">
+              {{ current_user.age }} ans
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Demandes en attente (Enseignant) -->
+    {% if current_user.role == 'enseignant' and current_user.enseignant and
+    pending_requests %}
+    <div
+      class="bg-white rounded-xl border border-yellow-200 overflow-hidden mt-4"
+    >
+      <div
+        class="px-4 py-3 sm:px-6 sm:py-4 bg-yellow-50 border-b border-yellow-200"
+      >
+        <h2 class="text-base sm:text-lg font-semibold text-yellow-900">
+          Demandes en attente
+        </h2>
+      </div>
+      <div class="px-4 py-4 sm:px-6 sm:py-5">
+        <div class="space-y-3">
+          {% for request in pending_requests %}
+          <div
+            class="bg-yellow-50 border border-yellow-200 rounded-lg p-3 sm:p-4"
+          >
+            <div class="flex items-start">
+              <i class="fas fa-clock text-yellow-600 mt-1 flex-shrink-0"></i>
+              <div class="ml-3 flex-1 min-w-0">
+                <p class="text-xs sm:text-sm font-medium text-yellow-900">
+                  {{ request.date_creation.strftime('%d/%m/%Y à %H:%M') }}
+                </p>
+                <p class="mt-1 text-xs sm:text-sm text-yellow-700">
+                  En cours d'examen
+                </p>
+              </div>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+    {% endif %}
+
+    <!-- Zone de danger -->
+    <div class="bg-red-50 border border-red-200 rounded-xl p-4 sm:p-6 mt-4">
+      <div class="flex items-start mb-3">
+        <i
+          class="fas fa-exclamation-triangle text-red-600 mt-0.5 flex-shrink-0"
+        ></i>
+        <div class="ml-3">
+          <h3 class="text-sm sm:text-base font-semibold text-red-900">
+            Zone de danger
+          </h3>
+          <p class="mt-1 text-xs sm:text-sm text-red-700">
+            Action irréversible
+          </p>
+        </div>
+      </div>
+      <form
+        method="POST"
+        action="{{ url_for('profile.supprimer_compte') }}"
+        onsubmit="return confirm('Êtes-vous sûr de vouloir supprimer votre compte ?');"
+      >
+        <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}" />
+        <button
+          type="submit"
+          class="w-full sm:w-auto px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg text-sm font-medium transition-colors"
+        >
+          <i class="fas fa-trash mr-2"></i>Supprimer mon compte
+        </button>
+      </form>
+    </div>
+  </div>
 </div>
 
 <!-- Mobile Bottom Bar -->
-<div class="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-10">
-    <div class="px-4 py-3 flex items-center space-x-3">
-        <a href="{{ url_for('main.index') }}"
-            class="flex-1 px-4 py-2.5 border border-gray-200 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors text-center">
-            Annuler
-        </a>
-        <button type="submit" onclick="document.querySelector('form').submit()" class="flex-1 px-4 py-2.5 
-                {% if current_user.role == 'enseignant' and current_user.enseignant %}bg-yellow-600 hover:bg-yellow-700{% else %}bg-blue-600 hover:bg-blue-700{% endif %}
-                text-white rounded-lg text-sm font-medium transition-colors text-center">
-            <i class="fas fa-save mr-2"></i>Enregistrer
-        </button>
-    </div>
+<div
+  class="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-10"
+>
+  <div class="px-4 py-3 flex items-center space-x-3">
+    <a
+      href="{{ url_for('main.index') }}"
+      class="flex-1 px-4 py-2.5 border border-gray-200 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors text-center"
+    >
+      Annuler
+    </a>
+    <button
+      type="submit"
+      onclick="document.querySelector('form').submit()"
+      class="flex-1 px-4 py-2.5 {% if current_user.role == 'enseignant' and current_user.enseignant %}bg-yellow-600 hover:bg-yellow-700{% else %}bg-blue-600 hover:bg-blue-700{% endif %} text-white rounded-lg text-sm font-medium transition-colors text-center"
+    >
+      <i class="fas fa-save mr-2"></i>Enregistrer
+    </button>
+  </div>
 </div>
 
 <style>
-    /* Custom scrollbar */
-    ::-webkit-scrollbar {
-        width: 6px;
-    }
+  /* Custom scrollbar */
+  ::-webkit-scrollbar {
+    width: 6px;
+  }
 
-    ::-webkit-scrollbar-track {
-        background: #f1f5f9;
-    }
+  ::-webkit-scrollbar-track {
+    background: #f1f5f9;
+  }
 
-    ::-webkit-scrollbar-thumb {
-        background: #cbd5e0;
-        border-radius: 3px;
-    }
+  ::-webkit-scrollbar-thumb {
+    background: #cbd5e0;
+    border-radius: 3px;
+  }
 
-    /* Focus states */
-    input:focus,
-    select:focus,
-    textarea:focus {
-        outline: none;
-    }
+  /* Focus states */
+  input:focus,
+  select:focus,
+  textarea:focus {
+    outline: none;
+  }
 
-    /* File input styling */
-    input[type="file"]::file-selector-button {
-        cursor: pointer;
-    }
+  /* File input styling */
+  input[type="file"]::file-selector-button {
+    cursor: pointer;
+  }
 
-    /* Smooth transitions */
-    * {
-        -webkit-tap-highlight-color: transparent;
-    }
+  /* Smooth transitions */
+  * {
+    -webkit-tap-highlight-color: transparent;
+  }
 
-    /* Safe area for iOS */
-    @supports (padding: max(0px)) {
-        .lg\:pb-8 {
-            padding-bottom: max(2rem, env(safe-area-inset-bottom));
-        }
+  /* Safe area for iOS */
+  @supports (padding: max(0px)) {
+    .lg\:pb-8 {
+      padding-bottom: max(2rem, env(safe-area-inset-bottom));
     }
+  }
 </style>
 
 <script>
-    // Auto-resize textarea
-    document.addEventListener('DOMContentLoaded', function () {
-        const textareas = document.querySelectorAll('textarea');
-        textareas.forEach(textarea => {
-            textarea.addEventListener('input', function () {
-                this.style.height = 'auto';
-                this.style.height = this.scrollHeight + 'px';
-            });
+  // Auto-resize textarea
+  document.addEventListener("DOMContentLoaded", function () {
+    const textareas = document.querySelectorAll("textarea");
+    textareas.forEach((textarea) => {
+      textarea.addEventListener("input", function () {
+        this.style.height = "auto";
+        this.style.height = this.scrollHeight + "px";
+      });
+    });
+
+    // Preview image before upload
+    const photoInput = document.querySelector('input[type="file"]');
+    if (photoInput) {
+      photoInput.addEventListener("change", function (e) {
+        const file = e.target.files[0];
+        if (file && file.type.startsWith("image/")) {
+          const reader = new FileReader();
+          reader.onload = function (e) {
+            const img = document.querySelector(".rounded-full img");
+            if (img) {
+              img.src = e.target.result;
+            } else {
+              const container = document.querySelector(".rounded-full");
+              container.innerHTML = `<img src="${e.target.result}" class="h-full w-full object-cover" />`;
+            }
+          };
+          reader.readAsDataURL(file);
+        }
+      });
+    }
+
+    // Form validation feedback
+    const form = document.querySelector("form");
+    if (form) {
+      form.addEventListener("submit", function (e) {
+        const requiredInputs = form.querySelectorAll("[required]");
+        let isValid = true;
+
+        requiredInputs.forEach((input) => {
+          if (!input.value.trim()) {
+            isValid = false;
+            input.classList.add("border-red-500");
+            setTimeout(() => {
+              input.classList.remove("border-red-500");
+            }, 2000);
+          }
         });
 
-        // Preview image before upload
-        const photoInput = document.querySelector('input[type="file"]');
-        if (photoInput) {
-            photoInput.addEventListener('change', function (e) {
-                const file = e.target.files[0];
-                if (file && file.type.startsWith('image/')) {
-                    const reader = new FileReader();
-                    reader.onload = function (e) {
-                        const img = document.querySelector('.rounded-full img');
-                        if (img) {
-                            img.src = e.target.result;
-                        } else {
-                            const container = document.querySelector('.rounded-full');
-                            container.innerHTML = `<img src="${e.target.result}" class="h-full w-full object-cover" />`;
-                        }
-                    };
-                    reader.readAsDataURL(file);
-                }
-            });
+        if (!isValid) {
+          e.preventDefault();
+          showToast("Veuillez remplir tous les champs obligatoires", "error");
         }
+      });
+    }
 
-        // Form validation feedback
-        const form = document.querySelector('form');
-        if (form) {
-            form.addEventListener('submit', function (e) {
-                const requiredInputs = form.querySelectorAll('[required]');
-                let isValid = true;
+    // Toast notification
+    function showToast(message, type = "info") {
+      const existingToast = document.getElementById("toast");
+      if (existingToast) {
+        existingToast.remove();
+      }
 
-                requiredInputs.forEach(input => {
-                    if (!input.value.trim()) {
-                        isValid = false;
-                        input.classList.add('border-red-500');
-                        setTimeout(() => {
-                            input.classList.remove('border-red-500');
-                        }, 2000);
-                    }
-                });
+      const toast = document.createElement("div");
+      toast.id = "toast";
+      toast.className = `fixed top-4 left-1/2 -translate-x-1/2 px-4 py-3 rounded-lg shadow-lg z-50 text-sm max-w-sm mx-4 animate-slide-down ${
+        type === "error"
+          ? "bg-red-500 text-white"
+          : type === "success"
+          ? "bg-green-500 text-white"
+          : "bg-gray-900 text-white"
+      }`;
 
-                if (!isValid) {
-                    e.preventDefault();
-                    showToast('Veuillez remplir tous les champs obligatoires', 'error');
-                }
-            });
-        }
-
-        // Toast notification
-        function showToast(message, type = 'info') {
-            const existingToast = document.getElementById('toast');
-            if (existingToast) {
-                existingToast.remove();
-            }
-
-            const toast = document.createElement('div');
-            toast.id = 'toast';
-            toast.className = `fixed top-4 left-1/2 -translate-x-1/2 px-4 py-3 rounded-lg shadow-lg z-50 text-sm max-w-sm mx-4 animate-slide-down ${type === 'error' ? 'bg-red-500 text-white' :
-                type === 'success' ? 'bg-green-500 text-white' :
-                    'bg-gray-900 text-white'
-                }`;
-
-            toast.innerHTML = `
+      toast.innerHTML = `
                 <div class="flex items-center space-x-2">
-                    <i class="fas fa-${type === 'error' ? 'exclamation-circle' : type === 'success' ? 'check-circle' : 'info-circle'}"></i>
+                    <i class="fas fa-${
+                      type === "error"
+                        ? "exclamation-circle"
+                        : type === "success"
+                        ? "check-circle"
+                        : "info-circle"
+                    }"></i>
                     <span>${message}</span>
                 </div>
             `;
 
-            document.body.appendChild(toast);
+      document.body.appendChild(toast);
 
-            setTimeout(() => {
-                toast.style.opacity = '0';
-                toast.style.transform = 'translate(-50%, -20px)';
-                setTimeout(() => toast.remove(), 300);
-            }, 3000);
+      setTimeout(() => {
+        toast.style.opacity = "0";
+        toast.style.transform = "translate(-50%, -20px)";
+        setTimeout(() => toast.remove(), 300);
+      }, 3000);
+    }
+
+    // Password strength indicator
+    const newPassword = document.querySelector(
+      'input[name="nouveau_mot_de_passe"]'
+    );
+    if (newPassword) {
+      newPassword.addEventListener("input", function () {
+        const value = this.value;
+        const strength = getPasswordStrength(value);
+
+        // Remove existing indicator
+        let indicator = this.parentElement.querySelector(".password-strength");
+        if (indicator) {
+          indicator.remove();
         }
 
-        // Password strength indicator
-        const newPassword = document.querySelector('input[name="nouveau_mot_de_passe"]');
-        if (newPassword) {
-            newPassword.addEventListener('input', function () {
-                const value = this.value;
-                const strength = getPasswordStrength(value);
+        if (value.length > 0) {
+          indicator = document.createElement("div");
+          indicator.className =
+            "password-strength mt-2 flex items-center space-x-2";
 
-                // Remove existing indicator
-                let indicator = this.parentElement.querySelector('.password-strength');
-                if (indicator) {
-                    indicator.remove();
-                }
+          const colors = {
+            weak: "bg-red-500",
+            medium: "bg-yellow-500",
+            strong: "bg-green-500",
+          };
 
-                if (value.length > 0) {
-                    indicator = document.createElement('div');
-                    indicator.className = 'password-strength mt-2 flex items-center space-x-2';
+          const labels = {
+            weak: "Faible",
+            medium: "Moyen",
+            strong: "Fort",
+          };
 
-                    const colors = {
-                        weak: 'bg-red-500',
-                        medium: 'bg-yellow-500',
-                        strong: 'bg-green-500'
-                    };
-
-                    const labels = {
-                        weak: 'Faible',
-                        medium: 'Moyen',
-                        strong: 'Fort'
-                    };
-
-                    indicator.innerHTML = `
+          indicator.innerHTML = `
                         <div class="flex-1 h-1.5 bg-gray-200 rounded-full overflow-hidden">
-                            <div class="${colors[strength]} h-full transition-all duration-300" 
-                                 style="width: ${strength === 'weak' ? '33%' : strength === 'medium' ? '66%' : '100%'}">
+                            <div class="${
+                              colors[strength]
+                            } h-full transition-all duration-300" 
+                                 style="width: ${
+                                   strength === "weak"
+                                     ? "33%"
+                                     : strength === "medium"
+                                     ? "66%"
+                                     : "100%"
+                                 }">
                             </div>
                         </div>
-                        <span class="text-xs text-gray-600">${labels[strength]}</span>
+                        <span class="text-xs text-gray-600">${
+                          labels[strength]
+                        }</span>
                     `;
 
-                    this.parentElement.appendChild(indicator);
-                }
-            });
+          this.parentElement.appendChild(indicator);
         }
+      });
+    }
 
-        function getPasswordStrength(password) {
-            if (password.length < 6) return 'weak';
+    function getPasswordStrength(password) {
+      if (password.length < 6) return "weak";
 
-            let strength = 0;
-            if (password.length >= 8) strength++;
-            if (/[a-z]/.test(password) && /[A-Z]/.test(password)) strength++;
-            if (/\d/.test(password)) strength++;
-            if (/[^a-zA-Z\d]/.test(password)) strength++;
+      let strength = 0;
+      if (password.length >= 8) strength++;
+      if (/[a-z]/.test(password) && /[A-Z]/.test(password)) strength++;
+      if (/\d/.test(password)) strength++;
+      if (/[^a-zA-Z\d]/.test(password)) strength++;
 
-            return strength < 2 ? 'weak' : strength < 4 ? 'medium' : 'strong';
+      return strength < 2 ? "weak" : strength < 4 ? "medium" : "strong";
+    }
+
+    // Confirm password match
+    const confirmPassword = document.querySelector(
+      'input[name="confirmer_mot_de_passe"]'
+    );
+    if (confirmPassword && newPassword) {
+      confirmPassword.addEventListener("input", function () {
+        if (this.value && this.value !== newPassword.value) {
+          this.classList.add("border-red-500");
+        } else {
+          this.classList.remove("border-red-500");
         }
-
-        // Confirm password match
-        const confirmPassword = document.querySelector('input[name="confirmer_mot_de_passe"]');
-        if (confirmPassword && newPassword) {
-            confirmPassword.addEventListener('input', function () {
-                if (this.value && this.value !== newPassword.value) {
-                    this.classList.add('border-red-500');
-                } else {
-                    this.classList.remove('border-red-500');
-                }
-            });
-        }
-    });
+      });
+    }
+  });
 </script>
 
 <style>
-    @keyframes slide-down {
-        from {
-            opacity: 0;
-            transform: translate(-50%, -20px);
-        }
-
-        to {
-            opacity: 1;
-            transform: translate(-50%, 0);
-        }
+  @keyframes slide-down {
+    from {
+      opacity: 0;
+      transform: translate(-50%, -20px);
     }
 
-    .animate-slide-down {
-        animation: slide-down 0.3s ease-out;
+    to {
+      opacity: 1;
+      transform: translate(-50%, 0);
+    }
+  }
+
+  .animate-slide-down {
+    animation: slide-down 0.3s ease-out;
+  }
+
+  /* Responsive text sizing */
+  @media (max-width: 374px) {
+    h1 {
+      font-size: 1.5rem;
     }
 
-    /* Responsive text sizing */
-    @media (max-width: 374px) {
-        h1 {
-            font-size: 1.5rem;
-        }
-
-        h2 {
-            font-size: 1rem;
-        }
+    h2 {
+      font-size: 1rem;
     }
+  }
 </style>
 
 {% endblock %}

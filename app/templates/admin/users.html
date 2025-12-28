@@ -89,155 +89,71 @@ DEFITECH{% endblock %} {% block content %}
       <div
         class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3"
       >
-        <!-- Import Étudiants -->
+        <!-- Helper Macro for Import Forms -->
+        {% macro import_form(name, url, icon, color, id_suffix) %}
         <div class="flex flex-col gap-2">
-          <form
-            action="{{ url_for('admin.import_etudiants') }}"
-            method="post"
-            enctype="multipart/form-data"
-          >
+          <form action="{{ url_for('admin.import_etudiants') }}" method="post" id="form-{{ id_suffix }}">
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+            <input
+              type="hidden"
+              name="file_url"
+              id="file_url_{{ id_suffix }}"
+            />
+
             <label
-              class="flex items-center justify-center w-full px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg cursor-pointer text-sm font-medium transition-colors shadow-sm"
+              for="file-upload-{{ id_suffix }}"
+              class="flex items-center justify-center w-full px-4 py-2.5 bg-{{ color }}-600 hover:bg-{{ color }}-700 text-white rounded-lg cursor-pointer text-sm font-medium transition-colors shadow-sm relative overflow-hidden group"
             >
-              <i class="fas fa-user-graduate mr-2"></i>
-              <span>Étudiants</span>
+              <span class="flex items-center" id="btn-text-{{ id_suffix }}">
+                <i class="fas fa-{{ icon }} mr-2"></i>
+                <span>{{ name }}</span>
+              </span>
+              <span
+                id="loading-{{ id_suffix }}"
+                class="hidden absolute inset-0 flex items-center justify-center bg-{{ color }}-700"
+              >
+                <i class="fas fa-circle-notch fa-spin"></i>
+              </span>
               <input
                 type="file"
-                name="file"
-                accept=".csv, .xlsx, .xls"
+                id="file-upload-{{ id_suffix }}"
                 class="hidden"
-                onchange="this.form.submit()"
+                accept=".csv, .xlsx, .xls"
               />
             </label>
+            <div
+              id="feedback_{{ id_suffix }}"
+              class="hidden text-xs text-{{ color }}-600 mt-1 text-center font-medium"
+            ></div>
           </form>
           <a
-            href="{{ url_for('admin.download_etudiants_template') }}"
-            class="text-center text-blue-600 hover:text-blue-800 text-xs underline"
+            href="{{ url_for('admin.download_' + id_suffix + '_template') }}"
+            class="text-center text-{{ color }}-600 hover:text-{{ color }}-800 text-xs underline"
           >
             <i class="fas fa-download mr-1"></i>Modèle
           </a>
         </div>
+        {% endmacro %}
+
+        <!-- Import Étudiants -->
+        {{ import_form('Étudiants', url_for('admin.import_etudiants'),
+        'user-graduate', 'blue', 'etudiants') }}
 
         <!-- Import Enseignants -->
-        <div class="flex flex-col gap-2">
-          <form
-            action="{{ url_for('admin.import_enseignants') }}"
-            method="post"
-            enctype="multipart/form-data"
-          >
-            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
-            <label
-              class="flex items-center justify-center w-full px-4 py-2.5 bg-purple-600 hover:bg-purple-700 text-white rounded-lg cursor-pointer text-sm font-medium transition-colors shadow-sm"
-            >
-              <i class="fas fa-chalkboard-teacher mr-2"></i>
-              <span>Enseignants</span>
-              <input
-                type="file"
-                name="file"
-                accept=".csv, .xlsx, .xls"
-                class="hidden"
-                onchange="this.form.submit()"
-              />
-            </label>
-          </form>
-          <a
-            href="{{ url_for('admin.download_enseignants_template') }}"
-            class="text-center text-purple-600 hover:text-purple-800 text-xs underline"
-          >
-            <i class="fas fa-download mr-1"></i>Modèle
-          </a>
-        </div>
+        {{ import_form('Enseignants', url_for('admin.import_enseignants'),
+        'chalkboard-teacher', 'purple', 'enseignants') }}
 
         <!-- Import Filières -->
-        <div class="flex flex-col gap-2">
-          <form
-            action="{{ url_for('admin.import_filieres') }}"
-            method="post"
-            enctype="multipart/form-data"
-          >
-            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
-            <label
-              class="flex items-center justify-center w-full px-4 py-2.5 bg-green-600 hover:bg-green-700 text-white rounded-lg cursor-pointer text-sm font-medium transition-colors shadow-sm"
-            >
-              <i class="fas fa-stream mr-2"></i>
-              <span>Filières</span>
-              <input
-                type="file"
-                name="file"
-                accept=".csv, .xlsx, .xls"
-                class="hidden"
-                onchange="this.form.submit()"
-              />
-            </label>
-          </form>
-          <a
-            href="{{ url_for('admin.download_filieres_template') }}"
-            class="text-center text-green-600 hover:text-green-800 text-xs underline"
-          >
-            <i class="fas fa-download mr-1"></i>Modèle
-          </a>
-        </div>
+        {{ import_form('Filières', url_for('admin.import_filieres'), 'stream',
+        'green', 'filieres') }}
 
         <!-- Import Matières -->
-        <div class="flex flex-col gap-2">
-          <form
-            action="{{ url_for('admin.import_matieres') }}"
-            method="post"
-            enctype="multipart/form-data"
-          >
-            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
-            <label
-              class="flex items-center justify-center w-full px-4 py-2.5 bg-orange-600 hover:bg-orange-700 text-white rounded-lg cursor-pointer text-sm font-medium transition-colors shadow-sm"
-            >
-              <i class="fas fa-book mr-2"></i>
-              <span>Matières</span>
-              <input
-                type="file"
-                name="file"
-                accept=".csv, .xlsx, .xls"
-                class="hidden"
-                onchange="this.form.submit()"
-              />
-            </label>
-          </form>
-          <a
-            href="{{ url_for('admin.download_matieres_template') }}"
-            class="text-center text-orange-600 hover:text-orange-800 text-xs underline"
-          >
-            <i class="fas fa-download mr-1"></i>Modèle
-          </a>
-        </div>
+        {{ import_form('Matières', url_for('admin.import_matieres'), 'book',
+        'orange', 'matieres') }}
 
         <!-- Import Années -->
-        <div class="flex flex-col gap-2">
-          <form
-            action="{{ url_for('admin.import_annees') }}"
-            method="post"
-            enctype="multipart/form-data"
-          >
-            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
-            <label
-              class="flex items-center justify-center w-full px-4 py-2.5 bg-pink-600 hover:bg-pink-700 text-white rounded-lg cursor-pointer text-sm font-medium transition-colors shadow-sm"
-            >
-              <i class="fas fa-calendar-alt mr-2"></i>
-              <span>Années</span>
-              <input
-                type="file"
-                name="file"
-                accept=".csv, .xlsx, .xls"
-                class="hidden"
-                onchange="this.form.submit()"
-              />
-            </label>
-          </form>
-          <a
-            href="{{ url_for('admin.download_annees_template') }}"
-            class="text-center text-pink-600 hover:text-pink-800 text-xs underline"
-          >
-            <i class="fas fa-download mr-1"></i>Modèle
-          </a>
-        </div>
+        {{ import_form('Années', url_for('admin.import_annees'), 'calendar-alt',
+        'pink', 'annees') }}
       </div>
     </div>
 
@@ -521,7 +437,74 @@ DEFITECH{% endblock %} {% block content %}
 </div>
 
 {% endblock %} {% block extra_js %}
+<script src="{{ url_for('static', filename='js/cloudinary_uploader.js') }}"></script>
 <script>
+  // Configuration for bulk imports
+  const importTypes = [
+    "etudiants",
+    "enseignants",
+    "filieres",
+    "matieres",
+    "annees",
+  ];
+
+  document.addEventListener("DOMContentLoaded", function () {
+    importTypes.forEach((type) => {
+      const fileInputId = `file-upload-${type}`;
+      const urlInputId = `file_url-${type}`;
+      const feedbackId = `feedback_${type}`;
+      const formId = `form-${type}`;
+      const loadingId = `loading-${type}`;
+      const btnTextId = `btn-text-${type}`;
+
+      if (document.getElementById(fileInputId)) {
+        // Note: We use 'raw' resource type for Excel/CSV files usually, but let's try 'auto' to be safe.
+        // If 'auto' causes issues with CSVs, we might need 'raw'. Cloudinary handles 'auto' well generally.
+        attachCloudinaryUpload(
+          fileInputId,
+          `file_url_${type}`,
+          "documents_upload",
+          feedbackId,
+          "auto"
+        );
+
+        // Add listener to handle loading state and auto-submit
+        const fileInput = document.getElementById(fileInputId);
+        fileInput.addEventListener("change", function () {
+          if (this.files.length > 0) {
+            // Show loading state
+            document.getElementById(loadingId).classList.remove("hidden");
+            document.getElementById(btnTextId).classList.add("invisible"); // Keep width
+            document.getElementById(feedbackId).classList.remove("hidden");
+
+            // Observe feedback for completion
+            const observer = new MutationObserver(function (mutations) {
+              const feedbackText =
+                document.getElementById(feedbackId).textContent;
+              if (feedbackText.includes("Upload terminé")) {
+                // Submit form
+                document.getElementById(formId).submit();
+                observer.disconnect();
+              } else if (feedbackText.includes("Erreur")) {
+                // Reset state on error
+                document.getElementById(loadingId).classList.add("hidden");
+                document
+                  .getElementById(btnTextId)
+                  .classList.remove("invisible");
+                observer.disconnect();
+              }
+            });
+            observer.observe(document.getElementById(feedbackId), {
+              childList: true,
+              subtree: true,
+              characterData: true,
+            });
+          }
+        });
+      }
+    });
+  });
+
   async function supprimerUtilisateur(userId) {
     if (
       !confirm(
@@ -585,15 +568,5 @@ DEFITECH{% endblock %} {% block content %}
       setTimeout(() => notification.remove(), 300);
     }, 4000);
   }
-
-  // Auto-submit feedback for file uploads
-  document.querySelectorAll('input[type="file"]').forEach((input) => {
-    input.addEventListener("change", function () {
-      if (this.files.length > 0) {
-        const fileName = this.files[0].name;
-        showNotification(`Importation de "${fileName}" en cours...`, "success");
-      }
-    });
-  });
 </script>
 {% endblock %}

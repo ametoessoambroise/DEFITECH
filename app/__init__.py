@@ -30,16 +30,8 @@ logger = logging.getLogger(__name__)
 def create_app(config_class=None):
     app = Flask(__name__)
 
-    # Load configuration
-    # Assuming config is loaded from env vars or Config class.
-    # For now, I'll copy some config setup from original app.py if needed,
-    # but using a Config object is cleaner.
-    # Since I don't have a config.py yet, I'll put basic config here or read from env.
-
-    app.config["SECRET_KEY"] = os.getenv("SECRET_KEY", "dev-key")
-    app.config["SQLALCHEMY_DATABASE_URI"] = os.getenv(
-        "SQLALCHEMY_DATABASE_URI", "sqlite:///app.db"
-    )
+    app.config["SECRET_KEY"] = os.getenv("SECRET_KEY")
+    app.config["SQLALCHEMY_DATABASE_URI"] = os.getenv("SQLALCHEMY_DATABASE_URI")
     app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
     app.config["WTF_CSRF_ENABLED"] = os.getenv("WTF_CSRF_ENABLED", "true").lower() in (
@@ -70,7 +62,7 @@ def create_app(config_class=None):
         "1",
         "t",
     )
-    app.config["DEFAI_ACCESS_KEY"] = os.getenv("DEFAI_ACCESS_KEY", "defai-internal-key")
+    app.config["DEFAI_ACCESS_KEY"] = os.getenv("DEFAI_ACCESS_KEY")
     app.config["DEFAI_ALLOWED_ENDPOINTS"] = DEFAI_ALLOWED_ENDPOINTS
 
     # Socket.IO Config

@@ -6,14 +6,10 @@ from flask import (
     url_for,
     flash,
     jsonify,
-    current_app,
 )
 from flask_login import login_required, current_user
-from werkzeug.utils import secure_filename
 from datetime import datetime
 import json
-import os
-import io
 from datetime import date, timedelta
 
 from app.extensions import db
@@ -28,7 +24,6 @@ from app.models.devoir_vu import DevoirVu
 from app.models.notification import Notification
 from app.models.presence import Presence
 from app.models.note import Note
-from app.utils.utils import allowed_file
 
 teachers_bp = Blueprint("teachers", __name__, url_prefix="/enseignant")
 
@@ -185,7 +180,7 @@ def notes():
         data = json.loads(enseignant.filieres_enseignees)
         filieres = data.get("filieres", [])
         annees = data.get("annees", [])
-    except:
+    except Exception:
         filieres = []
         annees = []
 
@@ -265,7 +260,7 @@ def devoirs():
         data = json.loads(enseignant.filieres_enseignees)
         filieres = data.get("filieres", [])
         annees = data.get("annees", [])
-    except:
+    except Exception:
         filieres = []
         annees = []
 
@@ -276,12 +271,11 @@ def devoirs():
         filiere = request.form["filiere"]
         annee = request.form["annee"]
         date_limite = request.form.get("date_limite")
-        fichier = request.files.get("fichier")
-        filename = None
-        if fichier and allowed_file(fichier.filename):
-            filename = secure_filename(fichier.filename)
-            filepath = os.path.join(current_app.config["UPLOAD_FOLDER"], filename)
-            fichier.save(filepath)
+
+        # Cloudinary File Handling
+        file_url = request.form.get("file_url")
+        # original_filename = request.form.get("original_filename") # Optionnel si on veut stocker le nom d'origine
+
         # Création du devoir
         devoir = Devoir(
             titre=titre,
@@ -291,7 +285,7 @@ def devoirs():
             annee=annee,
             enseignant_id=enseignant.id,
             date_limite=date_limite if date_limite else None,
-            fichier=filename,
+            fichier=file_url,  # Stocke l'URL Cloudinary directement
         )
         db.session.add(devoir)
         db.session.commit()
@@ -462,7 +456,6 @@ def set_etudiant_presence():
         if presence_record:
             presence_record.present = present
         else:
-            from app.models.presence import Presence  # Import local just in case
 
             # Need to get matiere_nom
             matiere = Matiere.query.get(matiere_id)

@@ -1,7 +1,7 @@
 // Configuration
 const CONFIG = {
-    BACKEND_URL: '',
-    DEFAULT_IMAGES_PER_PAGE: 12,
+    BACKEND_URL: window.location.origin,
+    DEFAULT_IMAGES_PER_PAGE: 30,
     CLOUDINARY: {
         CLOUD_NAME: 'doqjyyf8w',
         UPLOAD_PRESET: 'ml_default',
@@ -345,16 +345,20 @@ async function handleSearch() {
         showLoader('searchLoader');
         elements.imageContainer.innerHTML = '';
 
-        const searchType = elements.searchType.value;
         const color = elements.colorFilter.value;
 
-        let url = `${CONFIG.BACKEND_URL}/api/search?query=${encodeURIComponent(query)}&per_page=${CONFIG.DEFAULT_IMAGES_PER_PAGE}&page=${state.currentPage}`;
+        // Utiliser la nouvelle route backend
+        let url = `${CONFIG.BACKEND_URL}/image-search/api/search/images?query=${encodeURIComponent(query)}&per_page=${CONFIG.DEFAULT_IMAGES_PER_PAGE}&page=${state.currentPage}`;
 
-        if (searchType) url += `&type=${searchType}`;
-        if (color) url += `&color=${color}`;
+        if (color) {
+            url += `&color=${color}`;
+        }
 
         const response = await fetch(url);
-        if (!response.ok) throw new Error('Erreur lors de la recherche');
+        if (!response.ok) {
+            const errorData = await response.json().catch(() => ({}));
+            throw new Error(errorData.error || 'Erreur lors de la recherche');
+        }
 
         const data = await response.json();
         displayImages(data.results || []);
@@ -363,7 +367,7 @@ async function handleSearch() {
 
     } catch (error) {
         console.error('Erreur de recherche:', error);
-        showToast('Erreur lors de la recherche. Mode démo activé.', 'warning');
+        showToast(error.message || 'Erreur lors de la recherche. Mode démo activé.', 'warning');
         displayDummyImages();
     } finally {
         hideLoader('searchLoader');
@@ -381,16 +385,20 @@ async function loadMoreImages() {
     try {
         showLoader('searchLoader');
 
-        const searchType = elements.searchType.value;
         const color = elements.colorFilter.value;
 
-        let url = `${CONFIG.BACKEND_URL}/api/search?query=${encodeURIComponent(state.currentSearchQuery)}&per_page=${CONFIG.DEFAULT_IMAGES_PER_PAGE}&page=${state.currentPage}`;
+        // Utiliser la nouvelle route backend
+        let url = `${CONFIG.BACKEND_URL}/image-search/api/search/images?query=${encodeURIComponent(state.currentSearchQuery)}&per_page=${CONFIG.DEFAULT_IMAGES_PER_PAGE}&page=${state.currentPage}`;
 
-        if (searchType) url += `&type=${searchType}`;
-        if (color) url += `&color=${color}`;
+        if (color) {
+            url += `&color=${color}`;
+        }
 
         const response = await fetch(url);
-        if (!response.ok) throw new Error('Erreur lors du chargement');
+        if (!response.ok) {
+            const errorData = await response.json().catch(() => ({}));
+            throw new Error(errorData.error || 'Erreur lors du chargement des images');
+        }
 
         const data = await response.json();
         elements.loadMoreSpinner.classList.add('hidden');
@@ -401,8 +409,8 @@ async function loadMoreImages() {
         }
 
     } catch (error) {
-        console.error('Erreur:', error);
-        showToast('Erreur lors du chargement', 'error');
+        console.error('Erreur lors du chargement des images:', error);
+        showToast(error.message || 'Erreur lors du chargement des images', 'error');
         elements.loadMoreSpinner.classList.add('hidden');
     } finally {
         hideLoader('searchLoader');

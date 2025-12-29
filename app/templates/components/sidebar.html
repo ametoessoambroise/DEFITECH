@@ -154,8 +154,8 @@
         <span class="font-semibold">Suggestions</span>
       </a>
       <a
-        href="{{ url_for('admin.admin_notes') }}"
-        class="flex items-center px-4 py-3 text-gray-700 hover:bg-gradient-to-r hover:from-amber-50 hover:to-amber-100 hover:text-amber-600 rounded-xl transition-all duration-200 group {{ 'bg-gradient-to-r from-amber-50 to-amber-100 text-amber-600 shadow-sm' if request.endpoint == 'admin.admin_notes' else '' }}"
+        href="{{ url_for('admin.notes') }}"
+        class="flex items-center px-4 py-3 text-gray-700 hover:bg-gradient-to-r hover:from-amber-50 hover:to-amber-100 hover:text-amber-600 rounded-xl transition-all duration-200 group {{ 'bg-gradient-to-r from-amber-50 to-amber-100 text-amber-600 shadow-sm' if request.endpoint == 'admin.notes' else '' }}"
       >
         <div
           class="w-10 h-10 rounded-xl bg-amber-100 text-amber-600 flex items-center justify-center mr-3 group-hover:scale-110 transition-transform"

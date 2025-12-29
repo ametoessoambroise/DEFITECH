@@ -57,3 +57,5 @@ ImageSearch/
 database/
 docs/
 migrations/
+test.html
+diag_db.py

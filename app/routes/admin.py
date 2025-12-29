@@ -322,6 +322,7 @@ def approve_user(user_id):
     # Ajouter une notification interne pour l'utilisateur validé
     notif = Notification(
         user_id=user.id,
+        titre="Compte approuvé",
         message="Votre compte a été validé par l'administration.",
         type="success",
     )
@@ -1974,7 +1975,7 @@ def admin_teacher_update_requests():
         return redirect(url_for("admin.dashboard"))
 
     requests = TeacherProfileUpdateRequest.query.filter_by(statut="en_attente").all()
-    return render_template("admin/teacher_requests.html", requests=requests)
+    return render_template("admin/teacher_update_requests.html", requests=requests)
 
 
 @admin_bp.route("/teacher-request/<int:request_id>", methods=["GET", "POST"])

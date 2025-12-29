@@ -187,8 +187,8 @@ def view_post(post_id):
     Retourne:
         Response: La réponse HTTP contenant la page du post spécifié avec ses commentaires.
     """
-    from models.post import Post
-    from models.commentaire import Commentaire
+    from app.models.post import Post
+    from app.models.commentaire import Commentaire
     from sqlalchemy.orm import joinedload
 
     post = Post.query.options(joinedload(Post.auteur)).get_or_404(post_id)
@@ -234,9 +234,9 @@ def create_post(filiere_id):
     Retourne:
         Response: La réponse HTTP contenant la page de création de post pour la filière spécifiée.
     """
-    from models.filiere import Filiere
-    from models.post import Post
-    from models.piece_jointe import PieceJointe
+    from app.models.filiere import Filiere
+    from app.models.post import Post
+    from app.models.piece_jointe import PieceJointe
 
     filiere = Filiere.query.get_or_404(filiere_id)
 
@@ -337,8 +337,8 @@ def edit_post(post_id):
         abort(403): Si l'utilisateur n'a pas les permissions nécessaires.
         abort(404): Si le post spécifié n'existe pas.
     """
-    from models.post import Post
-    from models.piece_jointe import PieceJointe
+    from app.models.post import Post
+    from app.models.piece_jointe import PieceJointe
     from sqlalchemy.orm import joinedload
 
     post = Post.query.options(joinedload(Post.auteur)).get_or_404(post_id)
@@ -424,7 +424,7 @@ def delete_post(post_id):
     Exceptions:
         - None
     """
-    from models.post import Post
+    from app.models.post import Post
     from sqlalchemy.orm import joinedload
 
     post = Post.query.options(joinedload(Post.auteur)).get_or_404(post_id)
@@ -476,8 +476,8 @@ def add_comment(post_id):
     Exceptions:
         - None
     """
-    from models.post import Post
-    from models.commentaire import Commentaire
+    from app.models.post import Post
+    from app.models.commentaire import Commentaire
     from sqlalchemy.orm import joinedload
 
     post = Post.query.options(joinedload(Post.auteur)).get_or_404(post_id)
@@ -496,7 +496,7 @@ def add_comment(post_id):
         return redirect(url_for("community.view_post", post_id=post_id))
 
     # Vérifier que l'utilisateur actuel existe bien dans la base de données
-    from models.user import User
+    from app.models.user import User
 
     user_exists = User.query.get(current_user.id)
     if not user_exists:
@@ -555,7 +555,7 @@ def delete_comment(comment_id):
     Returns:
         None
     """
-    from models.commentaire import Commentaire
+    from app.models.commentaire import Commentaire
 
     commentaire = Commentaire.query.get_or_404(comment_id)
     post = commentaire.post
@@ -590,7 +590,7 @@ def toggle_pin(post_id):
     Returns:
         None
     """
-    from models.post import Post
+    from app.models.post import Post
     from sqlalchemy.orm import joinedload
 
     post = Post.query.options(joinedload(Post.auteur)).get_or_404(post_id)
@@ -622,7 +622,7 @@ def download_attachment(attachment_id):
     Raises:
         werkzeug.exceptions.NotFound: Si la pièce jointe n'est pas trouvée.
     """
-    from models.piece_jointe import PieceJointe
+    from app.models.piece_jointe import PieceJointe
 
     piece = PieceJointe.query.get_or_404(attachment_id)
     post = piece.post
@@ -689,9 +689,9 @@ def manage_admins():
         )
 
     # Imports locaux pour éviter les imports circulaires
-    from models.filiere import Filiere, FiliereAdmin
-    from models.enseignant import Enseignant
-    from models.user import User
+    from app.models.filiere import Filiere, FiliereAdmin
+    from app.models.enseignant import Enseignant
+    from app.models.user import User
 
     # Récupérer toutes les filières avec leurs administrateurs
     filieres = Filiere.query.options(
@@ -744,7 +744,7 @@ def add_filiere_admin(filiere_id):
         )
 
     # Imports locaux pour éviter les imports circulaires
-    from models.filiere import FiliereAdmin
+    from app.models.filiere import FiliereAdmin
 
     enseignant_id = request.form.get("enseignant_id", type=int)
 
@@ -804,7 +804,7 @@ def remove_filiere_admin(filiere_id, enseignant_id):
         )
 
     # Imports locaux pour éviter les imports circulaires
-    from models.filiere import FiliereAdmin
+    from app.models.filiere import FiliereAdmin
 
     admin = FiliereAdmin.query.filter_by(
         filiere_id=filiere_id, enseignant_id=enseignant_id

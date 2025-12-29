@@ -4,7 +4,7 @@
   <div class="flex justify-between items-center mb-6">
     <h1 class="text-2xl font-bold">Gestion des filières</h1>
     <a
-      href="{{ url_for('ajouter_filiere') }}"
+      href="{{ url_for('admin.ajouter_filiere') }}"
       class="bg-white/20-600 hover:bg-blue-500 border text-blue-500 hover:text-white px-4 py-2 rounded-lg transition duration-200 flex items-center"
     >
       <svg
@@ -73,7 +73,7 @@
           <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
             <div class="flex space-x-2">
               <a
-                href="{{ url_for('modifier_filiere', filiere_id=filiere.id) }}"
+                href="{{ url_for('admin.modifier_filiere', filiere_id=filiere.id) }}"
                 class="text-indigo-600 hover:text-indigo-900 transition duration-150"
               >
                 <svg
@@ -123,7 +123,7 @@
     <p class="mt-1 text-sm text-gray-500">Commencez par ajouter une filière.</p>
     <div class="mt-6">
       <a
-        href="{{ url_for('ajouter_filiere') }}"
+        href="{{ url_for('admin.ajouter_filiere') }}"
         class="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700"
       >
         <svg

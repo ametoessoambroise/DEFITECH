@@ -373,9 +373,8 @@
                     formData.append('annee', '{{ selected_annee }}');
                     formData.append('csrf_token', '{{ csrf_token() }}');
 
-                    // Corrected route name: admin.import_emploi_temps
-                    // Note: We are assuming the route name 'admin.import_emploi_temps' will be created.
-                    const response = await fetch('{{ url_for("admin.import_emploi_temps") }}', {
+                    // Using the correct route name: admin.admin_import_emploi_temps
+                    const response = await fetch('{{ url_for("admin.admin_import_emploi_temps") }}', {
                         method: 'POST',
                         body: formData
                     });

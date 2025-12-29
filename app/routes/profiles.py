@@ -744,6 +744,7 @@ def get_profile_picture(user):
     Renvoie l'URL de la photo de profil de l'utilisateur.
 
     Si l'utilisateur a une photo de profil, renvoie l'URL de cette photo.
+    Si la photo est déjà une URL complète (comme une URL Cloudinary), la renvoie telle quelle.
     Sinon, renvoie l'URL de l'image par défaut (le favicon).
 
     :param user: L'utilisateur dont on veut obtenir l'URL de la photo de profil.
@@ -752,7 +753,11 @@ def get_profile_picture(user):
     :rtype: str
     """
     if user.photo_profil:
-        return url_for("static", filename=f"uploads/profile_pics/{user.photo_profil}")
+        # Si c'est déjà une URL complète (commence par http:// ou https://)
+        if user.photo_profil.startswith(('http://', 'https://')):
+            return user.photo_profil
+        # Sinon, on suppose que c'est un chemin relatif
+        return url_for("static", filename=f"uploads/profile_pics/{user.photo_profil}", _external=True)
     return url_for("static", filename="assets/favicon.ico")
 
 

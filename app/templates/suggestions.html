@@ -215,8 +215,8 @@
               <div class="flex items-center space-x-4">
                 {% if suggestion.user %}
                 <img
-                  src="{{ url_for('static', filename='uploads/profile_pics/' + (suggestion.user.photo_profil or 'default.png')) }}"
-                  alt="Profil" class="rounded-full shadow-lg w-14 h-14 ring-4 ring-white" />
+                  src="{{ suggestion.user.photo_profil | default('default.png') | profile_image }}"
+                  alt="Profil" class="rounded-full shadow-lg w-14 h-14 ring-4 ring-white object-cover" />
                 {% else %}
                 <div
                   class="w-14 h-14 bg-gradient-to-br from-gray-400 to-gray-500 rounded-full shadow-lg flex items-center justify-center ring-4 ring-white">

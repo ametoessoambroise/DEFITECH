@@ -27,7 +27,7 @@
           >
             {% if current_user.photo_profil %}
             <img
-              src="{{ url_for('static', filename='uploads/profile_pics/' + current_user.photo_profil) }}"
+              src="{{ current_user.photo_profil | profile_image }}"
               alt="Photo de profil"
               class="h-full w-full object-cover"
             />

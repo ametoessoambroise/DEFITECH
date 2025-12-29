@@ -5,45 +5,6 @@ DEFITECH | L'école des battants - BTS, Licence, Master
 {% endblock %}
 {% block extra_css %}
 
-    <!-- Configuration Tailwind personnalisée -->
-    <script>
-      tailwind.config = {
-        theme: {
-          extend: {
-            screens: {
-              xs: "375px", // Breakpoint personnalisé pour très petits mobiles
-            },
-            colors: {
-              defitech: {
-                blue: "#0047AB", // Bleu "Roi" professionnel (proche du #0000FF demandé mais lisible)
-                red: "#D60000", // Rouge vif (proche du #FF0000 mais moins agressif)
-                dark: "#0f172a",
-                light: "#f8fafc",
-              },
-            },
-            fontFamily: {
-              sans: ["Inter", "system-ui", "sans-serif"],
-            },
-            animation: {
-              "fade-in": "fadeIn 0.5s ease-out",
-              "slide-up": "slideUp 0.6s ease-out",
-              "bounce-slow": "bounce 3s infinite",
-            },
-            keyframes: {
-              fadeIn: {
-                "0%": { opacity: "0" },
-                "100%": { opacity: "1" },
-              },
-              slideUp: {
-                "0%": { transform: "translateY(20px)", opacity: "0" },
-                "100%": { transform: "translateY(0)", opacity: "1" },
-              },
-            },
-          },
-        },
-      };
-    </script>
-
     <style>
       /* Optimisations spécifiques mobile */
       @media (max-width: 320px) {

@@ -15,17 +15,15 @@ from datetime import datetime
 import csv
 import io
 import os
-import subprocess
 import pandas as pd
 import json
 import random
 from reportlab.pdfgen import canvas
 from reportlab.lib.pagesizes import letter
-from sqlalchemy import inspect, text, create_engine
+from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
 from app.extensions import db
-from app.security_decorators import admin_required
 from app.models.user import User
 from app.models.etudiant import Etudiant
 from app.models.enseignant import Enseignant

@@ -1418,7 +1418,7 @@ class AIOrchestrator:
             user_role = user_obj.role
 
             # Utiliser le nouveau système de découverte de routes
-            from route_discovery_db import RouteDiscoveryDB
+            from app.utils.route_discovery_db import RouteDiscoveryDB
 
             discovery = RouteDiscoveryDB(db.session)
 
@@ -1698,7 +1698,7 @@ class AIOrchestrator:
             user_role = user_obj.role
 
             # Utiliser le nouveau système de découverte de routes
-            from route_discovery_db import RouteDiscoveryDB
+            from app.utils.route_discovery_db import RouteDiscoveryDB
 
             discovery = RouteDiscoveryDB(db.session)
 

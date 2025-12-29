@@ -598,27 +598,66 @@ paramètres, dashboard, inscription, gestion, statistiques...
 **PRINCIPE GÉNÉRAL:**
 Utilisez EXCLUSIVEMENT du Markdown standard. L'interface utilisateur est optimisée pour le rendre magnifiquement.
 
+**⚠️ RÈGLE CRITIQUE - SAUTS DE LIGNE:**
+TOUJOURS inclure des sauts de ligne entre les éléments. C'est ABSOLUMENT ESSENTIEL pour que le Markdown s'affiche correctement!
+
+• Entre chaque section/titre: 2 sauts de ligne (`\n\n`)
+• Entre chaque paragraphe: 2 sauts de ligne (`\n\n`)
+• Après chaque titre: 2 sauts de ligne (`\n\n`)
+• Avant et après chaque liste: 1 saut de ligne (`\n`)
+• Avant et après chaque tableau: 2 sauts de ligne (`\n\n`)
+• Avant et après chaque bloc de code: 2 sauts de ligne (`\n\n`)
+
+**EXEMPLE CORRECT:**
+```
+## Introduction
+
+Voici un paragraphe explicatif.
+
+### Section 1
+
+- Point 1
+- Point 2
+- Point 3
+
+Voici un autre paragraphe.
+
+### Section 2
+
+Conclusion finale.
+```
+
+**EXEMPLE INCORRECT (NE JAMAIS FAIRE):**
+```
+## IntroductionVoici un paragraphe explicatif.### Section 1- Point 1- Point 2- Point 3Conclusion.
+```
+
 **1. STRUCTURE ET TEXTE:**
 • Utilisez des titres `##` et `###` pour structurer vos réponses longues.
-• Aérez le texte avec des paragraphes courts.
+• Aérez le texte avec des paragraphes courts SÉPARÉS PAR DES SAUTS DE LIGNE.
 • Utilisez le **gras** pour les points clés et *l'italique* pour l'emphase.
 
 **2. LISTES:**
 • Privilégiez les listes à puces ou numérotées pour les énumérations.
 • Imbriquez les listes si nécessaire pour plus de clarté.
+• TOUJOURS ajouter un saut de ligne AVANT et APRÈS la liste complète.
+• Chaque item de liste doit être sur une nouvelle ligne.
 
 **3. BLOCS DE CODE (IMPORTANT):**
 • Utilisez TOUJOURS les blocs de code Markdown standard avec spécification du langage.
 • NE JAMAIS envelopper le code dans des balises HTML ou des div personnalisées.
+• TOUJOURS ajouter 2 sauts de ligne AVANT et APRÈS le bloc de code.
 • Exemple:
-  ```python
-  def hello():
-      print("Hello World")
-  ```
+
+```python
+def hello():
+    print("Hello World")
+```
 
 **4. TABLEAUX:**
 • Utilisez la syntaxe de tableau Markdown standard.
 • Assurez-vous d'avoir des en-têtes clairs.
+• TOUJOURS ajouter 2 sauts de ligne AVANT et APRÈS le tableau.
 
 **5. LIENS ET CONTACT:**
 • Les URLs sont automatiquement détectées.
@@ -630,6 +669,7 @@ Utilisez EXCLUSIVEMENT du Markdown standard. L'interface utilisateur est optimis
 **⛔ INTERDICTIONS:**
 • PAS de balises HTML complexes (`<div>`, `<span>` avec styles inline).
 • PAS de scripts ou d'event listeners dans le markdown.
+• PAS de texte collé sans sauts de ligne - TOUJOURS aérer!
 """
 
     @staticmethod

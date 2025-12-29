@@ -12,21 +12,19 @@ from functools import wraps
 import requests
 import json
 import re
-
+import os
 from app.extensions import db
 from app.models.etudiant import Etudiant
 from app.models.note import Note
 from app.models.devoir import Devoir
 from app.models.devoir_vu import DevoirVu
 from app.models.matiere import Matiere
-from app.models.emploi_temps import EmploiTemps
 from app.models.presence import Presence
 from app.models.pomodoro_session import PomodoroSession
-from app.models.filiere import Filiere
-
+from flask import current_app
 
 # Configuration API Gemini
-GEMINI_API_KEY = "AIzaSyCmkx5uJDmXvyfB2b_u8k_2spYP3P9GRLs"
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 GEMINI_API_URL = (
     "https://generativelanguage.googleapis.com/v1/models/gemini-2.5-flash:generateContent?key="
     + GEMINI_API_KEY
@@ -79,7 +77,7 @@ def clean_json_response(text):
             parsed = json.loads(json_text)
             return parsed
         except json.JSONDecodeError as e:
-            print(f"Erreur parsing JSON: {e}")  # Debug
+            current_app.logger.error(f"Erreur parsing JSON: {e}")  # Debug
             # print(f"Texte JSON problématique: {json_text}")  # Debug
 
             # Tenter de réparer les JSON tronqués ou mal formés
@@ -132,10 +130,10 @@ def clean_json_response(text):
             # Tenter de parser le JSON corrigé
             try:
                 parsed = json.loads(json_text_fixed)
-                print("JSON corrigé et parsé avec succès")  # Debug
+                current_app.logger.info("JSON corrigé et parsé avec succès")  # Debug
                 return parsed
             except json.JSONDecodeError as e2:
-                print(f"Erreur parsing JSON corrigé: {e2}")  # Debug
+                current_app.logger.error(f"Erreur parsing JSON corrigé: {e2}")  # Debug
 
                 # Dernière tentative: reconstruire le JSON manuellement
                 try:
@@ -179,11 +177,11 @@ def clean_json_response(text):
                         reconstructed = reconstructed.replace(",]", "]")
 
                         parsed = json.loads(reconstructed)
-                        print("JSON reconstruit et parsé avec succès")  # Debug
+                        current_app.logger.info("JSON reconstruit et parsé avec succès")  # Debug
                         return parsed
 
                 except Exception as e3:
-                    print(f"Erreur reconstruction JSON: {e3}")  # Debug
+                    current_app.logger.error(f"Erreur reconstruction JSON: {e3}")  # Debug
 
             # Si tout échoue, essayer de trouver un tableau JSON
             start = text.find("[")
@@ -202,9 +200,14 @@ def clean_json_response(text):
 def call_gemini_api(prompt, temperature=0.7):
     """
     Appelle l'API Gemini avec un prompt optimisé
-    Retourne un dict Python (pas du texte JSON)
+    Retourne un dict Python avec la réponse
     """
     try:
+        # Vérification de la clé API
+        if not GEMINI_API_KEY:
+            current_app.logger.error("Clé API Gemini non configurée")
+            return {"success": False, "error": "Configuration API manquante"}
+
         headers = {"Content-Type": "application/json"}
 
         data = {
@@ -217,87 +220,91 @@ def call_gemini_api(prompt, temperature=0.7):
             },
         }
 
-        response = requests.post(GEMINI_API_URL, headers=headers, json=data, timeout=30)
+        current_app.logger.info("Envoi de la requête à l'API Gemini...")
+
+        try:
+            response = requests.post(
+                GEMINI_API_URL, 
+                headers=headers, 
+                json=data, 
+                timeout=30
+            )
+            current_app.logger.info(f"Réponse reçue : {response.status_code}")
+
+        except requests.exceptions.RequestException as e:
+            current_app.logger.error(f"Erreur de connexion à l'API Gemini: {str(e)}")
+            return {
+                "success": False, 
+                "error": f"Erreur de connexion à l'API: {str(e)}"
+            }
 
         if response.status_code == 200:
-            result = response.json()
-            print(f"Structure de la réponse Gemini: {list(result.keys())}")  # Debug
+            try:
+                result = response.json()
+                current_app.logger.info("Réponse JSON parsée avec succès")
 
-            if "candidates" in result and len(result["candidates"]) > 0:
-                candidate = result["candidates"][0]
-                print(f"Structure du candidate: {list(candidate.keys())}")  # Debug
-                print(f"Finish reason: {candidate.get('finishReason', 'N/A')}")  # Debug
+                if "candidates" in result and result["candidates"]:
+                    candidate = result["candidates"][0]
+                    if "content" in candidate and "parts" in candidate["content"]:
+                        parts = candidate["content"]["parts"]
+                        if parts and "text" in parts[0]:
+                            text_response = parts[0]["text"].strip()
 
-                if "content" in candidate:
-                    content = candidate["content"]
-                    print(f"Structure du content: {list(content.keys())}")  # Debug
-                    print(f"Content complet: {content}")  # Debug
+                            # Nettoyage de la réponse
+                            if text_response.startswith("```json"):
+                                text_response = text_response[7:]
+                            if text_response.endswith("```"):
+                                text_response = text_response[:-3].strip()
 
-                    # Vérifier différentes structures possibles
-                    if "parts" in content and len(content["parts"]) > 0:
-                        text_response = content["parts"][0]["text"]
-                    elif "text" in content:
-                        text_response = content["text"]
-                    else:
-                        # Si le finishReason est SAFETY ou MAX_TOKENS ou autre, retourner une erreur spécifique
-                        finish_reason = candidate.get("finishReason", "")
-                        if finish_reason == "MAX_TOKENS":
-                            print("Réponse tronquée due à la limite de tokens")  # Debug
-                            # Pour les réponses tronquées, essayer de trouver du texte partiel
-                            # parfois Gemini retourne le contenu dans un format différent
-                            return {
-                                "success": False,
-                                "error": "Response truncated due to token limit",
-                                "finish_reason": finish_reason,
-                                "raw_response": result,
-                            }
-                        elif finish_reason and finish_reason != "STOP":
-                            return {
-                                "success": False,
-                                "error": f"Content blocked: {finish_reason}",
-                                "raw_response": result,
-                            }
+                            try:
+                                parsed_json = json.loads(text_response)
+                                return {"success": True, "data": parsed_json}
+                            except json.JSONDecodeError as e:
+                                current_app.logger.error(f"Erreur de parsing JSON: {str(e)}")
+                                return {
+                                    "success": False,
+                                    "error": "Format de réponse invalide",
+                                    "raw_text": text_response
+                                }
 
-                        return {
-                            "success": False,
-                            "error": "Unexpected response structure",
-                            "raw_response": result,
-                        }
-                else:
-                    print("Pas de 'content' dans le candidate")  # Debug
-                    return {
-                        "success": False,
-                        "error": "No content in response",
-                        "raw_response": result,
-                    }
-            else:
-                print("Pas de 'candidates' ou vide dans la réponse")  # Debug
+                # Si on arrive ici, la structure de la réponse est inattendue
+                current_app.logger.error(f"Structure de réponse inattendue: {result}")
                 return {
                     "success": False,
-                    "error": "No candidates in response",
-                    "raw_response": result,
+                    "error": "Format de réponse inattendu",
+                    "raw_response": result
                 }
 
-            # Parser le JSON de la réponse
-            parsed_json = clean_json_response(text_response)
-
-            if parsed_json:
-                return {"success": True, "data": parsed_json}
-            else:
-                # Si on ne peut pas parser, retourner le texte brut
+            except json.JSONDecodeError as e:
+                current_app.logger.error(f"Erreur de décodage JSON: {str(e)}")
                 return {
                     "success": False,
-                    "error": "Invalid JSON format",
-                    "raw_text": text_response,
+                    "error": "Réponse invalide de l'API",
+                    "raw_response": response.text
                 }
 
-        return {"success": False, "error": f"API error: {response.status_code}"}
+        # Gestion des erreurs HTTP
+        error_msg = f"Erreur {response.status_code}"
+        if response.status_code == 502:
+            error_msg = "Erreur de connexion au service d'IA (502 Bad Gateway)"
+        elif response.status_code == 401:
+            error_msg = "Clé API invalide ou expirée"
+        elif response.status_code == 429:
+            error_msg = "Quota de requêtes dépassé"
 
-    except requests.Timeout:
-        return {"success": False, "error": "Request timeout"}
+        current_app.logger.error(f"{error_msg}: {response.text}")
+        return {
+            "success": False,
+            "error": error_msg,
+            "status_code": response.status_code
+        }
+
     except Exception as e:
-        print(f"Erreur appel API Gemini: {e}")
-        return {"success": False, "error": str(e)}
+        current_app.logger.error(f"Erreur inattendue: {str(e)}", exc_info=True)
+        return {
+            "success": False,
+            "error": f"Erreur inattendue: {str(e)}"
+        }
 
 
 @study_planner_bp.route("/")
@@ -1408,69 +1415,62 @@ def api_pomodoro_add_interruption(session_id):
 @student_required
 def api_generate_plan():
     """
-    Génère un plan d'étude basique (algorithme local)
+    Génère un plan d'étude avec l'IA Gemini
 
     Cette fonction est appelée lorsque l'utilisateur souhaite générer un plan d'étude
-    basique en utilisant l'algorithme local proposé par Gemini. Elle prend en
-    paramètre une requête HTTP POST contenant les données nécessaires pour générer
-    le plan d'étude. Le format attendu de la requête HTTP POST est le suivant :
-        {
-            "start_date": str (en format ISO 8601),
-            "end_date": str (en format ISO 8601),
-            "study_hours_per_day": int,
-            "focus_areas": [str]
-        }
+    personnalisé en utilisant l'IA Gemini. Elle prend en paramètre une requête HTTP POST
+    contenant les données nécessaires pour générer le plan d'étude.
 
-    Les valeurs par défaut pour les paramètres sont la date actuelle pour start_date,
-    la date actuelle + 7 jours pour end_date, 3 heures d'étude par jour pour
-    study_hours_per_day, et une liste vide pour focus_areas.
+    Format de la requête:
+    {
+        "start_date": "YYYY-MM-DD",
+        "end_date": "YYYY-MM-DD",
+        "study_hours_per_day": int,
+        "focus_areas": [str]
+    }
 
-    Si l'utilisateur n'est pas connecté ou n'est pas identifié comme étudiant, une
-    réponse d'erreur est renvoyée au format suivant :
-        {
-            "success": bool,
-            "error": str
+    Retourne un plan d'étude au format:
+    {
+        "success": bool,
+        "data": {
+            "plan": [{
+                "day": int,
+                "hours": int,
+                "sessions": [{
+                    "matiere": str,
+                    "duree": int,
+                    "type": str
+                }]
+            }]
         }
-
-    Si le plan d'étude a pu être généré avec succès, une réponse au format suivant
-    est renvoyée :
-        {
-            "success": bool,
-            "data": {
-                "plan": [
-                    {
-                        "day": int,
-                        "hours": int,
-                        "sessions": [
-                            {
-                                "matiere": str,
-                                "duree": int,
-                                "type": str
-                            }
-                        ]
-                    }
-                ]
-            }
-        }
-
-    Si l'utilisateur n'est pas autorisé à générer le plan d'étude, une réponse d'erreur
-    est renvoyée au format suivant :
-        {
-            "success": bool,
-            "error": str
-        }
+    }
     """
     try:
-        data = request.get_json()
-        start_date = datetime.fromisoformat(
-            data.get("start_date", datetime.now().isoformat())
-        )
-        end_date = datetime.fromisoformat(
-            data.get("end_date", (datetime.now() + timedelta(days=7)).isoformat())
-        )
-        study_hours_per_day = data.get("study_hours_per_day", 3)
+        data = request.get_json() or {}
+
+        # 1. Validation et sécurisation des paramètres d'entrée
+        try:
+            start_date = datetime.fromisoformat(
+                data.get("start_date", datetime.now().date().isoformat())
+            )
+            end_date = datetime.fromisoformat(
+                data.get(
+                    "end_date", (datetime.now() + timedelta(days=7)).date().isoformat()
+                )
+            )
+        except (ValueError, TypeError):
+            return (
+                jsonify(
+                    {"success": False, "error": "Format de date invalide (ISO attendu)"}
+                ),
+                400,
+            )
+
+        # Limitation raisonnable du temps d'étude (max 12h/jour)
+        study_hours_per_day = min(int(data.get("study_hours_per_day", 2)), 12)
         focus_areas = data.get("focus_areas", [])
 
+        # 2. Récupération des données académiques
         etudiant = Etudiant.query.filter_by(user_id=current_user.id).first()
         if not etudiant:
             return (
@@ -1478,6 +1478,25 @@ def api_generate_plan():
                 404,
             )
 
+        # Récupération des notes pour calcul de moyenne par matière
+        notes = Note.query.filter_by(etudiant_id=etudiant.id).all()
+        matieres_stats = {}
+        for n in notes:
+            if n.matiere_id not in matieres_stats:
+                matieres_stats[n.matiere_id] = {
+                    "sum": 0,
+                    "count": 0,
+                    "nom": n.matiere.nom,
+                }
+            matieres_stats[n.matiere_id]["sum"] += n.note
+            matieres_stats[n.matiere_id]["count"] += 1
+
+        matieres_data = [
+            {"matiere": v["nom"], "moyenne": round(v["sum"] / v["count"], 2)}
+            for v in matieres_stats.values()
+        ]
+
+        # Récupération des devoirs à venir sur la période
         devoirs = (
             Devoir.query.filter(
                 Devoir.filiere == etudiant.filiere,
@@ -1485,31 +1504,91 @@ def api_generate_plan():
                 Devoir.date_limite >= start_date,
                 Devoir.date_limite <= end_date,
             )
-            .order_by(Devoir.date_limite)
+            .order_by(Devoir.date_limite.asc())
             .all()
         )
 
-        filiere_obj = Filiere.query.filter_by(nom=etudiant.filiere).first()
-        if filiere_obj:
-            emploi_temps = EmploiTemps.query.filter_by(filiere_id=filiere_obj.id).all()
-        else:
-            emploi_temps = []
+        # 3. Construction du Prompt optimisé
+        prompt = f"""Tu es un expert en coaching académique. Génère un plan d'étude JSON pour cet étudiant :
 
-        weak_subjects = analyze_weak_subjects(etudiant.id)
+PROFIL :
+- Cursus : {etudiant.filiere} ({etudiant.annee})
+- Volume : {study_hours_per_day}h/jour
+- Période : du {start_date.strftime('%d/%m/%Y')} au {end_date.strftime('%d/%m/%Y')}
 
-        study_plan = generate_smart_plan(
-            start_date,
-            end_date,
-            study_hours_per_day,
-            devoirs,
-            emploi_temps,
-            weak_subjects,
-            focus_areas,
-        )
+PERFORMANCES :
+- Moyennes actuelles : {json.dumps(matieres_data, ensure_ascii=False)}
+- Priorités déclarées : {', '.join(focus_areas) if focus_areas else 'Aucune'}
 
-        return jsonify({"success": True, "data": study_plan})
+ÉCHÉANCES CRITIQUES :
+{chr(10).join([f"- {d.titre} le {d.date_limite.strftime('%d/%m/%Y')}" for d in devoirs])}
+
+RÈGLES STRICTES :
+1. ÉQUILIBRE : Alloue plus de temps aux matières où la moyenne est < 10/20.
+2. ANTICIPATION : Prévois des sessions "Devoir" 48h avant chaque échéance.
+3. STRUCTURE : Sessions de 45 à 90 minutes maximum.
+4. FORMAT : Réponds EXCLUSIVEMENT avec un objet JSON. Pas de texte avant/après.
+
+FORMAT JSON ATTENDU :
+{{
+  "plan": [
+    {{
+      "jour": 1,
+      "date": "YYYY-MM-DD",
+      "sessions": [
+        {{ "matiere": "Nom", "duree": 60, "type": "Révision/Exercices/Devoir", "objectif": "Sujet précis" }}
+      ]
+    }}
+  ]
+}}"""
+
+        # 4. Appel à l'IA avec température basse pour plus de rigueur structurelle
+        result = call_gemini_api(prompt, temperature=0.3)
+
+        if not result.get("success"):
+            return (
+                jsonify({"success": False, "error": "L'IA n'a pas pu générer le plan"}),
+                502,
+            )
+
+        # 5. Nettoyage et Parsing de la réponse
+        raw_text = result.get("data", {}).get("text", "{}")
+        # Supprime les balises Markdown ```json si Gemini les ajoute malgré les instructions
+        clean_json = re.sub(r"```json|```", "", raw_text).strip()
+
+        try:
+            plan_data = json.loads(clean_json)
+
+            # Validation sommaire de la structure
+            if "plan" not in plan_data:
+                raise ValueError("Clé 'plan' absente de la réponse IA")
+
+            # Formatage final pour le front-end
+            formatted_plan = []
+            for day_entry in plan_data["plan"]:
+                sessions = day_entry.get("sessions", [])
+                formatted_day = {
+                    "day": day_entry.get("jour"),
+                    "date": day_entry.get("date"),
+                    "total_minutes": sum(s.get("duree", 0) for s in sessions),
+                    "sessions": sessions,
+                }
+                formatted_plan.append(formatted_day)
+
+            return jsonify({"success": True, "data": {"plan": formatted_plan}})
+
+        except (json.JSONDecodeError, ValueError) as e:
+            current_app.logger.error(
+                f"Erreur parsing JSON IA: {str(e)} | Brut: {raw_text}"
+            )
+            return (
+                jsonify({"success": False, "error": "Le format généré est invalide"}),
+                500,
+            )
+
     except Exception as e:
-        return jsonify({"success": False, "error": str(e)}), 500
+        current_app.logger.error(f"Erreur critique api_generate_plan: {str(e)}")
+        return jsonify({"success": False, "error": "Erreur serveur interne"}), 500
 
 
 @study_planner_bp.route("/view-plan")

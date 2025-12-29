@@ -13,7 +13,6 @@ const CONFIG = {
     },
     selectors: {
         messages: '#messages',
-        chatStream: '#chatStream',
         form: '#chatForm',
         input: '#userInput',
         sidebar: '#sidebar',
@@ -32,9 +31,10 @@ const CONFIG = {
 const State = {
     isTyping: false,
     currentConversationId: null,
-    theme: localStorage.getItem('theme') || 'light',
+    theme: localStorage.getItem('theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'),
     recognition: null,
-    isRecording: false
+    isRecording: false,
+    isSystemTheme: !localStorage.getItem('theme')
 };
 
 const UI = {
@@ -191,10 +191,7 @@ const UI = {
 
     clearActiveConversation() {
         State.currentConversationId = null;
-        const chatStream = this.elements.chatStream;
-        if (chatStream) {
-            chatStream.innerHTML = '';
-        }
+        this.elements.messages.innerHTML = '';
         if (this.elements.welcome) this.elements.welcome.style.display = 'flex';
         // Reset sidebar selection
         document.querySelectorAll('.conversation-item').forEach(el => {
@@ -219,20 +216,17 @@ const UI = {
                 State.pagination.hasMore = data.pagination.has_more;
             }
 
-            // Clear existing and show
-            const chatStream = this.elements.chatStream;
-            if (chatStream) {
-                chatStream.innerHTML = '';
+            this.elements.messages.innerHTML = ''; // Clear existing
+            this.elements.messages.classList.remove('hidden');
 
-                if (this.elements.welcome) {
-                    this.elements.welcome.style.display = messages.length ? 'none' : 'flex';
-                }
-
-                messages.forEach(msg => {
-                    const isUser = msg.sender_id === (data.user_id || 0) || msg.message_type === 'user';
-                    chatStream.appendChild(this.createMessageElement(msg.content, isUser));
-                });
+            if (this.elements.welcome) {
+                this.elements.welcome.style.display = messages.length ? 'none' : 'flex';
             }
+
+            messages.forEach(msg => {
+                const isUser = msg.sender_id === (data.user_id || 0) || msg.message_type === 'user';
+                this.elements.messages.appendChild(this.createMessageElement(msg.content, isUser));
+            });
 
             this.scrollToBottom();
             hljs.highlightAll();
@@ -287,10 +281,7 @@ const UI = {
                 const isUser = msg.sender_id === (data.user_id || 0) || msg.message_type === 'user';
                 fragment.appendChild(this.createMessageElement(msg.content, isUser));
             });
-            const chatStream = this.elements.chatStream;
-            if (chatStream) {
-                chatStream.insertBefore(fragment, chatStream.firstChild);
-            }
+            this.elements.messages.insertBefore(fragment, this.elements.messages.firstChild);
 
             hljs.highlightAll();
 
@@ -307,19 +298,86 @@ const UI = {
     },
 
     setupTheme() {
-        if (State.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+        // Apply saved theme or system preference
+        if (State.theme === 'dark' || (State.isSystemTheme && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
             document.documentElement.classList.add('dark');
+            document.documentElement.setAttribute('data-theme', 'dark');
+        } else {
+            document.documentElement.classList.remove('dark');
+            document.documentElement.setAttribute('data-theme', 'light');
+        }
+        
+        // Listen for system theme changes
+        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', e => {
+            if (State.isSystemTheme) {
+                if (e.matches) {
+                    document.documentElement.classList.add('dark');
+                    document.documentElement.setAttribute('data-theme', 'dark');
+                } else {
+                    document.documentElement.classList.remove('dark');
+                    document.documentElement.setAttribute('data-theme', 'light');
+                }
+            }
+        });
+    },
+    
+    setupTheme() {
+        // Apply saved theme or system preference
+        if (State.theme === 'dark' || (State.isSystemTheme && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            document.documentElement.classList.add('dark');
+            document.documentElement.setAttribute('data-theme', 'dark');
             if (this.elements.themeToggle) this.elements.themeToggle.checked = true;
         } else {
             document.documentElement.classList.remove('dark');
-            if (this.elements.themeToggle) this.elements.themeToggle.checked = false;
+            document.documentElement.setAttribute('data-theme', 'light');
         }
     },
 
     toggleTheme() {
-        State.theme = State.theme === 'light' ? 'dark' : 'light';
-        localStorage.setItem('theme', State.theme);
-        this.setupTheme();
+        if (State.theme === 'dark') {
+            State.theme = 'light';
+            State.isSystemTheme = false;
+            localStorage.setItem('theme', 'light');
+            document.documentElement.classList.remove('dark');
+            document.documentElement.setAttribute('data-theme', 'light');
+        } else if (State.theme === 'light') {
+            State.theme = 'dark';
+            State.isSystemTheme = false;
+            localStorage.setItem('theme', 'dark');
+            document.documentElement.classList.add('dark');
+            document.documentElement.setAttribute('data-theme', 'dark');
+        } else {
+            // If no theme was set, use system preference
+            State.isSystemTheme = true;
+            localStorage.removeItem('theme');
+            if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+                document.documentElement.classList.add('dark');
+                document.documentElement.setAttribute('data-theme', 'dark');
+            } else {
+                document.documentElement.classList.remove('dark');
+                document.documentElement.setAttribute('data-theme', 'light');
+            }
+        }
+        
+        // Update UI elements
+        this.updateThemeToggleIcon();
+    },
+    
+    updateThemeToggleIcon() {
+        const themeToggle = this.elements.themeToggle;
+        if (!themeToggle) return;
+        
+        const isDark = document.documentElement.classList.contains('dark');
+        const moonIcon = themeToggle.querySelector('.fa-moon');
+        const sunIcon = themeToggle.querySelector('.fa-sun');
+        
+        if (isDark) {
+            moonIcon?.classList.add('hidden');
+            sunIcon?.classList.remove('hidden');
+        } else {
+            sunIcon?.classList.add('hidden');
+            moonIcon?.classList.remove('hidden');
+        }
     },
 
     setupMarkdown() {
@@ -439,98 +497,96 @@ const UI = {
     },
 
     createMessageElement(content, isUser) {
-        // Container globable du message
-        const div = document.createElement('div');
-        div.className = `flex flex-col w-full animate-fade-in ${isUser ? 'items-end' : 'items-start'}`;
-
-        // Header (Nom de l'émetteur)
-        const header = document.createElement('div');
-        header.className = "flex items-center gap-2 mb-2 px-1";
+        const messageGroup = document.createElement('div');
 
         if (isUser) {
-            header.innerHTML = `
-                <span class="text-xs font-semibold text-gray-500 dark:text-gray-400">VOUS</span>
-                <div class="w-6 h-6 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center">
-                    <i class="fas fa-user text-[10px] text-gray-500 dark:text-gray-400"></i>
-                </div>
-            `;
-            div.className = 'flex flex-col w-full animate-fade-in items-end'; // Align user to right
+            // === USER MESSAGE (Aligned Right, Gray Background) ===
+            messageGroup.className = 'message-group user-message mb-6 flex flex-col items-end animate-slide-up';
+
+            // Message content wrapper
+            const contentWrapper = document.createElement('div');
+            contentWrapper.className = 'inline-block max-w-[85%] sm:max-w-[75%] bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-gray-50 rounded-2xl rounded-tr-sm px-4 py-3 shadow-sm border border-gray-200 dark:border-gray-700';
+
+            contentWrapper.innerHTML = `<div class="whitespace-pre-wrap text-sm leading-relaxed">${this.escapeHtml(content)}</div>`;
+
+            messageGroup.appendChild(contentWrapper);
+
         } else {
-            header.innerHTML = `
-                <div class="w-6 h-6 rounded-full bg-gradient-to-tr from-primary-500 to-purple-600 flex items-center justify-center shadow-lg shadow-primary-500/20">
-                    <i class="fas fa-robot text-[10px] text-white"></i>
-                </div>
-                <span class="text-xs font-semibold text-primary-600 dark:text-primary-400">defAI</span>
-            `;
-            div.className = 'flex flex-col w-full animate-fade-in items-start'; // Align AI to left
-        }
-
-        div.appendChild(header);
-
-        // Contenu du message
-        const messageBox = document.createElement('div');
-        // On retire le style "bulle" pour l'IA, on garde un léger fond pour l'utilisateur
-
-        if (isUser) {
-            messageBox.className = "px-4 py-3 bg-gray-100 dark:bg-dark-surface rounded-2xl rounded-tr-sm text-gray-800 dark:text-gray-100 max-w-[85%] text-sm";
-            messageBox.textContent = content; // Texte brut pour l'utilisateur
-        } else {
-            // Style "Document" pour l'IA : pas de fond contraint, pleine largeur relative
-            messageBox.className = "w-full pl-0 lg:pl-8 text-gray-800 dark:text-gray-100";
+            // === AI MESSAGE (Full Width, No Background) ===
+            messageGroup.className = 'message-group ai-message mb-6 w-full animate-slide-up';
 
             try {
-                // 1. Parsing Markdown -> HTML
-                // marked.parse renvoie une string HTML
-                const rawHtml = marked.parse(content);
+                // Debug logs
+                console.log('Contenu AI brut:', content);
+                console.log('Contenu AI JSON:', JSON.stringify(content));
 
-                // 2. Sanitization HTML (Sécurité)
-                // On nettoie le HTML généré, pas le Markdown source !
-                const cleanHtml = DOMPurify.sanitize(rawHtml, {
+                // Parse Markdown
+                const parsedMarkdown = marked.parse(content);
+
+                // Sanitize HTML
+                const cleanHtml = DOMPurify.sanitize(parsedMarkdown, {
                     ALLOWED_TAGS: [
                         'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'blockquote', 'p', 'a', 'ul', 'ol',
                         'li', 'b', 'i', 'strong', 'em', 'strike', 'code', 'hr', 'br', 'div',
                         'table', 'thead', 'tbody', 'tr', 'th', 'td', 'pre', 'span', 'img', 'kbd'
                     ],
                     ALLOWED_ATTR: ['href', 'src', 'alt', 'title', 'class', 'target', 'rel', 'data-language'],
-                    FORBID_TAGS: ['script', 'style', 'iframe', 'form', 'object', 'embed', 'link'],
                     ALLOW_DATA_ATTR: false
                 });
 
-                // 3. Injection sécurisée
-                messageBox.innerHTML = `
-                    <div class="markdown-body prose dark:prose-invert max-w-none">
+                // Content wrapper (no background, full width)
+                const contentWrapper = document.createElement('div');
+                contentWrapper.className = 'relative group py-2';
+
+                // Markdown content
+                contentWrapper.innerHTML = `
+                    <div class="markdown-body prose dark:prose-invert max-w-none prose-headings:font-bold prose-a:text-blue-600 dark:prose-a:text-blue-400 prose-code:text-pink-600 dark:prose-code:text-pink-400">
                         ${cleanHtml}
                     </div>
                 `;
 
-                // Highlight.js
-                messageBox.querySelectorAll('pre code').forEach((block) => {
+                // Highlight code blocks
+                contentWrapper.querySelectorAll('pre code').forEach((block) => {
                     hljs.highlightElement(block);
                 });
 
-                // Bouton de copie
-                // On l'ajoute flottant à droite du bloc
-                const copyContainer = document.createElement('div');
-                copyContainer.className = "flex justify-end mt-2 opacity-0 group-hover:opacity-100 transition-opacity";
-
+                // Copy button
                 const copyBtn = document.createElement('button');
-                copyBtn.className = "text-xs text-gray-400 hover:text-primary-500 flex items-center gap-1";
-                copyBtn.innerHTML = '<i class="fas fa-copy"></i> Copier';
-                copyBtn.onclick = () => {
+                copyBtn.className = 'absolute -top-2 -right-2 opacity-0 group-hover:opacity-100 p-2 rounded-lg bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 transition-all text-xs shadow-md border border-gray-200 dark:border-gray-700';
+                copyBtn.setAttribute('aria-label', 'Copier le message');
+                copyBtn.title = 'Copier le message';
+                copyBtn.innerHTML = '<i class="fas fa-copy text-gray-600 dark:text-gray-300"></i>';
+
+                copyBtn.onclick = (e) => {
+                    e.stopPropagation();
                     this.copyToClipboard(content);
-                    this.showToast('Copié !', 'success');
+                    this.showToast('Copié', 'success');
+
+                    const icon = copyBtn.querySelector('i');
+                    icon.classList.replace('fa-copy', 'fa-check');
+
+                    setTimeout(() => {
+                        icon.classList.replace('fa-check', 'fa-copy');
+                    }, 2000);
                 };
-                copyContainer.appendChild(copyBtn);
-                // messageBox.appendChild(copyContainer); // Optionnel, peut être bruyant sur chaque message
+
+                contentWrapper.appendChild(copyBtn);
+                messageGroup.appendChild(contentWrapper);
 
             } catch (error) {
-                console.error('Erreur rendu Markdown:', error);
-                messageBox.textContent = content;
+                console.error('Erreur lors du rendu du message:', error);
+                messageGroup.innerHTML = `
+                    <div class="text-red-500 text-sm">
+                        Une erreur est survenue lors de l'affichage de la réponse.
+                    </div>
+                    <div class="mt-2 p-2 bg-red-50 dark:bg-red-900/20 rounded text-sm">
+                        ${this.escapeHtml(content)}
+                    </div>
+                `;
             }
         }
 
-        div.appendChild(messageBox);
-        return div;
+        return messageGroup;
     },
 
     createTypingIndicator() {
@@ -686,7 +742,12 @@ const UI = {
 
     setupEventListeners() {
         if (this.elements.form) {
-            this.elements.form.addEventListener('submit', (e) => this.handleSubmit(e));
+            this.elements.form.addEventListener('submit', this.handleSubmit.bind(this));
+        }
+        
+        if (this.elements.themeToggle) {
+            this.elements.themeToggle.addEventListener('click', () => this.toggleTheme());
+            this.updateThemeToggleIcon(); // Set initial icon state
         }
 
         if (this.elements.input) {
@@ -796,10 +857,7 @@ const UI = {
 
         // Add User Message (Text)
         if (message) {
-            const chatStream = this.elements.chatStream;
-            if (chatStream) {
-                chatStream.appendChild(this.createMessageElement(message, true));
-            }
+            this.elements.messages.appendChild(this.createMessageElement(message, true));
         }
 
         // Add User Message (Attachments Visual feedback - optional, or just let backend echo)
@@ -822,10 +880,7 @@ const UI = {
 
         // Show Typing Indicator
         const typingObj = this.createTypingIndicator();
-        const chatStream = this.elements.chatStream;
-        if (chatStream) {
-            chatStream.appendChild(typingObj);
-        }
+        this.elements.messages.appendChild(typingObj);
         this.scrollToBottom();
 
         try {
@@ -865,10 +920,7 @@ const UI = {
             const aiContent = data.response || data.message || "Je ne sais pas quoi répondre. veuillez réessayer";
 
             // Add AI Message
-            const chatStream = this.elements.chatStream;
-            if (chatStream) {
-                chatStream.appendChild(this.createMessageElement(aiContent, false));
-            }
+            this.elements.messages.appendChild(this.createMessageElement(aiContent, false));
             this.scrollToBottom();
 
             // Highlight Code Blocks
@@ -877,10 +929,7 @@ const UI = {
         } catch (error) {
             console.error('Error:', error);
             typingObj.remove();
-            const chatStream = this.elements.chatStream;
-            if (chatStream) {
-                chatStream.appendChild(this.createMessageElement(`Désolé, une erreur est survenue: ${error.message}`, false));
-            }
+            this.elements.messages.appendChild(this.createMessageElement(`Désolé, une erreur est survenue: ${error.message}`, false));
             this.scrollToBottom();
         } finally {
             State.isTyping = false;

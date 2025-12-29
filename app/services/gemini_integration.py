@@ -342,8 +342,9 @@ class GeminiIntegration:
         text = re.sub(r"```(?:json)?\s*", "", text, flags=re.IGNORECASE)
         text = re.sub(r"```\s*$", "", text)
 
-        # Nettoyer les espaces multiples
-        text = re.sub(r"\s+", " ", text)
+        # ❌ NE PAS nettoyer les espaces multiples car ça détruit les sauts de ligne!
+        # Cette ligne remplaçait TOUS les \n par des espaces simples
+        # text = re.sub(r"\s+", " ", text)
 
         # Supprimer les demandes de données du texte final (elles seront traitées séparément)
         text = re.sub(r"\[NEED_DATA:[^\]]+\]", "", text, flags=re.IGNORECASE)
@@ -515,3 +516,4 @@ class GeminiIntegration:
 
         # Fallback pour types simples
         return f"    - {str(data)}"
+

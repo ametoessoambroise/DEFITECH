@@ -7,7 +7,6 @@ from datetime import datetime
 from app.extensions import db
 from sqlalchemy import CheckConstraint
 
-
 class AIConversation(db.Model):
     __tablename__ = "ai_conversations"
 

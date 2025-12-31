@@ -82,7 +82,14 @@ def create_app(config_class=None):
     mail.init_app(app)
     csrf.init_app(app)
     migrate.init_app(app, db)
-    socketio.init_app(app, cookie=False, cors_allowed_origins="*")
+    socketio.init_app(
+        app,
+        async_mode="eventlet",
+        cors_allowed_origins="*",
+        cookie=False,
+        engineio_logger=False,
+        always_connect=True,
+    )
     study_buddy_ai.init_app(app)
 
     # Initialize models

@@ -88,8 +88,9 @@ class Notification(db.Model):
         type=None,
         element_id=None,
         element_type=None,
+        link=None,
     ):
-        """Crée une nouvelle notification"""
+        """Crée une nouvelle notification et l'envoie en temps réel via Socket.IO"""
         notification = cls(
             user_id=user_id,
             titre=titre,
@@ -97,7 +98,28 @@ class Notification(db.Model):
             type=type,
             element_id=element_id,
             element_type=element_type,
+            link=link,
         )
         db.session.add(notification)
         db.session.commit()
+
+        # Envoi en temps réel si possible
+        try:
+            from app.extensions import socketio
+
+            socketio.emit(
+                "new_notification",
+                {
+                    "id": notification.id,
+                    "titre": titre,
+                    "message": message,
+                    "type": type or "info",
+                    "date": datetime.now(tz=timezone.utc).isoformat(),
+                },
+                room=f"user_{user_id}",
+            )
+        except Exception as e:
+            # Ne pas bloquer la création si le socket échoue
+            print(f"[NOTIF ERROR] Error emitting via socket: {e}")
+
         return notification

@@ -10,6 +10,7 @@ class NotificationManager {
     this.reconnectDelay = 3000;
     this.notificationSound = null;
     this.csrfToken = null;
+    this.socket = null;
 
     this.init();
   }
@@ -32,6 +33,23 @@ class NotificationManager {
     // Initialize notification sound
     this.notificationSound = new Audio("/static/sounds/notification.mp3");
     this.notificationSound.volume = 0.5;
+
+    this.initSocket();
+  }
+
+  initSocket() {
+    if (typeof io !== "undefined") {
+      this.socket = io();
+      this.socket.on("connect", () => {
+        console.log("Notification Socket connected");
+      });
+
+      this.socket.on("new_notification", (data) => {
+        console.log("New real-time notification received:", data);
+        this.loadNotifications();
+        this.playNotificationSound();
+      });
+    }
   }
 
   loadSettings() {

@@ -22,11 +22,8 @@ requests==2.31.0
 PyPDF2==3.0.1
 huggingface-hub==0.19.4
 chardet
-tensorflow-cpu
-torch
 numpy
 pandas
-matplotlib
 email_validator
 gunicorn
 eventlet

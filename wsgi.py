@@ -1,6 +1,9 @@
-from app import create_app
-from dotenv import load_dotenv
-import os
+import eventlet
+eventlet.monkey_patch()
+
+from app import create_app # noqa
+from dotenv import load_dotenv # noqa
+import os # noqa
 
 load_dotenv()
 

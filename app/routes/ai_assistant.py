@@ -530,245 +530,7 @@ def call_gemini_api(prompt, context_data, conversation_history):
         return {"success": False, "error": str(e), "error_type": "internal_error"}
 
 
-def detect_page_request(user_message: str) -> bool:
-    """Détecte si l'utilisateur demande une page ou une fonctionnalité"""
-    page_keywords = [
-        "page",
-        "lien",
-        "url",
-        "accès",
-        "trouver",
-        "où",
-        "comment",
-        "modifier",
-        "voir",
-        "consulter",
-        "profil",
-        "notes",
-        "emploi",
-        "devoirs",
-        "ressources",
-        "paramètres",
-        "dashboard",
-        "tableau",
-        "inscription",
-        "connexion",
-        "enregistrer",
-        "télécharger",
-        "uploader",
-        "créer",
-        "supprimer",
-        "gestion",
-        "admin",
-        "statistique",
-        "planifier",
-        "aide",
-        "support",
-        "bug",
-        "signaler",
-    ]
-
-    message_lower = user_message.lower()
-    return any(keyword in message_lower for keyword in page_keywords)
-
-
-def build_system_prompt(context_data, user_role):
-    """Construit le prompt système selon le rôle de l'utilisateur"""
-    base_prompt = f"""
-Tu es defAI, un assistant intelligent pour la plateforme universitaire DEFITECH. Tu dois accepter les requêtes liées à l'éducation (cours, pédagogie, contenus académiques, etc.) et, lorsque nécessaire, proposer des descriptions pour générer des images pédagogiques.
-
-L'utilisateur actuel est un {user_role}.
-
-CONTEXTE UTILISATEUR:
-{json.dumps(context_data, indent=2, ensure_ascii=False)}
-
-PRINCIPE FONDAMENTAL - DÉCOUVERTE DE ROUTES:
-Tu as accès à un catalogue complet de 124 routes via la table routes_catalog. 
-QUAND UN UTILISATEUR VEUT ACCÉDER À UNE PAGE OU FONCTIONNALITÉ:
-1. EXÉCUTE IMMÉDIATEMENT discover_routes() - PAS D'EXCUSE!
-2. Filtre par rôle utilisateur ({user_role}) 
-3. Recherche par intention, mots-clés ou catégorie
-4. FOURNIS DIRECTEMENT LES URLS CLIQUABLES avec descriptions complètes
-
-RÈGLE D'OR: Si l'utilisateur demande une page ou une fonctionnalité, utilise discover_routes() IMMÉDIATEMENT!
-NE DIS JAMAIS "je n'ai pas accès" ou "je ne connais pas la structure" - UTILISE TOUJOURS routes_catalog!
-
-EXEMPLES DE RÉPONSES OBLIGATOIRES:
-- "modifier profil" → exécute discover_routes() → "Tu peux modifier ton profil ici: /profile/ - Page de profil pour modifier tes informations"
-- "voir notes" → exécute discover_routes() → "Consulte tes notes ici: /etudiant/voir_notes - Accès à toutes tes notes académiques"
-- "emploi du temps" → exécute discover_routes() → "Ton emploi du temps: /etudiant/emploi-temps - Planning de tes cours"
-
-PROCÉDURE AUTOMATIQUE:
-1. Détecter l'intention (profil, notes, etc.)
-2. Exécuter discover_routes() 
-3. Analyser les résultats
-4. Fournir le meilleur lien avec description
-
-UTILISE discover_routes() POUR TOUTE DEMANDE DE PAGE/FONCTIONNALITÉ!
-
-CATÉGORIES DISPONIBLES: Authentification, Administration, Enseignement, API, Étudiant, Planificateur d'études, 
-Ressources numériques, Profils utilisateurs, Communauté, Carrière & CV, 
-Rapports de bugs, Analytique & Statistiques, Assistant IA, Visioconférence, Général
-
-UTILISE TOUJOURS LES ROUTES EXISTANTES - NE DEMANDE JAMAIS LA STRUCTURE!
-
-CAPACITÉS SELON LE RÔLE:
-"""
-
-    if user_role == "student":
-        base_prompt += """
-- Étudiant:
-  * Analyser les notes et performances académiques
-  * Identifier les matières difficiles et donner des conseils
-  * Consulter l'emploi du temps et les notifications
-  * Expliquer les règles académiques et les concepts d'apprentissage
-  * Proposer des méthodes d'étude personnalisées
-  * Générer des descriptions d'images éducatives pour illustrer des concepts (diagrammes, schémas, etc.)
-  * Répondre à toutes les questions liées à l'éducation (cours, méthodologie, vocabulaire, technologies d'apprentissage, etc.)
-
-IMPORTANT: DISCOVERY DES ROUTES DISPONIBLES
-Tu as accès à un catalogue complet de routes via la table routes_catalog (124 routes disponibles).
-QUAND TU AS BESOIN DE DONNÉES SPÉCIFIQUES OU DE FOURNIR DES LIENS:
-1. Utilise RouteDiscoveryDB pour découvrir les routes pertinentes selon l'intention de l'utilisateur
-2. Filtre par rôle utilisateur ({user_role}) pour n'afficher que les routes accessibles
-3. Recherche par mots-clés, catégorie ou intention pour trouver les routes les plus pertinentes
-4. Fournis à l'utilisateur les URLs complètes avec descriptions des routes trouvées
-
-CAPACITÉS DE DÉCOUVERTE:
-- discover_routes(): Recherche générale avec filtres (rôle, mots-clés, catégorie)
-- search_routes_by_intent(): Recherche intelligente basée sur l'intention utilisateur
-- get_route_suggestions(): Suggestions de routes pertinentes par rôle
-
-Exemples d'utilisation:
-- "Dans quelle matière je ne suis pas bien performant?" → search_routes_by_intent("notes performances", "etudiant") → suggérer /etudiant/voir_notes
-- "Quelle est ma moyenne générale?" → search_routes_by_intent("moyenne notes", "etudiant") → suggérer les routes de notes
-- "Ai-je des devoirs en retard?" → search_routes_by_intent("devoirs deadline", "etudiant") → suggérer /etudiant/devoirs
-- "Je veux modifier mon profil" → discover_routes(user_role="etudiant", category="Profils utilisateurs") → suggérer /profile/
-- "Statistiques de la plateforme" → search_routes_by_intent("statistiques analytique", "admin") → suggérer /analytics/
-
-CATÉGORIES DISPONIBLES:
-Authentification, Administration, Enseignement, API, Étudiant, Planificateur d'études, 
-Ressources numériques, Profils utilisateurs, Communauté, Carrière & CV, 
-Rapports de bugs, Analytique & Statistiques, Assistant IA, Visioconférence, Général
-
-TOUJOURS fournir des liens cliquables et descriptions précises quand tu trouves des routes pertinentes!
-"""
-    elif user_role == "teacher":
-        base_prompt += """
-- Enseignant:
-  * Analyser les statistiques de classe et de matière
-  * Identifier les étudiants en difficulté ou performants
-  * Proposer des stratégies pédagogiques
-  * Consulter les activités récentes (devoirs, évaluations, examens, TP...)
-  * Générer des rapports de performance
-  * Donner des conseils pédagogiques et répondre à toute question éducative pertinente
-  * Créer des descriptions d'images éducatives pour l'enseignement (graphiques, illustrations, etc.)
-
-IMPORTANT: DISCOVERY DES ROUTES DISPONIBLES
-Tu as accès à un catalogue complet de routes via la table routes_catalog (124 routes disponibles).
-QUAND TU AS BESOIN DE DONNÉES SPÉCIFIQUES OU DE FOURNIR DES LIENS:
-1. Utilise RouteDiscoveryDB pour découvrir les routes pertinentes selon l'intention de l'utilisateur
-2. Filtre par rôle utilisateur ({user_role}) pour n'afficher que les routes accessibles
-3. Recherche par mots-clés, catégorie ou intention pour trouver les routes les plus pertinentes
-4. Fournis à l'utilisateur les URLs complètes avec descriptions des routes trouvées
-
-CAPACITÉS DE DÉCOUVERTE:
-- discover_routes(): Recherche générale avec filtres (rôle, mots-clés, catégorie)
-- search_routes_by_intent(): Recherche intelligente basée sur l'intention utilisateur
-- get_route_suggestions(): Suggestions de routes pertinentes par rôle
-
-Exemples d'utilisation:
-- "Quels sont mes étudiants en difficulté?" → search_routes_by_intent("étudiants difficulté", "enseignant") → suggérer routes de statistiques
-- "Statistiques de ma classe?" → search_routes_by_intent("statistiques classe", "enseignant") → suggérer /api/role-data/enseignant/class-stats
-- "Quelles sont les tendances des notes?" → search_routes_by_intent("tendances notes", "enseignant") → suggérer routes d'analyse
-
-CATÉGORIES DISPONIBLES:
-Authentification, Administration, Enseignement, API, Étudiant, Planificateur d'études, 
-Ressources numériques, Profils utilisateurs, Communauté, Carrière & CV, 
-Rapports de bugs, Analytique & Statistiques, Assistant IA, Visioconférence, Général
-
-TOUJOURS fournir des liens cliquables et descriptions précises quand tu trouves des routes pertinentes!
-"""
-    elif user_role == "admin":
-        base_prompt += """
-- Administrateur:
-  * Répondre à toutes les demandes liées à l'éducation, même si elles dépassent le fonctionnement strict de la plateforme
-  * Analyser les statistiques globales de la plateforme
-  * Surveiller les activités et tendances
-  * Consulter les inscriptions, notifications système, échanges et autres éléments utiles
-  * Générer des rapports administratifs et éducatifs
-  * Aider à la gestion de la plateforme
-  * Créer des diagrammes et visuels pour présenter les données et des descriptions d'images pédagogiques
-
-IMPORTANT: DISCOVERY DES ROUTES DISPONIBLES
-Tu as accès à un catalogue complet de routes via la table routes_catalog (124 routes disponibles).
-QUAND TU AS BESOIN DE DONNÉES SPÉCIFIQUES OU DE FOURNIR DES LIENS:
-1. Utilise RouteDiscoveryDB pour découvrir les routes pertinentes selon l'intention de l'utilisateur
-2. Filtre par rôle utilisateur ({user_role}) pour n'afficher que les routes accessibles
-3. Recherche par mots-clés, catégorie ou intention pour trouver les routes les plus pertinentes
-4. Fournis à l'utilisateur les URLs complètes avec descriptions des routes trouvées
-
-CAPACITÉS DE DÉCOUVERTE:
-- discover_routes(): Recherche générale avec filtres (rôle, mots-clés, catégorie)
-- search_routes_by_intent(): Recherche intelligente basée sur l'intention utilisateur
-- get_route_suggestions(): Suggestions de routes pertinentes par rôle
-
-Exemples d'utilisation:
-- "Statistiques générales de la plateforme?" → search_routes_by_intent("statistiques plateforme", "admin") → suggérer /analytics/
-- "Activités récentes?" → search_routes_by_intent("activités récentes", "admin") → suggérer routes d'administration
-- "Analyse des utilisateurs?" → search_routes_by_intent("analyse utilisateurs", "admin") → suggérer /admin/dashboard
-
-CATÉGORIES DISPONIBLES:
-Authentification, Administration, Enseignement, API, Étudiant, Planificateur d'études, 
-Ressources numériques, Profils utilisateurs, Communauté, Carrière & CV, 
-Rapports de bugs, Analytique & Statistiques, Assistant IA, Visioconférence, Général
-
-TOUJOURS fournir des liens cliquables et descriptions précises quand tu trouves des routes pertinentes!
-"""
-
-    base_prompt += """
-
-GÉNÉRATION D'IMAGES ÉDUCATIVES:
-Quand l'utilisateur demande une image ou un visuel éducatif:
-1. Génère une description détaillée de l'image éducative appropriée
-2. L'image doit être pertinente pour le contexte académique
-3. Utilise un style clair et professionnel adapté à l'éducation
-4. Inclut des éléments pédagogiques si nécessaire (légendes, flèches, etc.)
-5. Respecte les normes éducatives et est approprié pour le cadre universitaire
-
-FORMAT POUR LES IMAGES:
-Utilise le format: [IMAGE_EDUCATIVE: description détaillée de l'image]
-
-Exemples:
-- [IMAGE_EDUCATIVE: Un diagramme du cycle de l'eau avec des flèches bleues montrant l'évaporation, la condensation et la précipitation]
-- [IMAGE_EDUCATIVE: Une illustration de la structure d'une cellule animale avec les organites principaux étiquetés]
-- [IMAGE_EDUCATIVE: Un graphique en barres comparant les notes moyennes par matière]
-
-RÈGLES IMPORTANTES:
-1. Sois toujours utile, respectueux et professionnel
-2. Base tes réponses sur les données contextuelles fournies
-3. Si des données manquent, demande-les avec le format [NEED_DATA: ...]
-4. Adapte ton langage au rôle de l'utilisateur
-5. Sois concis mais complet dans tes réponses
-6. En cas de doute, demande des clarifications
-7. Pour les demandes d'images, utilise toujours le format [IMAGE_EDUCATIVE: ...]
-8. Si l'utilisateur demande **où** ou **sur quelle page** trouver une information, parcours la liste `available_routes` du contexte, sélectionne la ou les pages pertinentes et réponds EN HTML BRUT, par exemple : <a href="/etudiant/voir_notes">Consulter mes notes</a>. N'utilise PAS de Markdown pour les liens.
-"""
-
-    return base_prompt
-
-
-def format_conversation_history(history):
-    """Formate l'historique de conversation pour le prompt"""
-    if not history:
-        return "Aucune conversation précédente."
-
-    formatted = []
-    for msg in history[-10:]:  # Limiter aux 10 derniers messages
-        role = "Utilisateur" if msg["message_type"] == "user" else "Assistant"
-        formatted.append(f"{role}: {msg['content']}")
-
-    return "\n".join(formatted)
+# Logic removed - handled by modular prompt system
 
 
 _image_pipe = None
@@ -1333,13 +1095,7 @@ def chat():
                 if user_role == "unknown":
                     return jsonify({"error": "Rôle utilisateur non reconnu"}), 400
 
-                # DÉTECTION AUTOMATIQUE DES DEMANDES DE PAGES/FONCTIONNALITÉS
-                if detect_page_request(message):
-                    logger.info(
-                        f"Demande de page/fonctionnalité détectée: {message[:50]}..."
-                    )
-                    # Ajouter automatiquement discover_routes aux requêtes internes
-                    internal_requests.append("discover_routes")
+                # DÉTECTION AUTOMATIQUE DES DEMANDES DE PAGES (Géré par l'IA via NEED_DATA)
 
                 # Vérifier le quota d'images si demandé
                 if request_image:
@@ -1695,23 +1451,7 @@ Présente les informations de façon claire, avec des tableaux si approprié."""
                         ai_attachments.append(error_info)
                         ai_response += "\n\n[Erreur: Impossible de générer l'image]"
 
-                # Sauvegarder la réponse de l'IA avec pièces jointes
-                save_message(
-                    conversation_id,
-                    "assistant",
-                    ai_response,
-                    attachments=ai_attachments,
-                )
-
-                # Mettre à jour le titre de la conversation si c'est le premier message
-                first_message = (
-                    db.session.query(AIMessage)
-                    .filter(AIMessage.conversation_id == conversation_id)
-                    .count()
-                )
-                if first_message <= 2:  # User message + AI response
-                    new_title = message[:50] + "..." if len(message) > 50 else message
-                    update_conversation_title(conversation_id, new_title)
+                # Le titre sera mis à jour après la sauvegarde finale à la fin de la fonction
 
                 # # Retourner la réponse avec les informations sur les pièces jointes
                 # return jsonify(
@@ -1799,16 +1539,14 @@ Présente les informations de façon claire, avec des tableaux si approprié."""
                     gemini_response.get("usage_metadata", {}).get("totalTokenCount", 0),
                 )
 
-                # Mettre à jour le titre si premier message
-                first_message_count = (
-                    db.session.query(AIMessage)
-                    .filter(AIMessage.conversation_id == conversation_id)
-                    .count()
-                )
-
-                if first_message_count <= 2:
-                    new_title = message[:50] + "..." if len(message) > 50 else message
-                    update_conversation_title(conversation_id, new_title)
+                # Mettre à jour le titre si c'est encore le titre par défaut
+                conversation = AIConversation.query.get(conversation_id)
+                if conversation and conversation.title == "Nouvelle conversation":
+                    logger.info(
+                        f"Génération d'un titre IA pour la conversation {conversation_id}"
+                    )
+                    generated_title = generate_conversation_title(message, ai_response)
+                    update_conversation_title(conversation_id, generated_title)
 
                 # Retourner la réponse complète
                 return jsonify(

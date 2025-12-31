@@ -42,6 +42,7 @@ class AIOrchestrator:
                 "get_missing_assignments",
                 "get_academic_info",
                 "get_all_users",
+                "inspect_page",
             ],
             "enseignant": [
                 "discover_routes",  # Nouvelle fonctionnalité
@@ -59,6 +60,7 @@ class AIOrchestrator:
                 "get_student_attendance_detail",
                 "get_class_progression",
                 "get_all_users",
+                "inspect_page",
             ],
             "admin": [
                 "discover_routes",  # Nouvelle fonctionnalité
@@ -94,6 +96,7 @@ class AIOrchestrator:
                 "get_subject_statistics",
                 "get_best_students",
                 "get_struggling_students",
+                "inspect_page",
             ],
         }
 
@@ -1503,6 +1506,9 @@ class AIOrchestrator:
                 if request_type == "get_users_by_role":
                     role_filter = self._extract_role_from_context(request_context)
                     return method(user_id, role_filter)
+                elif request_type == "inspect_page" and request_context:
+                    url = request_context.get("description")
+                    return method(user_id, url=url)
                 return method(user_id)
             else:
                 logger.error(f"Méthode {method_name} non implémentée")
@@ -1514,6 +1520,51 @@ class AIOrchestrator:
         except Exception as e:
             logger.error(f"Erreur exécution requête {request_type}: {e}")
             return {"success": False, "error": str(e)}
+
+    def _execute_inspect_page(self, user_id, url=None):
+        """Inspecte le contenu d'une page de l'application (interception)"""
+        if not url:
+            return {"success": False, "error": "URL manquante pour l'inspection"}
+
+        try:
+            from flask import current_app
+            from app.utils.route_discover import RouteAccessor
+
+            # Utiliser le client de test Flask pour récupérer le HTML de la page
+            with current_app.test_client() as client:
+                # Login simulé si nécessaire (dépend de la config de l'app)
+                with client.session_transaction() as sess:
+                    sess["_user_id"] = str(user_id)
+                    sess["_fresh"] = True
+
+                response = client.get(url, follow_redirects=True)
+
+                if response.status_code != 200:
+                    return {
+                        "success": False,
+                        "error": f"Impossible d'accéder à la page (Status: {response.status_code})",
+                        "url": url,
+                    }
+
+                html_content = response.get_data(as_text=True)
+
+                # Utiliser RouteAccessor pour extraire les données
+                accessor = RouteAccessor()
+                parsed_data = accessor._parse_html_response(html_content, url)
+
+                return {
+                    "success": True,
+                    "url": url,
+                    "content_summary": parsed_data.get("extracted_data", {}).get(
+                        "main_content", "Aucun contenu textuel trouvé."
+                    ),
+                    "structured_data": parsed_data.get("extracted_data", {}),
+                    "status_code": response.status_code,
+                }
+
+        except Exception as e:
+            logger.error(f"Erreur lors de l'inspection de la page {url}: {e}")
+            return {"success": False, "error": str(e), "url": url}
 
     # Méthodes d'exécution spécifiques
     def _execute_get_student_grades(self, student_id):

@@ -195,10 +195,15 @@ def register_socketio_handlers(socket_io):
             participant.joined_at = datetime.utcnow()
             participant.left_at = None
         else:
+            # Déterminer le rôle
+            role = "student"
+            if user.role == "enseignant" or user.is_admin:
+                role = "host" if room.host_id == user.id else "teacher"
+
             participant = RoomParticipant(
                 room_id=room.id,
                 user_id=user.id,
-                role="participant",
+                role=role,
             )
             db.session.add(participant)
 
@@ -541,3 +546,64 @@ def register_socketio_handlers(socket_io):
             room=room_token,
             skip_sid=request.sid,
         )
+
+    @csrf_exempt_socketio_handler
+    @socket_io.on("toggle_hand_raise")
+    def handle_toggle_hand_raise(data):
+        """Gère la levée/baisse de main."""
+        room_token = data.get("room_token")
+        user_id = str(data.get("user_id"))
+        is_raised = data.get("is_raised")
+
+        if not verify_user_in_room(user_id, room_token):
+            return
+
+        emit(
+            "hand_raised_changed",
+            {"user_id": user_id, "is_raised": is_raised},
+            room=room_token,
+        )
+
+    @csrf_exempt_socketio_handler
+    @socket_io.on("kick_participant")
+    def handle_kick_participant(data):
+        """Permet à l'hôte d'expulser un participant."""
+        room_token = data.get("room_token")
+        host_id = str(data.get("host_id"))
+        target_id = str(data.get("target_id"))
+
+        # Vérifier que l'émetteur est l'hôte
+        room = Room.query.filter_by(room_token=room_token).first()
+        if not room or str(room.host_id) != host_id:
+            logger.warning(f"🚫 Tentative d'expulsion non autorisée par {host_id}")
+            return
+
+        target_mapping = user_socket_map.get(target_id)
+        if target_mapping:
+            # Informer le participant qu'il est expulsé
+            emit(
+                "kicked",
+                {"reason": "Expulsé par l'hôte"},
+                room=target_mapping["socket_id"],
+            )
+
+            # Informer tout le monde
+            emit("user_kicked", {"user_id": target_id}, room=room_token)
+            logger.info(f"👢 Participant {target_id} expulsé de {room_token}")
+
+    @csrf_exempt_socketio_handler
+    @socket_io.on("mute_remote_user")
+    def handle_mute_remote_user(data):
+        """Permet à l'hôte de couper le micro d'un participant."""
+        room_token = data.get("room_token")
+        host_id = str(data.get("host_id"))
+        target_id = str(data.get("target_id"))
+
+        room = Room.query.filter_by(room_token=room_token).first()
+        if not room or str(room.host_id) != host_id:
+            return
+
+        target_mapping = user_socket_map.get(target_id)
+        if target_mapping:
+            emit("force_mute", {"by": host_id}, room=target_mapping["socket_id"])
+            logger.info(f"🔇 Participant {target_id} muté par l'hôte dans {room_token}")

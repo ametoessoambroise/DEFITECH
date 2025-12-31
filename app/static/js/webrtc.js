@@ -23,6 +23,7 @@ const State = {
     audioEnabled: true,
     videoEnabled: true,
     isSharingScreen: false,
+    isHandRaised: false,
 
     // Devices
     videoDevice: null,
@@ -43,6 +44,7 @@ const DOM = {
     btnMic: document.getElementById('btn-mic'),
     btnCam: document.getElementById('btn-cam'),
     btnScreen: document.getElementById('btn-screen'),
+    btnHand: document.getElementById('btn-hand'),
     btnLeave: document.getElementById('btn-leave'),
     btnChat: document.getElementById('btn-chat'),
     btnParticipants: document.getElementById('btn-participants'),
@@ -83,6 +85,7 @@ function setupEventListeners() {
     DOM.btnMic.addEventListener('click', toggleAudio);
     DOM.btnCam.addEventListener('click', toggleVideo);
     DOM.btnScreen.addEventListener('click', toggleScreenShare);
+    DOM.btnHand.addEventListener('click', toggleHandRaise);
     DOM.btnLeave.addEventListener('click', () => window.location.href = '/');
 
     // Sidebar Controls
@@ -107,6 +110,10 @@ function setupEventListeners() {
     socket.on('ice_candidate', handleIceCandidate);
     socket.on('user_audio_changed', handleRemoteAudioChange);
     socket.on('user_video_changed', handleRemoteVideoChange);
+    socket.on('hand_raised_changed', handleRemoteHandRaiseChange);
+    socket.on('force_mute', handleForcedMute);
+    socket.on('kicked', handleKicked);
+    socket.on('user_kicked', handleUserKicked);
     socket.on('screen_share_started', handleRemoteScreenShareStart);
     socket.on('screen_share_stopped', handleRemoteScreenShareStop);
     socket.on('new_chat_message', handleNewChatMessage);
@@ -332,11 +339,18 @@ function addParticipantToUI(userId, name, isLocal, stream) {
     pinOverlay.className = 'pin-overlay';
     pinOverlay.innerHTML = '<i class="fas fa-thumbtack text-white text-3xl drop-shadow-lg"></i>';
 
+    // Hand Icon (hidden by default)
+    const hand = document.createElement('div');
+    hand.className = 'hand-raised-badge hidden';
+    hand.id = `hand-raised-${userId}`;
+    hand.innerHTML = '<i class="fas fa-hand-paper"></i>';
+
     // Assemble
     card.appendChild(video);
     card.appendChild(avatar);
     card.appendChild(label);
     card.appendChild(ring);
+    card.appendChild(hand);
     card.appendChild(pinOverlay);
 
     DOM.layoutContainer.appendChild(card);
@@ -516,6 +530,83 @@ function stopScreenShare() {
     socket.emit('screen_share_stopped', { room_token: window.ROOM_ID, user_id: window.USER_ID, username: window.USER_NAME });
 }
 
+function toggleHandRaise() {
+    State.isHandRaised = !State.isHandRaised;
+
+    // Update local UI state
+    if (State.isHandRaised) {
+        DOM.btnHand.classList.add('bg-yellow-500', 'text-black');
+        DOM.btnHand.classList.remove('bg-slate-700', 'text-white');
+    } else {
+        DOM.btnHand.classList.remove('bg-yellow-500', 'text-black');
+        DOM.btnHand.classList.add('bg-slate-700', 'text-white');
+    }
+
+    socket.emit('toggle_hand_raise', {
+        room_token: window.ROOM_ID,
+        user_id: window.USER_ID,
+        is_raised: State.isHandRaised
+    });
+}
+
+function muteRemoteUser(targetId) {
+    if (!window.IS_HOST) return;
+    socket.emit('mute_remote_user', {
+        room_token: window.ROOM_ID,
+        host_id: window.USER_ID,
+        target_id: targetId
+    });
+}
+
+function muteAll() {
+    if (!window.IS_HOST) return;
+    if (!confirm('Voulez-vous couper le micro de tous les participants ?')) return;
+
+    State.participants.forEach((p, id) => {
+        muteRemoteUser(id);
+    });
+}
+
+function kickParticipant(targetId) {
+    if (!window.IS_HOST) return;
+    if (!confirm('Êtes-vous sûr de vouloir expulser ce participant ?')) return;
+
+    socket.emit('kick_participant', {
+        room_token: window.ROOM_ID,
+        host_id: window.USER_ID,
+        target_id: targetId
+    });
+}
+
+function handleRemoteHandRaiseChange(data) {
+    const hand = document.getElementById(`hand-raised-${data.user_id}`);
+    if (hand) {
+        hand.classList.toggle('hidden', !data.is_raised);
+    }
+
+    if (data.is_raised) {
+        const p = State.participants.get(data.user_id) || { name: 'Un participant' };
+        showToast(`${p.name} lève la main.`);
+    }
+}
+
+function handleForcedMute(data) {
+    if (State.audioEnabled) {
+        toggleAudio(); // Mute self
+        showToast('L\'hôte a coupé votre micro.', 'info');
+    }
+}
+
+function handleKicked(data) {
+    alert('Vous avez été expulsé de la réunion.');
+    window.location.href = '/';
+}
+
+function handleUserKicked(data) {
+    removeParticipant(data.user_id);
+    showToast('Un participant a été expulsé.');
+}
+
 function replaceTracksInPeers(oldStream, newStream) {
     if (!newStream) return;
 
@@ -665,6 +756,15 @@ function updateParticipantListUI() {
     const container = document.getElementById('participants-view');
     container.innerHTML = '';
 
+    // Add Mute All button if host
+    if (window.IS_HOST && State.participants.size > 0) {
+        const muteAllBtn = document.createElement('button');
+        muteAllBtn.className = 'w-full mb-4 py-2 px-4 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-2';
+        muteAllBtn.innerHTML = '<i class="fas fa-microphone-slash"></i> Tout couper';
+        muteAllBtn.onclick = muteAll;
+        container.appendChild(muteAllBtn);
+    }
+
     // Add local
     addListEntry(window.USER_ID, window.USER_NAME + ' (Vous)', true);
 
@@ -685,7 +785,17 @@ function addListEntry(id, name, isLocal) {
             <div class="w-8 h-8 rounded-full bg-slate-700 flex items-center justify-center text-xs font-bold">${getInitials(name)}</div>
             <span class="text-sm truncate max-w-[150px]">${name}</span>
         </div>
-        ${!isLocal ? `<div class="text-xs text-slate-500"><i class="fas fa-signal"></i></div>` : ''}
+        <div class="flex items-center gap-1">
+            ${window.IS_HOST && !isLocal ? `
+                <button onclick="muteRemoteUser('${id}')" class="w-7 h-7 flex items-center justify-center rounded-full hover:bg-white/10 text-slate-400" title="Couper le micro">
+                    <i class="fas fa-microphone-slash text-xs"></i>
+                </button>
+                <button onclick="kickParticipant('${id}')" class="w-7 h-7 flex items-center justify-center rounded-full hover:bg-white/10 text-red-500" title="Expulser">
+                    <i class="fas fa-user-minus text-xs"></i>
+                </button>
+            ` : ''}
+            ${!isLocal ? `<div class="text-xs text-slate-500 ml-1"><i class="fas fa-signal"></i></div>` : ''}
+        </div>
     `;
     document.getElementById('participants-view').appendChild(div);
 }

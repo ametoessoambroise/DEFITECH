@@ -132,7 +132,8 @@ def view_profile(user_id):
         # Les enseignants peuvent voir les profils des étudiants de leurs filières
         if hasattr(current_user, "enseignant") and hasattr(user, "etudiant"):
             # Vérifier si l'enseignant enseigne dans la filière de l'étudiant
-            from app.models import Matiere, Filiere
+            from app.models.matiere import Matiere
+            from app.models.filiere import Filiere
 
             filiere = Filiere.query.filter_by(nom=user.etudiant.filiere).first()
             if filiere:

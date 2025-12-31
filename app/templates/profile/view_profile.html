@@ -195,7 +195,7 @@
                 <div class="px-6 py-4">
                     <div class="space-y-3">
                         {% if current_user.role in ['admin', 'enseignant'] %}
-                        <a href="{{ url_for('community.create_post') }}"
+                        <a href="{{ url_for('community.create_post', filiere_id=user.etudiant.filiere.id if user.etudiant and user.etudiant.filiere else 1) }}"
                             class="w-full flex items-center justify-center p-3 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors text-blue-900">
                             <i class="fas fa-plus mr-2"></i>
                             Créer un post

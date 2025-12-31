@@ -7,6 +7,7 @@ from datetime import datetime
 from app.extensions import db
 from sqlalchemy import CheckConstraint
 
+
 class AIConversation(db.Model):
     __tablename__ = "ai_conversations"
 
@@ -73,13 +74,15 @@ class AIMessage(db.Model):
 
     # IMPORTANT : renommer metadata
     extra_data = db.Column(db.JSON, default=dict)
-    
+
     # Gestion des pièces jointes (images, fichiers)
     attachments = db.Column(db.JSON, default=list)  # Liste des fichiers attachés
-    
+
     # Métadonnées pour le quota d'images
     image_count = db.Column(db.Integer, default=0)  # Nombre d'images dans ce message
-    has_generated_image = db.Column(db.Boolean, default=False)  # Si l'IA a généré une image
+    has_generated_image = db.Column(
+        db.Boolean, default=False
+    )  # Si l'IA a généré une image
 
     created_at = db.Column(db.DateTime, default=datetime.utcnow, index=True)
 
@@ -93,6 +96,7 @@ class AIMessage(db.Model):
             "message_type": self.message_type,
             "content": self.content,
             "extra_data": self.extra_data or {},
+            "attachments": self.attachments or [],
             "created_at": self.created_at.isoformat() if self.created_at else None,
             "message_order": self.message_order,
         }

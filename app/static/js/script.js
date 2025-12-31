@@ -226,7 +226,7 @@ const UI = {
 
             messages.forEach(msg => {
                 const isUser = msg.sender_id === (data.user_id || 0) || msg.message_type === 'user';
-                this.elements.messages.appendChild(this.createMessageElement(msg.content, isUser));
+                this.elements.messages.appendChild(this.createMessageElement(msg.content, isUser, msg.attachments || []));
             });
 
             this.scrollToBottom();
@@ -280,7 +280,7 @@ const UI = {
             const fragment = document.createDocumentFragment();
             messages.forEach(msg => {
                 const isUser = msg.sender_id === (data.user_id || 0) || msg.message_type === 'user';
-                fragment.appendChild(this.createMessageElement(msg.content, isUser));
+                fragment.appendChild(this.createMessageElement(msg.content, isUser, msg.attachments || []));
             });
             this.elements.messages.insertBefore(fragment, this.elements.messages.firstChild);
 
@@ -299,39 +299,36 @@ const UI = {
     },
 
     setupTheme() {
-        // Apply saved theme or system preference
-        if (State.theme === 'dark' || (State.isSystemTheme && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+        // Appliquer le thème sauvegardé ou la préférence système
+        const theme = State.theme;
+
+        if (theme === 'dark' || (!localStorage.getItem('theme') && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
             document.documentElement.classList.add('dark');
             document.documentElement.setAttribute('data-theme', 'dark');
+            State.theme = 'dark';
         } else {
             document.documentElement.classList.remove('dark');
             document.documentElement.setAttribute('data-theme', 'light');
+            State.theme = 'light';
         }
 
-        // Listen for system theme changes
+        this.updateThemeToggleIcon();
+
+        // Écouter les changements de thème système si aucun thème n'est forcé
         window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', e => {
-            if (State.isSystemTheme) {
+            if (!localStorage.getItem('theme')) {
                 if (e.matches) {
                     document.documentElement.classList.add('dark');
                     document.documentElement.setAttribute('data-theme', 'dark');
+                    State.theme = 'dark';
                 } else {
                     document.documentElement.classList.remove('dark');
                     document.documentElement.setAttribute('data-theme', 'light');
+                    State.theme = 'light';
                 }
+                this.updateThemeToggleIcon();
             }
         });
-    },
-
-    setupTheme() {
-        // Apply saved theme or system preference
-        if (State.theme === 'dark' || (State.isSystemTheme && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
-            document.documentElement.classList.add('dark');
-            document.documentElement.setAttribute('data-theme', 'dark');
-            if (this.elements.themeToggle) this.elements.themeToggle.checked = true;
-        } else {
-            document.documentElement.classList.remove('dark');
-            document.documentElement.setAttribute('data-theme', 'light');
-        }
     },
 
     toggleTheme() {

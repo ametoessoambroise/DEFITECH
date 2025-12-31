@@ -135,7 +135,9 @@ def admin_etudiants():
         users_query = users_query.filter(User.id == id_filter)
 
     etudiants = users_query.all()
-    etudiants_infos = [Etudiant.query.filter_by(user_id=e.id).first() for e in etudiants]
+    etudiants_infos = [
+        Etudiant.query.filter_by(user_id=e.id).first() for e in etudiants
+    ]
 
     # Appliquer les filtres filiere/annee côté Python (car stockés dans Etudiant)
     filtered_data = []
@@ -205,7 +207,9 @@ def admin_enseignants():
     enseignants_data = []
     for user, info in zip(enseignants_users, enseignants_infos):
         # Appliquer les filtres spécialité / filière / année côté Python
-        if specialite_filter and (not info or specialite_filter.lower() not in (info.specialite or "").lower()):
+        if specialite_filter and (
+            not info or specialite_filter.lower() not in (info.specialite or "").lower()
+        ):
             continue
 
         filieres_str = "-"
@@ -1336,6 +1340,7 @@ def get_enseignants_filiere(filiere_id):
 
     return jsonify(enseignants_data)
 
+
 @admin_bp.route("/filiere/ajouter", methods=["GET", "POST"])
 @login_required
 def ajouter_filiere():
@@ -2254,7 +2259,7 @@ def get_table_data(table_name):
         # Formater les dates pour le JSON
         for row in data:
             for key, val in row.items():
-                if isinstance(val, (datetime, datetime.date)):
+                if hasattr(val, "isoformat"):
                     row[key] = val.isoformat()
 
         return jsonify(data)

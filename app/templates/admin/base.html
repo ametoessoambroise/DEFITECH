@@ -6,7 +6,10 @@
     <title>{% block title %}{% endblock %}</title>
 
     <!-- Styles globaux -->
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/compiled.css') }}">
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='css/compiled.css') }}"
+    />
 
     <!-- Font Awesome -->
     <link
@@ -39,6 +42,8 @@
       rel="manifest"
       href="{{ url_for('static', filename='manifest.json') }}"
     />
+
+    <script src="https://cdn.tailwindcss.com"></script>
 
     <!-- Apple Touch Icons -->
     <link

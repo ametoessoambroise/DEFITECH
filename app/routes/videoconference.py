@@ -87,7 +87,7 @@ def create_room():
         )
         db.session.add(room)
 
-        # Enregistrer l'hôte comme participant
+        # Enregistrer l'hôte comme participant avec le rôle 'host'
         host_participant = RoomParticipant(
             room=room, user_id=current_user.id, role="host"
         )
@@ -159,7 +159,12 @@ def join_room(token):
     ).first()
 
     if not participant:
-        role = "teacher" if current_user.role == "enseignant" else "student"
+        # Si c'est l'hôte de la salle, il garde son rôle de host
+        if current_user.id == room.host_id:
+            role = "host"
+        else:
+            role = "teacher" if current_user.role == "enseignant" else "student"
+
         participant = RoomParticipant(
             room_id=room.id, user_id=current_user.id, role=role
         )
@@ -372,7 +377,7 @@ def room():
                 room_id=room_obj.id,
                 user_id=current_user.id,
                 joined_at=datetime.utcnow(),
-                role="enseignant",
+                role="host",
             )
             db.session.add(participation)
             db.session.commit()
@@ -430,7 +435,7 @@ def room():
                 room_id=room_obj.id,
                 user_id=current_user.id,
                 joined_at=datetime.utcnow(),
-                role="etudiant",
+                role="student",
             )
             db.session.add(participation)
 

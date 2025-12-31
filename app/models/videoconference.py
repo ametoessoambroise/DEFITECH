@@ -49,16 +49,18 @@ class Room(db.Model):
         "RoomActivityLog", backref="room", lazy=True, cascade="all, delete-orphan"
     )
 
-
     created_by = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
 
     creator = db.relationship(
         "User", backref="created_rooms", foreign_keys=[created_by]
     )
-    
+
     def __init__(self, **kwargs):
         super(Room, self).__init__(**kwargs)
-        self.room_token = str(uuid.uuid4())
+        if not self.room_token:
+            self.room_token = str(uuid.uuid4())
+        if not self.created_by and self.host_id:
+            self.created_by = self.host_id
 
     def __repr__(self):
         return f"<Room {self.name} (ID: {self.id})>"

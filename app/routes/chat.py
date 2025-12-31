@@ -434,6 +434,21 @@ def handle_send_message(data):
         # Envoyer le message au destinataire (dans sa room personnelle)
         emit("receive_message", message_data, room=f"user_{receiver_id}")
 
+        # Créer une notification globale pour le destinataire
+        try:
+            from app.models.notification import Notification
+
+            notif_link = url_for("chat.index")
+            Notification.creer_notification(
+                user_id=receiver_id,
+                titre=f"Nouveau message de {current_user.prenom}",
+                message=content[:100] + ("..." if len(content) > 100 else ""),
+                type="message",
+                link=notif_link,
+            )
+        except Exception as e:
+            print(f"[CHAT ERROR] Failed to create global notification: {e}")
+
         print(
             f"[CHAT] Message sent: {current_user.nom} -> {receiver.nom} (ID: {message.id})"
         )

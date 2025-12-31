@@ -2,12 +2,35 @@
 Routes pour la gestion des notifications (API et standard)
 """
 
-from flask import Blueprint, jsonify, request, flash, redirect, url_for, current_app
+from flask import (
+    Blueprint,
+    render_template,
+    jsonify,
+    flash,
+    redirect,
+    url_for,
+    current_app,
+)
 from flask_login import login_required, current_user
 from app.models.notification import Notification
 from app.extensions import db, csrf
 
 notifications_bp = Blueprint("notifications", __name__, url_prefix="/notifications")
+
+
+@notifications_bp.route("/")
+@login_required
+def index():
+    """
+    Page listant toutes les notifications de l'utilisateur
+    """
+    notifications = (
+        Notification.query.filter_by(user_id=current_user.id)
+        .order_by(Notification.date_created.desc())
+        .limit(100)
+        .all()
+    )
+    return render_template("notifications/index.html", notifications=notifications)
 
 
 @notifications_bp.route("/api", methods=["GET"])

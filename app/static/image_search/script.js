@@ -336,7 +336,8 @@ async function handleSearch() {
         return;
     }
 
-    elements.searchButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> <span>Recherche...</span>';
+    elements.searchButton.innerHTML =
+        '<i class="fas fa-spinner fa-spin"></i> <span>Recherche...</span>';
     elements.searchButton.disabled = true;
 
     state.currentSearchQuery = query;
@@ -348,12 +349,11 @@ async function handleSearch() {
 
         const color = elements.colorFilter.value;
 
-        // Utiliser la nouvelle route backend
-        let url = `${CONFIG.BACKEND_URL}/image-search/api/search/images?query=${encodeURIComponent(query)}&per_page=${CONFIG.DEFAULT_IMAGES_PER_PAGE}&page=${state.currentPage}`;
+        let url = `${CONFIG.BACKEND_URL}/image-search/api/search/images?query=${encodeURIComponent(
+            query
+        )}&per_page=${CONFIG.DEFAULT_IMAGES_PER_PAGE}&page=${state.currentPage}`;
 
-        if (color) {
-            url += `&color=${color}`;
-        }
+        if (color) url += `&color=${color}`;
 
         const response = await fetch(url);
         if (!response.ok) {
@@ -364,15 +364,19 @@ async function handleSearch() {
         const data = await response.json();
         displayImages(data.results || []);
 
-        elements.loadMoreBtn.classList.toggle('hidden', !data.results || data.results.length < CONFIG.DEFAULT_IMAGES_PER_PAGE);
+        elements.loadMoreBtn.classList.toggle(
+            'hidden',
+            !data.results || data.results.length < CONFIG.DEFAULT_IMAGES_PER_PAGE
+        );
 
     } catch (error) {
-        console.error('Erreur de recherche:', error);
-        showToast(error.message || 'Erreur lors de la recherche. Mode démo activé.', 'warning');
+        console.error(error);
+        showToast(error.message || 'Erreur lors de la recherche', 'warning');
         displayDummyImages();
     } finally {
         hideLoader('searchLoader');
-        elements.searchButton.innerHTML = '<i class="fas fa-search"></i> <span>Rechercher</span>';
+        elements.searchButton.innerHTML =
+            '<i class="fas fa-search"></i> <span>Rechercher</span>';
         elements.searchButton.disabled = false;
     }
 }
@@ -388,21 +392,19 @@ async function loadMoreImages() {
 
         const color = elements.colorFilter.value;
 
-        // Utiliser la nouvelle route backend
-        let url = `${CONFIG.BACKEND_URL}/image-search/api/search/images?query=${encodeURIComponent(state.currentSearchQuery)}&per_page=${CONFIG.DEFAULT_IMAGES_PER_PAGE}&page=${state.currentPage}`;
+        let url = `${CONFIG.BACKEND_URL}/image-search/api/search/images?query=${encodeURIComponent(
+            state.currentSearchQuery
+        )}&per_page=${CONFIG.DEFAULT_IMAGES_PER_PAGE}&page=${state.currentPage}`;
 
-        if (color) {
-            url += `&color=${color}`;
-        }
+        if (color) url += `&color=${color}`;
 
         const response = await fetch(url);
         if (!response.ok) {
             const errorData = await response.json().catch(() => ({}));
-            throw new Error(errorData.error || 'Erreur lors du chargement des images');
+            throw new Error(errorData.error || 'Erreur lors du chargement');
         }
 
         const data = await response.json();
-        elements.loadMoreSpinner.classList.add('hidden');
         displayImages(data.results || [], true);
 
         if (!data.results || data.results.length < CONFIG.DEFAULT_IMAGES_PER_PAGE) {
@@ -410,10 +412,10 @@ async function loadMoreImages() {
         }
 
     } catch (error) {
-        console.error('Erreur lors du chargement des images:', error);
-        showToast(error.message || 'Erreur lors du chargement des images', 'error');
-        elements.loadMoreSpinner.classList.add('hidden');
+        console.error(error);
+        showToast(error.message || 'Erreur lors du chargement', 'error');
     } finally {
+        elements.loadMoreSpinner.classList.add('hidden');
         hideLoader('searchLoader');
     }
 }
@@ -421,34 +423,40 @@ async function loadMoreImages() {
 function displayImages(images, append = false) {
     if (!images || images.length === 0) {
         if (!append) {
-            elements.imageContainer.innerHTML = '<div class="col-span-full text-center py-16"><i class="fas fa-search text-6xl text-gray-300 dark:text-gray-600 mb-4"></i><p class="text-lg text-gray-500 dark:text-gray-400">Aucun résultat trouvé. Essayez une autre recherche.</p></div>';
+            elements.imageContainer.innerHTML = `
+                <div class="col-span-full text-center py-16">
+                    <i class="fas fa-search text-6xl text-gray-300 dark:text-gray-600 mb-4"></i>
+                    <p class="text-lg text-gray-500 dark:text-gray-400">
+                        Aucun résultat trouvé.
+                    </p>
+                </div>
+            `;
         }
         return;
     }
 
-    if (!append) {
-        elements.imageContainer.innerHTML = '';
-    }
+    if (!append) elements.imageContainer.innerHTML = '';
 
     images.forEach(image => {
-        const imageCard = createImageCard(image);
-        elements.imageContainer.appendChild(imageCard);
+        const card = createImageCard(image);
+        elements.imageContainer.appendChild(card);
     });
 }
 
-function createImageCard(imageData) {
-    const imageCard = document.createElement('div');
-    imageCard.className = 'image-card-hover bg-white dark:bg-gray-800 rounded-xl overflow-hidden shadow-lg cursor-pointer group';
+function createImageCard(image) {
+    const card = document.createElement('div');
+    card.className =
+        'image-card-hover bg-white dark:bg-gray-800 rounded-xl overflow-hidden shadow-lg cursor-pointer group';
 
-    const imageWrapper = document.createElement('div');
-    imageWrapper.className = 'relative overflow-hidden h-64';
+    const wrapper = document.createElement('div');
+    wrapper.className = 'relative overflow-hidden h-64';
 
     const img = document.createElement('img');
-    img.src = imageData.small_url || imageData.thumb_url;
-
-    img.alt = imageData.description || 'Sans titre';
+    img.src = image.urls?.small || '';
+    img.alt = image.alt_description || 'Sans titre';
     img.loading = 'lazy';
-    img.className = 'w-full h-full object-cover transition-transform duration-500 group-hover:scale-110 opacity-0';
+    img.className =
+        'w-full h-full object-cover transition-transform duration-500 group-hover:scale-110 opacity-0';
 
     img.onload = () => {
         img.classList.remove('opacity-0');
@@ -456,45 +464,48 @@ function createImageCard(imageData) {
     };
 
     const overlay = document.createElement('div');
-    overlay.className = 'absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300';
+    overlay.className =
+        'absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300';
 
-    const imageInfo = document.createElement('div');
-    imageInfo.className = 'p-4';
+    const info = document.createElement('div');
+    info.className = 'p-4';
 
     const title = document.createElement('h3');
-    title.className = 'text-base font-semibold text-gray-900 dark:text-white truncate mb-2';
-    title.textContent = imageData.description || 'Sans titre';
+    title.className =
+        'text-base font-semibold text-gray-900 dark:text-white truncate mb-2';
+    title.textContent = image.description || 'Sans titre';
 
     const meta = document.createElement('div');
-    meta.className = 'flex justify-between items-center text-sm text-gray-600 dark:text-gray-400';
+    meta.className =
+        'flex justify-between items-center text-sm text-gray-600 dark:text-gray-400';
 
     const author = document.createElement('span');
     author.className = 'truncate flex items-center gap-1';
-    author.innerHTML = `<i class="fas fa-user text-xs"></i>${imageData.user?.name || 'Seeker AI'}`;
-
-    const likes = document.createElement('span');
-    likes.className = 'flex items-center gap-1';
-    likes.innerHTML = `<i class="fas fa-heart text-red-500"></i> ${imageData.likes || Math.floor(Math.random() * 100)}`;
+    author.innerHTML = `
+        <i class="fas fa-user text-xs"></i>
+        ${image.user?.name || 'Auteur inconnu'}
+    `;
 
     meta.appendChild(author);
-    meta.appendChild(likes);
-    imageInfo.appendChild(title);
-    imageInfo.appendChild(meta);
+    info.appendChild(title);
+    info.appendChild(meta);
 
-    imageWrapper.appendChild(img);
-    imageWrapper.appendChild(overlay);
-    imageCard.appendChild(imageWrapper);
-    imageCard.appendChild(imageInfo);
+    wrapper.appendChild(img);
+    wrapper.appendChild(overlay);
+    card.appendChild(wrapper);
+    card.appendChild(info);
 
-    imageCard.addEventListener('click', () => openImageModal({
-        url: imageData.full_url || imageData.urls?.regular || imageData.urls?.full,
-        title: imageData.description || 'Sans titre',
-        description: imageData.description || '',
-        downloadUrl: imageData.full_url || imageData.urls?.full,
-        author: imageData.user?.name || 'Seeker AI'
-    }));
+    card.addEventListener('click', () => {
+        openImageModal({
+            url: image.urls?.regular,
+            downloadUrl: image.urls?.full,
+            title: image.description || 'Sans titre',
+            description: image.alt_description || '',
+            author: image.user?.name || 'Auteur inconnu'
+        });
+    });
 
-    return imageCard;
+    return card;
 }
 
 function displayDummyImages() {

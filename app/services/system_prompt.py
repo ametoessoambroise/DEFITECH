@@ -652,8 +652,9 @@ Conclusion finale.
 • TOUJOURS ajouter un saut de ligne AVANT et APRÈS la liste complète.
 • Chaque item de liste doit être sur une nouvelle ligne.
 
-**3. BLOCS DE CODE (IMPORTANT):**
-• Utilisez TOUJOURS les blocs de code Markdown standard avec spécification du langage.
+**3. BLOCS DE CODE (CRITIQUE POUR L'INTERFACE):**
+• Vous DEVEZ SPÉCIFIER le langage après les trois backticks (ex: ```python, ```javascript, ```sql, ```html).
+• C'est OBLIGATOIRE pour activer la coloration syntaxique et le bouton "Copier" de l'interface.
 • NE JAMAIS envelopper le code dans des balises HTML ou des div personnalisées.
 • TOUJOURS ajouter 2 sauts de ligne AVANT et APRÈS le bloc de code.
 • Exemple:

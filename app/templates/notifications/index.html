@@ -1,0 +1,200 @@
+{% extends "base.html" %} {% block title %}Mes Notifications - DEFITECH{%
+endblock %} {% block extra_css %}
+<style>
+  .notification-card {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  .notification-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1),
+      0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  }
+  .unread-indicator {
+    position: absolute;
+    top: 1.25rem;
+    right: 1.25rem;
+    width: 0.75rem;
+    height: 0.75rem;
+    background-color: #ef4444;
+    border-radius: 9999px;
+  }
+</style>
+{% endblock %} {% block content %}
+<div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+  <!-- Header Section -->
+  <div
+    class="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4"
+  >
+    <div>
+      <h1 class="text-3xl font-black text-gray-900 tracking-tight">
+        Centre de Notifications
+      </h1>
+      <p class="text-gray-600 mt-2 font-medium">
+        Restez informé de votre activité sur DEFITECH
+      </p>
+    </div>
+
+    <div class="flex items-center gap-3">
+      <button
+        id="page-mark-all-read"
+        class="bg-blue-50 text-blue-600 hover:bg-blue-100 px-4 py-2 rounded-xl text-sm font-bold transition-all duration-300 flex items-center gap-2"
+      >
+        <i class="fas fa-check-double"></i>
+        Tout marquer comme lu
+      </button>
+      <button
+        id="page-clear-all"
+        class="bg-red-50 text-red-600 hover:bg-red-100 px-4 py-2 rounded-xl text-sm font-bold transition-all duration-300 flex items-center gap-2"
+      >
+        <i class="fas fa-trash"></i>
+        Tout effacer
+      </button>
+    </div>
+  </div>
+
+  <!-- Notifications List -->
+  <div class="space-y-4">
+    {% if notifications %} {% for notification in notifications %}
+    <div
+      class="notification-card relative bg-white rounded-2xl p-6 border {% if not notification.est_lue %}border-blue-200 bg-blue-50/30{% else %}border-gray-100{% endif %}"
+    >
+      {% if not notification.est_lue %}
+      <div class="unread-indicator animate-pulse"></div>
+      {% endif %}
+
+      <div class="flex items-start gap-4">
+        <!-- Icon based on type -->
+        <div
+          class="w-12 h-12 rounded-xl flex-shrink-0 flex items-center justify-center {% if notification.type == 'success' %}bg-green-100 text-green-600 {% elif notification.type == 'warning' %}bg-yellow-100 text-yellow-600 {% elif notification.type == 'error' %}bg-red-100 text-red-600 {% elif notification.type == 'message' %}bg-purple-100 text-purple-600 {% else %}bg-blue-100 text-blue-600{% endif %}"
+        >
+          <i
+            class="fas {% if notification.type == 'success' %}fa-check-circle {% elif notification.type == 'warning' %}fa-exclamation-triangle {% elif notification.type == 'error' %}fa-times-circle {% elif notification.type == 'message' %}fa-comment-alt {% else %}fa-bell{% endif %} text-xl"
+          ></i>
+        </div>
+
+        <div class="flex-1 min-w-0">
+          <div class="flex justify-between items-start">
+            <h3 class="text-lg font-bold text-gray-900 truncate pr-8">
+              {{ notification.titre }}
+            </h3>
+          </div>
+          <p class="text-gray-600 mt-1 leading-relaxed">
+            {{ notification.message | safe }}
+          </p>
+
+          <div class="mt-4 flex items-center justify-between">
+            <span
+              class="text-xs font-semibold text-gray-400 flex items-center gap-1"
+            >
+              <i class="far fa-clock"></i>
+              {{ notification.date_created.strftime('%d/%m/%Y %H:%M') if
+              notification.date_created else 'Date inconnue' }}
+            </span>
+
+            <div class="flex items-center gap-3">
+              {% if notification.link %}
+              <a
+                href="{{ url_for('notifications.marquer_notification_lue', notif_id=notification.id) }}"
+                class="text-blue-600 hover:text-blue-800 text-sm font-bold flex items-center gap-1 transition-colors"
+              >
+                Voir les détails
+                <i class="fas fa-chevron-right text-xs"></i>
+              </a>
+              {% endif %}
+
+              <button
+                data-id="{{ notification.id }}"
+                onclick="deletePageNotification(this)"
+                class="text-gray-400 hover:text-red-500 transition-colors p-1"
+                title="Supprimer"
+              >
+                <i class="fas fa-trash-alt"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    {% endfor %} {% else %}
+    <!-- Empty State -->
+    <div
+      class="bg-white rounded-3xl p-12 text-center border-2 border-dashed border-gray-200"
+    >
+      <div
+        class="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-6 text-gray-400"
+      >
+        <i class="fas fa-bell-slash text-3xl"></i>
+      </div>
+      <h2 class="text-xl font-bold text-gray-900">Aucune notification</h2>
+      <p class="text-gray-500 mt-2">
+        Vous êtes à jour ! Toutes vos notifications apparaîtront ici.
+      </p>
+      <a
+        href="{{ url_for('main.index') }}"
+        class="mt-6 inline-block bg-blue-600 text-white px-6 py-3 rounded-xl font-bold hover:bg-blue-700 transition-all active:scale-95"
+      >
+        Retour à l'accueil
+      </a>
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %} {% block extra_js %}
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    const markAllBtn = document.getElementById("page-mark-all-read");
+    const clearAllBtn = document.getElementById("page-clear-all");
+
+    if (markAllBtn) {
+      markAllBtn.addEventListener("click", async function () {
+        if (window.notificationManager) {
+          await window.notificationManager.markAllAsRead();
+          // Relancer le chargement ou rafraîchir la page
+          window.location.reload();
+        }
+      });
+    }
+
+    if (clearAllBtn) {
+      clearAllBtn.addEventListener("click", async function () {
+        if (
+          confirm("Êtes-vous sûr de vouloir effacer toutes vos notifications ?")
+        ) {
+          if (window.notificationManager) {
+            await window.notificationManager.clearAll();
+            window.location.reload();
+          }
+        }
+      });
+    }
+  });
+
+  async function deletePageNotification(btn) {
+    const id = btn.getAttribute("data-id");
+    const element = btn.closest(".notification-card");
+    if (confirm("Supprimer cette notification ?")) {
+      try {
+        const csrfMeta = document.querySelector('meta[name="csrf-token"]');
+        const response = await fetch(`/notifications/api/${id}`, {
+          method: "DELETE",
+          headers: {
+            "X-CSRF-Token": csrfMeta ? csrfMeta.content : "",
+          },
+        });
+        const data = await response.json();
+        if (data.success) {
+          element.classList.add("opacity-0", "scale-95");
+          setTimeout(() => {
+            element.remove();
+            if (document.querySelectorAll(".notification-card").length === 0) {
+              window.location.reload();
+            }
+          }, 300);
+        }
+      } catch (error) {
+        console.error("Error deleting notification:", error);
+      }
+    }
+  }
+</script>
+{% endblock %}

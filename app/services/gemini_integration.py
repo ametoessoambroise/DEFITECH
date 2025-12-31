@@ -219,8 +219,11 @@ class GeminiIntegration:
                     "raw_response": result,
                 }
 
-            # Extraire le texte
-            text_response = content["parts"][0].get("text", "")
+            # Extraire le texte de toutes les parties (parts)
+            text_response = ""
+            for part in content.get("parts", []):
+                if "text" in part:
+                    text_response += part["text"]
 
             # Détecter la recherche web (grounding)
             grounding_metadata = candidate.get("groundingMetadata", {})
@@ -245,9 +248,9 @@ class GeminiIntegration:
             has_image_generation = "[IMAGE_EDUCATIVE:" in text_response
 
             # Nettoyer la réponse
-            logger.info(f"Réponse brute de Gemini: {text_response[:200]}...")
+            logger.info(f"Réponse brute de Gemini: {text_response[:1000]}...")
             cleaned_response = self._clean_response_text(text_response, prompt)
-            logger.info(f"Réponse nettoyée: {cleaned_response[:200]}...")
+            logger.info(f"Réponse nettoyée: {cleaned_response[:1000]}...")
 
             return {
                 "success": True,
@@ -352,9 +355,9 @@ class GeminiIntegration:
         # Détecter et traiter les alertes de sécurité
         self._process_security_alerts(text, user_message)
 
-        # Supprimer les backticks markdown
-        text = re.sub(r"```(?:json)?\s*", "", text, flags=re.IGNORECASE)
-        text = re.sub(r"```\s*$", "", text)
+        # ❌ NE PAS supprimer les backticks markdown, ils sont nécessaires pour le rendu du code
+        # text = re.sub(r"```(?:json)?\s*", "", text, flags=re.IGNORECASE)
+        # text = re.sub(r"```\s*$", "", text)
 
         # ❌ NE PAS nettoyer les espaces multiples car ça détruit les sauts de ligne!
         # Cette ligne remplaçait TOUS les \n par des espaces simples

@@ -276,6 +276,8 @@ def get_conversation_messages(conversation_id, user_id, page=1, per_page=50):
                     "content": msg.content,
                     "created_at": msg.created_at.isoformat(),
                     "message_order": msg.message_order,
+                    "extra_data": msg.extra_data or {},
+                    "attachments": msg.attachments or [],
                 }
             )
 
@@ -517,6 +519,8 @@ def call_gemini_api(prompt, context_data, conversation_history):
                 "data_requests": data_requests,
                 "usage_metadata": response.get("usage_metadata", {}),
                 "finish_reason": response.get("finish_reason", "STOP"),
+                "grounding_metadata": response.get("grounding_metadata", {}),
+                "has_web_search": response.get("has_web_search", False),
             }
         else:
             return {
@@ -1197,10 +1201,10 @@ def chat():
 
                     # Construire un prompt enrichi avec toutes les données
                     if smart_data:
-                        enhanced_prompt = f"""{message}
+                        enhanced_prompt = f"""RÉPONSE INITIALE:
+{ai_response}
 
 === DONNÉES RÉCUPÉRÉES AUTOMATIQUEMENT ===
-
 """
                         for query, data in smart_data.items():
                             enhanced_prompt += f"\n--- Données pour: {query} ---\n"
@@ -1209,11 +1213,13 @@ def chat():
                             )
                             enhanced_prompt += "\n"
 
-                        enhanced_prompt += """
+                        enhanced_prompt += f"""
+--- QUESTION INITIALE DE L'UTILISATEUR ---
+{message}
 
-Instructions: Utilise ces données pour répondre de manière complète et structurée.
-Présente les informations de façon claire. Si tu as trouvé des tableaux de notes,
-analyse-les et identifie les points forts et faibles. Format ta réponse en Markdown."""
+Instructions: Tu as déjà commencé à répondre (voir RÉPONSE INITIALE). Utilise les DONNÉES RÉCUPÉRÉES ci-dessus pour enrichir, compléter ou corriger ta réponse. 
+Conserve les parties importantes de ta réponse initiale (comme les scripts ou explications déjà fournies) et intègre les nouvelles informations de manière fluide. 
+Format ta réponse finale en Markdown complet. REPRODUIS INTEGRALEMENT LES SCRIPTS ET CODES déjà fournis."""
 
                         # Relancer Gemini avec les données enrichies
                         enhanced_response = call_gemini_api(
@@ -1236,7 +1242,8 @@ analyse-les et identifie les points forts et faibles. Format ta réponse en Mark
                     logger.info(f"Détection de {len(sql_queries)} SQL_QUERY")
                     sql_data = process_sql_queries(sql_queries, user_role)
                     if sql_data:
-                        enhanced_prompt_sql = f"""{message}
+                        enhanced_prompt_sql = f"""RÉPONSE INITIALE:
+{ai_response}
 
 === RÉSULTATS SQL ===
 """
@@ -1247,10 +1254,13 @@ analyse-les et identifie les points forts et faibles. Format ta réponse en Mark
                             )
                             enhanced_prompt_sql += "\n"
 
-                        enhanced_prompt_sql += """
+                        enhanced_prompt_sql += f"""
+--- QUESTION INITIALE DE L'UTILISATEUR ---
+{message}
 
-Instructions: Utilise ces résultats SQL pour répondre précisément à la question.
-"""
+Instructions: En utilisant les RÉSULTATS SQL ci-dessus, complète ta RÉPONSE INITIALE de manière précise. 
+Garde les éléments déjà générés et intègre ces données chiffrées/factuelles. 
+Format ta réponse finale en Markdown complet. REPRODUIS-LES SCRIPTS si présents."""
 
                         enhanced_response_sql = call_gemini_api(
                             enhanced_prompt_sql, context_data, messages
@@ -1322,13 +1332,17 @@ Instructions: Utilise ces résultats SQL pour répondre précisément à la ques
                         )
 
                         # Construire un nouveau prompt enrichi
-                        enhanced_prompt = f"""{message}
+                        enhanced_prompt = f"""RÉPONSE INITIALE:
+{ai_response}
 
 === DONNÉES SUPPLÉMENTAIRES RÉCUPÉRÉES ===
 {json.dumps(all_additional_data, indent=2, ensure_ascii=False)}
 
-Instructions: Utilise ces données pour répondre de manière complète et structurée à la question de l'utilisateur. 
-Présente les informations de façon claire, avec des tableaux si approprié."""
+--- QUESTION INITIALE DE L'UTILISATEUR ---
+{message}
+
+Format ta réponse finale en Markdown complet.
+IMPORTANT : Ne résume pas les parties techniques (codes, scripts). REPRODUIS-LES intégralement dans ta réponse finale."""
 
                         # Relancer Gemini
                         enhanced_response = call_gemini_api(
@@ -1469,56 +1483,15 @@ Présente les informations de façon claire, avec des tableaux si approprié."""
                 #     }
                 # )
 
-                # Traiter les demandes de données supplémentaires
-                if gemini_response.get("data_requests"):
-                    for data_req in gemini_response["data_requests"]:
-                        try:
-                            # Exécuter la requête interne
-                            result = orchestrator.execute_request(
-                                data_req["type"],
-                                current_user.id,
-                                user_role,
-                                request_context=data_req,
-                            )
-
-                            internal_requests.append(
-                                {
-                                    "type": data_req["type"],
-                                    "description": data_req["description"],
-                                    "status": (
-                                        "success" if result["success"] else "failed"
-                                    ),
-                                    "data": result.get("data", {}),
-                                }
-                            )
-
-                            if result["success"]:
-                                # Relancer Gemini avec les nouvelles données
-                                enhanced_prompt = f"""{message} DONNÉS SUPPLÉMENTAIRES ({data_req["type"]}):{json.dumps(result["data"], indent=2, ensure_ascii=False)}Intègre ces informations dans ta réponse."""
-                                gemini_response = call_gemini_api(
-                                    enhanced_prompt, context_data, messages
-                                )
-                                if gemini_response["success"]:
-                                    ai_response = gemini_response["response"]
-
-                        except Exception as e:
-                            logger.error(
-                                f"Erreur requête interne {data_req['type']}: {e}"
-                            )
-                            internal_requests.append(
-                                {
-                                    "type": data_req["type"],
-                                    "description": data_req["description"],
-                                    "status": "failed",
-                                    "error": str(e),
-                                }
-                            )
+                # Bloc rédondant supprimé
 
                 # Ajouter les requêtes internes aux métadonnées
                 metadata = {
                     "internal_requests": internal_requests,
                     "finish_reason": gemini_response.get("finish_reason", "STOP"),
                     "has_additional_data": len(internal_requests) > 0,
+                    "grounding_metadata": gemini_response.get("grounding_metadata", {}),
+                    "has_web_search": gemini_response.get("has_web_search", False),
                 }
 
                 # Sauvegarder la réponse finale
@@ -1562,6 +1535,10 @@ Présente les informations de façon claire, avec des tableaux si approprié."""
                             if request_image
                             else None
                         ),
+                        "grounding_metadata": gemini_response.get(
+                            "grounding_metadata", {}
+                        ),
+                        "has_web_search": gemini_response.get("has_web_search", False),
                     }
                 )
 

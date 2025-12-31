@@ -72,16 +72,9 @@ class NotificationManager {
       return;
     }
 
-    notifBell.addEventListener("click", (e) => {
-      e.stopPropagation();
-      this.toggleDropdown();
-    });
+    // Event listener for bell removed - handled by Alpine.js
 
-    document.addEventListener("click", (e) => {
-      if (!notifDropdown.contains(e.target) && !notifBell.contains(e.target)) {
-        this.closeDropdown();
-      }
-    });
+    // Document click listener removed - handled by Alpine.js x-on:click.away
   }
 
   setupEventListeners() {
@@ -417,21 +410,12 @@ class NotificationManager {
   }
 
   toggleDropdown() {
-    const dropdown = document.getElementById("notification-dropdown");
-    if (!dropdown) return;
-
-    dropdown.classList.toggle("hidden");
-
-    if (!dropdown.classList.contains("hidden")) {
-      this.loadNotifications();
-    }
+    // This is now just a helper to refresh if needed
+    this.loadNotifications();
   }
 
   closeDropdown() {
-    const dropdown = document.getElementById("notification-dropdown");
-    if (dropdown) {
-      dropdown.classList.add("hidden");
-    }
+    // Handled by Alpine.js
   }
 
   startPolling() {

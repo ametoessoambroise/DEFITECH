@@ -35,7 +35,8 @@ const State = {
     theme: localStorage.getItem('theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'),
     recognition: null,
     isRecording: false,
-    isSystemTheme: !localStorage.getItem('theme')
+    isSystemTheme: !localStorage.getItem('theme'),
+    lastUserMessage: ''
 };
 
 const UI = {
@@ -45,6 +46,12 @@ const UI = {
         // Initialize elements
         for (const [key, selector] of Object.entries(CONFIG.selectors)) {
             this.elements[key] = document.querySelector(selector);
+        }
+
+        // Initialize Sidebar Accessibility
+        if (this.elements.sidebar && this.elements.sidebar.classList.contains('-translate-x-full')) {
+            this.elements.sidebar.setAttribute('inert', '');
+            this.elements.sidebar.setAttribute('aria-hidden', 'true');
         }
 
         this.setupTheme();
@@ -230,7 +237,7 @@ const UI = {
             });
 
             this.scrollToBottom();
-            hljs.highlightAll();
+            // hljs.highlightAll(); // Removed to prevent double highlighting
         } catch (error) {
             console.error('Error loading history:', error);
             this.showToast('Erreur lors du chargement de la conversation', 'error');
@@ -284,7 +291,8 @@ const UI = {
             });
             this.elements.messages.insertBefore(fragment, this.elements.messages.firstChild);
 
-            hljs.highlightAll();
+            // hljs.highlightAll(); // Removed
+
 
             // Maintain scroll position
             const newHeight = this.elements.messages.scrollHeight;
@@ -477,6 +485,73 @@ const UI = {
         }
     },
 
+    toggleSourcesSidebar(show) {
+        const sidebar = document.getElementById('sourcesSidebar');
+        const overlay = document.getElementById('sourcesOverlay');
+        if (!sidebar || !overlay) return;
+
+        if (show) {
+            sidebar.classList.remove('translate-x-full');
+            overlay.classList.remove('hidden', 'opacity-0');
+            overlay.classList.add('opacity-100');
+        } else {
+            sidebar.classList.add('translate-x-full');
+            overlay.classList.remove('opacity-100');
+            overlay.classList.add('opacity-0');
+            setTimeout(() => overlay.classList.add('hidden'), 300);
+        }
+    },
+
+    renderSourcesInSidebar(chunks) {
+        const container = document.getElementById('sourcesList');
+        if (!container) return;
+
+        container.innerHTML = '';
+        if (!chunks || chunks.length === 0) {
+            container.innerHTML = '<p class="text-sm text-gray-500 text-center">Aucune source disponible.</p>';
+            return;
+        }
+
+        chunks.forEach((chunk, index) => {
+            if (chunk.web && chunk.web.uri && chunk.web.title) {
+                const domain = new URL(chunk.web.uri).hostname;
+                const favicon = `https://www.google.com/s2/favicons?domain=${domain}&sz=32`;
+
+                const item = document.createElement('a');
+                item.href = chunk.web.uri;
+                item.target = '_blank';
+                item.className = 'block p-3 rounded-lg bg-gray-50 dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 border border-gray-200 dark:border-gray-700 transition-colors group';
+                item.innerHTML = `
+                    <div class="flex items-start gap-3">
+                        <div class="source-favicon-wrapper group-hover:bg-white dark:group-hover:bg-gray-600 transition-colors">
+                            <img src="${favicon}" class="source-favicon" alt="" onerror="this.style.display='none'">
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <h4 class="text-sm font-medium text-blue-600 truncate dark:text-blue-400 group-hover:underline">${this.escapeHtml(chunk.web.title)}</h4>
+                            <p class="text-xs text-gray-500 truncate mt-0.5">${domain}</p>
+                        </div>
+                    </div>
+                `;
+                container.appendChild(item);
+            }
+        });
+    },
+
+    handleAction(btn, action) {
+        const content = decodeURIComponent(btn.dataset.content || '');
+
+        if (action === 'copy') {
+            this.copyToClipboard(content);
+            this.showToast('Copié', 'success');
+        } else if (action === 'speak') {
+            this.speakText(btn, content);
+        } else if (action === 'regenerate') {
+            // Use the last user message, not the AI response
+            setInput(State.lastUserMessage);
+            document.querySelector('form').dispatchEvent(new Event('submit'));
+        }
+    },
+
     toggleSidebar() {
         const sidebar = this.elements.sidebar;
         const overlay = this.elements.sidebarOverlay;
@@ -487,112 +562,146 @@ const UI = {
 
         if (isClosed) {
             sidebar.classList.remove('-translate-x-full');
+            sidebar.setAttribute('aria-hidden', 'false');
+            sidebar.removeAttribute('inert');
             overlay.classList.remove('opacity-0', 'pointer-events-none');
         } else {
             sidebar.classList.add('-translate-x-full');
+            sidebar.setAttribute('aria-hidden', 'true');
+            sidebar.setAttribute('inert', '');
             overlay.classList.add('opacity-0', 'pointer-events-none');
         }
     },
 
-    createMessageElement(content, isUser, attachments = []) {
-        const messageGroup = document.createElement('div');
+    enhanceCodeBlocks(container) {
+        container.querySelectorAll('pre code').forEach((codeBlock) => {
+            const pre = codeBlock.parentElement;
+            if (pre.parentElement.classList.contains('code-block-wrapper')) return;
 
-        if (isUser) {
-            // === USER MESSAGE (Aligned Right, Gray Background) ===
-            messageGroup.className = 'message-group user-message mb-6 flex flex-col items-end animate-slide-up';
+            // Detect language
+            let lang = 'Code';
+            codeBlock.classList.forEach(cls => {
+                if (cls.startsWith('language-')) {
+                    lang = cls.replace('language-', '');
+                }
+            });
 
-            // Message content wrapper
-            const contentWrapper = document.createElement('div');
-            contentWrapper.className = 'inline-block max-w-[85%] sm:max-w-[75%] bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-gray-50 rounded-2xl rounded-tr-sm px-4 py-3 shadow-sm border border-gray-200 dark:border-gray-700';
+            // Create Wrapper
+            const wrapper = document.createElement('div');
+            wrapper.className = 'code-block-wrapper';
 
-            contentWrapper.innerHTML = `<div class="whitespace-pre-wrap text-sm leading-relaxed">${this.escapeHtml(content)}</div>`;
+            // Create Header
+            const header = document.createElement('div');
+            header.className = 'code-block-header';
+            header.innerHTML = `
+                <span class="lang-label">${lang}</span>
+                <button class="copy-btn" title="Copier le code">
+                    <i class="fas fa-copy"></i>
+                    <span>Copier</span>
+                </button>
+            `;
 
-            messageGroup.appendChild(contentWrapper);
+            // Setup Copy Event
+            const copyBtn = header.querySelector('.copy-btn');
+            copyBtn.onclick = (e) => {
+                e.stopPropagation(); // Prevent message copy
+                this.copyToClipboard(codeBlock.textContent);
 
-        } else {
-            // === AI MESSAGE (Full Width, No Background) ===
-            messageGroup.className = 'message-group ai-message mb-6 w-full animate-slide-up';
+                const icon = copyBtn.querySelector('i');
+                const span = copyBtn.querySelector('span');
 
-            try {
-                // Parse AI Content (Handle special tags like images)
-                const processedContent = this.formatAIContent(content, attachments);
+                icon.className = 'fas fa-check text-green-500';
+                span.textContent = 'Copié !';
+                span.className = 'text-green-500';
 
-                // Parse Markdown
-                const parsedMarkdown = marked.parse(processedContent);
-
-                // Sanitize HTML
-                const cleanHtml = DOMPurify.sanitize(parsedMarkdown, {
-                    ALLOWED_TAGS: [
-                        'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'blockquote', 'p', 'a', 'ul', 'ol',
-                        'li', 'b', 'i', 'strong', 'em', 'strike', 'code', 'hr', 'br', 'div',
-                        'table', 'thead', 'tbody', 'tr', 'th', 'td', 'pre', 'span', 'img', 'kbd'
-                    ],
-                    ALLOWED_ATTR: ['href', 'src', 'alt', 'title', 'class', 'target', 'rel', 'data-language', 'data-filename', 'data-task-id'],
-                    ALLOW_DATA_ATTR: true
-                });
-
-                // Content wrapper (no background, full width)
-                const contentWrapper = document.createElement('div');
-                contentWrapper.className = 'relative group py-2';
-
-                // Markdown content
-                contentWrapper.innerHTML = `
-                    <div class="markdown-body prose dark:prose-invert max-w-none prose-headings:font-bold prose-a:text-blue-600 dark:prose-a:text-blue-400 prose-code:text-pink-600 dark:prose-code:text-pink-400">
-                        ${cleanHtml}
-                    </div>
-                `;
-
-                // Highlight code blocks
-                contentWrapper.querySelectorAll('pre code').forEach((block) => {
-                    hljs.highlightElement(block);
-                });
-
-                // Copy button
-                const copyBtn = document.createElement('button');
-                copyBtn.className = 'absolute -top-2 -right-2 opacity-0 group-hover:opacity-100 p-2 rounded-lg bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 transition-all text-xs shadow-md border border-gray-200 dark:border-gray-700';
-                copyBtn.setAttribute('aria-label', 'Copier le message');
-                copyBtn.title = 'Copier le message';
-                copyBtn.innerHTML = '<i class="fas fa-copy text-gray-600 dark:text-gray-300"></i>';
-
-                copyBtn.onclick = (e) => {
-                    e.stopPropagation();
-                    this.copyToClipboard(content);
-                    this.showToast('Copié', 'success');
-
-                    const icon = copyBtn.querySelector('i');
-                    icon.classList.replace('fa-copy', 'fa-check');
-
-                    setTimeout(() => {
-                        icon.classList.replace('fa-check', 'fa-copy');
-                    }, 2000);
-                };
-
-                contentWrapper.appendChild(copyBtn);
-                messageGroup.appendChild(contentWrapper);
-
-                // Start Polling for images in this message if any
                 setTimeout(() => {
-                    contentWrapper.querySelectorAll('.ai-image-container').forEach(container => {
-                        const taskId = container.dataset.taskId;
-                        if (taskId) this.pollImageStatus(taskId, container);
-                    });
-                }, 100);
+                    icon.className = 'fas fa-copy';
+                    span.textContent = 'Copier';
+                    span.className = '';
+                }, 2000);
+            };
 
-            } catch (error) {
-                console.error('Erreur lors du rendu du message:', error);
-                messageGroup.innerHTML = `
-                    <div class="text-red-500 text-sm">
-                        Une erreur est survenue lors de l'affichage de la réponse.
-                    </div>
-                    <div class="mt-2 p-2 bg-red-50 dark:bg-red-900/20 rounded text-sm">
-                        ${this.escapeHtml(content)}
-                    </div>
+            // Wrap
+            pre.parentNode.insertBefore(wrapper, pre);
+            wrapper.appendChild(header);
+            wrapper.appendChild(pre);
+        });
+    },
+
+    renderSources(metadata) {
+        // Sources are now handled in the actions bar / sidebar
+        return '';
+    },
+
+    renderActionsBar(content, metadata) {
+        let sourcesHtml = '';
+        if (metadata && metadata.grounding_metadata && metadata.grounding_metadata.groundingChunks) {
+            const chunks = metadata.grounding_metadata.groundingChunks;
+            const validChunks = chunks.filter(c => c.web && c.web.uri && c.web.title).slice(0, 3);
+
+            if (validChunks.length > 0) {
+                const chunksData = encodeURIComponent(JSON.stringify(metadata.grounding_metadata.groundingChunks));
+                sourcesHtml = `
+                    <div class="flex items-center gap-1 mr-2 pr-2 border-r border-gray-200 dark:border-gray-700 cursor-pointer" 
+                         onclick="UI.renderSourcesInSidebar(JSON.parse(decodeURIComponent('${chunksData}'))); UI.toggleSourcesSidebar(true)"
+                         title="Voir toutes les sources">
                 `;
+                validChunks.forEach(chunk => {
+                    const domain = new URL(chunk.web.uri).hostname;
+                    const favicon = `https://www.google.com/s2/favicons?domain=${domain}&sz=32`;
+                    sourcesHtml += `
+                        <img src="${favicon}" class="w-4 h-4 rounded-sm opacity-70 hover:opacity-100 transition-opacity" alt="Source" onerror="this.style.display='none'">
+                    `;
+                });
+                sourcesHtml += `</div>`;
             }
         }
 
-        return messageGroup;
+        const safeContent = encodeURIComponent(content);
+
+        return `
+            <div class="actions-bar flex items-center">
+                ${sourcesHtml}
+                <button class="action-btn" onclick="UI.handleAction(this, 'copy')" data-content="${safeContent}" title="Copier">
+                    <i class="fas fa-copy"></i>
+                </button>
+                <button class="action-btn" onclick="UI.handleAction(this, 'speak')" data-content="${safeContent}" title="Lire à haute voix">
+                    <i class="fas fa-volume-up"></i>
+                </button>
+                <button class="action-btn" onclick="UI.handleAction(this, 'regenerate')" data-content="${safeContent}" title="Régénérer">
+                    <i class="fas fa-sync-alt"></i>
+                </button>
+                <div class="flex-1"></div>
+                 <button class="action-btn" title="Bonne réponse">
+                    <i class="far fa-thumbs-up"></i>
+                </button>
+                <button class="action-btn" title="Mauvaise réponse">
+                    <i class="far fa-thumbs-down"></i>
+                </button>
+            </div>
+        `;
     },
+
+    speakText(btn, text) {
+        text = text || btn.dataset.text;
+        if (!text) return;
+
+        if (window.speechSynthesis.speaking) {
+            window.speechSynthesis.cancel();
+            btn.querySelector('i').className = 'fas fa-volume-up';
+            return;
+        }
+
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.lang = 'fr-FR';
+        utterance.onend = () => {
+            btn.querySelector('i').className = 'fas fa-volume-up';
+        };
+
+        btn.querySelector('i').className = 'fas fa-stop-circle text-red-500';
+        window.speechSynthesis.speak(utterance);
+    },
+
     createTypingIndicator() {
         const div = document.createElement('div');
         div.className = 'flex w-full mb-6 justify-start animate-fade-in';
@@ -605,6 +714,105 @@ const UI = {
             </div>
         `;
         return div;
+    },
+
+    renderMath(element) {
+        if (!window.renderMathInElement) return;
+
+        try {
+            renderMathInElement(element, {
+                delimiters: [
+                    { left: '$$', right: '$$', display: true },
+                    { left: '$', right: '$', display: false },
+                    { left: '\\(', right: '\\)', display: false },
+                    { left: '\\[', right: '\\]', display: true }
+                ],
+                throwOnError: false,
+                output: 'html',
+                strict: false
+            });
+        } catch (e) {
+            console.error("KaTeX Render Error:", e);
+        }
+    },
+
+    createMessageElement(content, isUser, attachments = [], metadata = {}) {
+        const messageGroup = document.createElement('div');
+
+        if (isUser) {
+            // === USER MESSAGE (Aligned Right, Gray Background) ===
+            messageGroup.className = 'message-group user-message mb-6 flex flex-col items-end animate-slide-up';
+            // ... (keep existing wrapper logic)
+            const contentWrapper = document.createElement('div');
+            contentWrapper.className = 'inline-block max-w-[85%] sm:max-w-[75%] bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-gray-50 rounded-2xl rounded-tr-sm px-4 py-3 shadow-sm border border-gray-200 dark:border-gray-700';
+            contentWrapper.innerHTML = `<div class="whitespace-pre-wrap text-sm leading-relaxed">${this.escapeHtml(content)}</div>`;
+            messageGroup.appendChild(contentWrapper);
+
+        } else {
+            // === AI MESSAGE (Full Width, No Background) ===
+            messageGroup.className = 'message-group ai-message mb-6 w-full animate-slide-up';
+
+            try {
+                const processedContent = this.formatAIContent(content, attachments);
+                const parsedMarkdown = marked.parse(processedContent);
+                const cleanHtml = DOMPurify.sanitize(parsedMarkdown, {
+                    ALLOWED_TAGS: [
+                        'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'blockquote', 'p', 'a', 'ul', 'ol',
+                        'li', 'b', 'i', 'strong', 'em', 'strike', 'code', 'hr', 'br', 'div',
+                        'table', 'thead', 'tbody', 'tr', 'th', 'td', 'pre', 'span', 'img', 'kbd'
+                    ],
+                    ALLOWED_ATTR: ['href', 'src', 'alt', 'title', 'class', 'target', 'rel', 'data-language', 'data-filename', 'data-task-id'],
+                    ALLOW_DATA_ATTR: true
+                });
+
+                const contentWrapper = document.createElement('div');
+                contentWrapper.className = 'relative group py-2';
+
+                contentWrapper.innerHTML = `
+                    <div class="markdown-body prose dark:prose-invert max-w-none prose-headings:font-bold prose-a:text-blue-600 dark:prose-a:text-blue-400 prose-code:text-pink-600 dark:prose-code:text-pink-400">
+                        ${cleanHtml}
+                    </div>
+                `;
+
+                // Add Sources if available
+                if (metadata && metadata.grounding_metadata) {
+                    contentWrapper.innerHTML += this.renderSources(metadata.grounding_metadata);
+                }
+
+                // Add Actions Bar
+                contentWrapper.innerHTML += this.renderActionsBar(content, metadata);
+
+                // Enhance Code Blocks
+                this.enhanceCodeBlocks(contentWrapper);
+
+                // Highlight code blocks
+                // Marked is configured to highlight, so we don't need manual highlighting here
+                // contentWrapper.querySelectorAll('pre code').forEach((block) => {
+                //    hljs.highlightElement(block);
+                // });
+
+                // Render Math
+                this.renderMath(contentWrapper);
+
+                messageGroup.appendChild(contentWrapper);
+
+                // Start Polling
+                setTimeout(() => {
+                    contentWrapper.querySelectorAll('.ai-image-container').forEach(container => {
+                        const taskId = container.dataset.taskId;
+                        if (taskId) this.pollImageStatus(taskId, container);
+                    });
+                }, 100);
+
+            } catch (error) {
+                console.error('Erreur lors du rendu du message:', error);
+                messageGroup.innerHTML = `
+                    <div class="text-red-500 text-sm">Une erreur est survenue lors de l'affichage.</div>
+                    <div class="mt-2 p-2 bg-red-50 dark:bg-red-900/20 rounded text-sm">${this.escapeHtml(content)}</div>
+                `;
+            }
+        }
+        return messageGroup;
     },
 
     showWebSearchLoader() {
@@ -637,7 +845,7 @@ const UI = {
         loader.id = 'imageGenLoader';
         loader.className = 'loader-container image-gen-loader';
         loader.innerHTML = `
-    < i class="fas fa-magic loader-icon" ></i >
+    <i class="fas fa-magic loader-icon"></i>
         <span class="text-sm font-medium">Génération de l'image éducative...</span>
 `;
         container.appendChild(loader);
@@ -651,7 +859,7 @@ const UI = {
         }
     },
 
-    async typeAIStream(content, container, attachments = []) {
+    async typeAIStream(content, container, attachments = [], metadata = {}) {
         const words = content.split(' ');
         let currentText = '';
 
@@ -667,15 +875,28 @@ const UI = {
             const processedText = this.formatAIContent(currentText, attachments);
             contentDiv.innerHTML = marked.parse(processedText);
 
-            // Re-highlight code blocks if any
-            contentDiv.querySelectorAll('pre code').forEach((block) => {
-                hljs.highlightElement(block);
-            });
+            // Enhance Code Blocks
+            this.enhanceCodeBlocks(contentDiv);
+
+            // Re-highlight code blocks if any - Removed to prevent conflict with marked
+            // contentDiv.querySelectorAll('pre code').forEach((block) => {
+            //    hljs.highlightElement(block);
+            // });
 
             this.scrollToBottom();
             // Délai pour l'effet de streaming
-            await new Promise(resolve => setTimeout(resolve, 30 + Math.random() * 20));
+            await new Promise(resolve => setTimeout(resolve, 30 + Math.random() * 20)); // Keep streaming fast
         }
+
+        // Fin du streaming : Ajouter les Sources et la barre d'action
+        if (metadata && metadata.grounding_metadata) {
+            contentDiv.innerHTML += this.renderSources(metadata.grounding_metadata);
+        }
+
+        contentDiv.innerHTML += this.renderActionsBar(content, metadata);
+
+        // Final Math Render
+        this.renderMath(contentDiv);
 
         // Start Polling for images after stream is done
         contentDiv.querySelectorAll('.ai-image-container').forEach(container => {
@@ -697,8 +918,8 @@ const UI = {
             return `<div class="ai-image-container" data-filename="${filename}" data-task-id="${taskId}">
                 <img src="/api/ai/image/${filename}" class="ai-image-final" onerror="this.style.display='none'" onload="this.style.display='block'; this.classList.add('loaded')">
                 <div class="ai-image-placeholder">
-                    <i class="fas fa-magic"></i>
-                    <span>Intelligence Artificielle génère...</span>
+                    <i class="fas fa-spinner fa-spin"></i>
+                    <span> génération en cours...</span>
                 </div>
             </div>`;
         });
@@ -992,6 +1213,11 @@ const UI = {
 
         if (!message && attachments.length === 0) return;
 
+        // Store the user message for regeneration
+        if (message) {
+            State.lastUserMessage = message;
+        }
+
         // Hide welcome screen
         if (this.elements.welcome) {
             this.elements.welcome.style.display = 'none';
@@ -1073,7 +1299,7 @@ const UI = {
             const aiContent = data.response || data.message || "Je ne sais pas quoi répondre. veuillez réessayer";
 
             // Add AI Message with Streaming Effect
-            await this.typeAIStream(aiContent, this.elements.messages, data.attachments || []);
+            await this.typeAIStream(aiContent, this.elements.messages, data.attachments || [], data);
 
             if (data.has_image_generation) {
                 // Si une image est en cours, on pourrait attendre ou laisser le polling (existant peut-être) faire le job
@@ -1084,7 +1310,7 @@ const UI = {
             this.scrollToBottom();
 
             // Highlight Code Blocks
-            hljs.highlightAll();
+            // hljs.highlightAll(); // Removed
 
         } catch (error) {
             console.error('Error:', error);

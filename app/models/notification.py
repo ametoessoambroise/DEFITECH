@@ -14,6 +14,7 @@ class Notification(db.Model):
     date_created = db.Column(db.DateTime, default=datetime.now(tz=timezone.utc))
     is_read = db.Column(db.Boolean, default=False)
     type = db.Column(db.String(50))  # 'post', 'comment', 'system', etc.
+    lien = db.Column(db.String(500))  # Colonne persistante pour les liens
 
     # Clé étrangère vers l'utilisateur destinataire
     user_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
@@ -42,42 +43,24 @@ class Notification(db.Model):
         self.est_lue = True
         db.session.commit()
 
-    def __init__(self, *args, **kwargs):
-        """Allow a transient `link` kwarg for backward compatibility.
-
-        The `link` value is not stored in the DB by default but is kept on the
-        instance as `_link`. Templates or UI code can use `notification.link`
-        which will return the transient value if provided, otherwise fall back
-        to constructing a URL-like path from `element_type`/`element_id`.
-        """
-        # Pop link so SQLAlchemy's constructor won't reject it
-        self._link = kwargs.pop("link", None)
-        super().__init__(*args, **kwargs)
-
     @property
     def link(self):
         """Return a usable URL/path for the notification.
-
         Priority:
-        - if a transient `_link` was provided at construction, return it
+        - if a `lien` column value exists, return it
         - otherwise, if `element_type` is known, return a simple path based on it
         - else return None
         """
-        if getattr(self, "_link", None):
-            return self._link
+        if self.lien:
+            return self.lien
         # Fallbacks: provide simple path patterns so templates can link to items
         if self.element_type == "post" and self.element_id:
             return f"/community/post/{self.element_id}"
         if self.element_type == "comment" and self.element_id:
-            # We don't always know the parent post id here; provide a comment path
             return f"/community/post/{self.element_id}"
         if self.element_type == "teacher_request" and self.element_id:
             return f"/admin/review-teacher-request/{self.element_id}"
         return None
-
-    @link.setter
-    def link(self, value):
-        self._link = value
 
     @classmethod
     def creer_notification(
@@ -98,7 +81,7 @@ class Notification(db.Model):
             type=type,
             element_id=element_id,
             element_type=element_type,
-            link=link,
+            lien=link,
         )
         db.session.add(notification)
         db.session.commit()

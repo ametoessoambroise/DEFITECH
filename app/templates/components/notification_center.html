@@ -95,14 +95,11 @@
   }
 </style>
 
-<!-- Demo Container -->
 <div class="max-w-7xl mx-auto">
   <div class="flex justify-end">
-    <!-- Notification Center Component - Ultra Modern Design -->
     <div class="relative" x-data="{ notificationOpen: false }">
-      <!-- Notification Bell Button -->
       <button
-        @click="notificationOpen = !notificationOpen"
+        @click="notificationOpen = !notificationOpen; if(notificationOpen) window.notificationManager?.toggleDropdown()"
         id="notification-bell"
         class="relative p-2 text-gray-600 hover:text-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 rounded-xl transition-all duration-300 hover:bg-gradient-to-br hover:from-blue-50 hover:to-blue-100 active:scale-95"
         aria-label="Notifications"
@@ -258,7 +255,7 @@
           class="sticky bottom-0 bg-gradient-to-r from-gray-50 to-gray-100 border-t border-gray-200 px-4 sm:px-6 py-3 sm:py-4"
         >
           <a
-            href="#"
+            href="{{ url_for('notifications.index') }}"
             class="group block text-center text-xs sm:text-sm font-bold text-blue-600 hover:text-blue-800 transition-colors"
           >
             Voir toutes les notifications

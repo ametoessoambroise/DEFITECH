@@ -50,6 +50,18 @@ from app.email_utils import send_account_validation_email
 admin_bp = Blueprint("admin", __name__, url_prefix="/admin")
 
 
+@admin_bp.before_request
+@login_required
+def check_app_lock():
+    from app.utils.decorators import app_lock_required
+
+    @app_lock_required
+    def protected():
+        pass
+
+    return protected()
+
+
 # Configuration de la base de données pour les outils d'inspection
 DATABASE_URI = os.getenv("SQLALCHEMY_DATABASE_URI")
 engine = create_engine(DATABASE_URI) if DATABASE_URI else None

@@ -606,6 +606,10 @@
     <!-- Global Loading Component -->
     {% include 'components/loading.html' %}
 
+    <!-- App Lock Overlay -->
+    {% if current_user.is_authenticated and current_user.is_app_lock_enabled %}
+    {% include 'components/lock_screen.html' %} {% endif %}
+
     <!-- Sources Sidebar -->
     <div
       id="sourcesSidebar"
@@ -918,6 +922,7 @@
       aria-atomic="true"
     ></div>
 
+    <script src="{{ url_for('static', filename='js/app_lock.js') }}"></script>
     <script src="{{ url_for('static', filename='js/cloudinary_uploader.js') }}"></script>
     <script src="{{ url_for('static', filename='js/script.js') }}?v=2"></script>
   </body>

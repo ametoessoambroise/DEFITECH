@@ -31,6 +31,19 @@ from functools import wraps
 # Création du blueprint pour les profils
 profile_bp = Blueprint("profile", __name__, url_prefix="/profile")
 
+
+@profile_bp.before_request
+@login_required
+def check_app_lock():
+    from app.utils.decorators import app_lock_required
+
+    @app_lock_required
+    def protected():
+        pass
+
+    return protected()
+
+
 # Configuration pour le téléchargement des fichiers
 ALLOWED_EXTENSIONS = {"png", "jpg", "jpeg", "gif", "webp", "avif"}
 

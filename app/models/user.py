@@ -49,6 +49,16 @@ class User(UserMixin, db.Model):
     # 'en_attente', 'approuve', 'rejete'
     statut = db.Column(db.String(50), default="en_attente")  # Augmenté à 50 caractères
 
+    # Paramètres de verrouillage de l'application
+    app_lock_pin_hash = db.Column(db.String(255), nullable=True)
+    is_app_lock_enabled = db.Column(db.Boolean, default=False, nullable=False)
+    is_biometric_enabled = db.Column(db.Boolean, default=False, nullable=False)
+    app_lock_timeout = db.Column(db.Integer, default=5, nullable=False)  # en minutes
+
+    # Sécurité anti-bruteforce pour le PIN
+    failed_pin_attempts = db.Column(db.Integer, default=0, nullable=False)
+    last_failed_pin_attempt = db.Column(db.DateTime, nullable=True)
+
     # Relations
     # etudiant sera défini après que Etudiant soit défini
     etudiant = db.relationship("Etudiant", back_populates="user", uselist=False)
@@ -178,6 +188,46 @@ class User(UserMixin, db.Model):
 
     def get_id(self):
         return str(self.id)
+
+    # --- Gestion du verrouillage PIN ---
+
+    @property
+    def pin(self):
+        raise AttributeError("Le code PIN n'est pas un attribut lisible")
+
+    @pin.setter
+    def pin(self, pin_code):
+        if pin_code:
+            # On utilise generate_password_hash par simplicité/cohérence, bcrypt est recommandé
+            self.app_lock_pin_hash = generate_password_hash(pin_code)
+        else:
+            self.app_lock_pin_hash = None
+
+    def verify_pin(self, pin_code):
+        if not self.app_lock_pin_hash:
+            return False
+
+        # Vérification anti-bruteforce (cooldown de 30 secondes après 5 échecs)
+        if self.failed_pin_attempts >= 5:
+            if self.last_failed_pin_attempt:
+                from datetime import timedelta
+
+                if datetime.utcnow() - self.last_failed_pin_attempt < timedelta(
+                    seconds=30
+                ):
+                    return False  # Toujours en cooldown
+
+        is_valid = check_password_hash(self.app_lock_pin_hash, pin_code)
+
+        if is_valid:
+            self.failed_pin_attempts = 0
+            self.last_failed_pin_attempt = None
+        else:
+            self.failed_pin_attempts += 1
+            self.last_failed_pin_attempt = datetime.utcnow()
+
+        db.session.commit()
+        return is_valid
 
     def __repr__(self):
         return f"<User {self.email}>"

@@ -141,6 +141,10 @@
     <!-- Global Loading Component -->
     {% include 'components/loading.html' %}
 
+    <!-- App Lock Overlay -->
+    {% if current_user.is_authenticated and current_user.is_app_lock_enabled %}
+    {% include 'components/lock_screen.html' %} {% endif %}
+
     <!-- Barre de progression -->
     {% include 'components/progress_bar.html' %}
 
@@ -506,7 +510,9 @@
     </footer>
 
     <!-- Scripts -->
+    <!-- Scripts JavaScript -->
     <script src="https://cdn.socket.io/4.7.4/socket.io.min.js"></script>
+    <script src="{{ url_for('static', filename='js/app_lock.js') }}"></script>
     <script src="{{ url_for('static', filename='js/cloudinary_uploader.js') }}"></script>
     <script>
       // ==================== SYSTÈME DE TOOLTIPS PERSONNALISÉS ====================

@@ -84,6 +84,10 @@
     <!-- Global Loading Component -->
     {% include 'components/loading.html' %}
 
+    <!-- App Lock Overlay -->
+    {% if current_user.is_authenticated and current_user.is_app_lock_enabled %}
+    {% include 'components/lock_screen.html' %} {% endif %}
+
     <!-- Sidebar (Conversation List) -->
     <aside class="w-80 glass-panel flex flex-col z-20">
       <!-- Header -->
@@ -216,6 +220,7 @@
 
     <!-- Socket.IO -->
     <script src="https://cdn.socket.io/4.7.4/socket.io.min.js"></script>
+    <script src="{{ url_for('static', filename='js/app_lock.js') }}"></script>
     <script>
       // State
       const STATE = {

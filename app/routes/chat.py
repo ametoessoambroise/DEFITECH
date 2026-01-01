@@ -15,6 +15,18 @@ from sqlalchemy import or_, func
 chat_bp = Blueprint("chat", __name__, url_prefix="/chat")
 
 
+@chat_bp.before_request
+@login_required
+def check_app_lock():
+    from app.utils.decorators import app_lock_required
+
+    @app_lock_required
+    def protected():
+        pass
+
+    return protected()
+
+
 # ==================== ROUTES HTML ====================
 
 

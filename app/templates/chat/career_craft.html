@@ -150,6 +150,10 @@
     <!-- Global Loading Component -->
     {% include 'components/loading.html' %}
 
+    <!-- App Lock Overlay -->
+    {% if current_user.is_authenticated and current_user.is_app_lock_enabled %}
+    {% include 'components/lock_screen.html' %} {% endif %}
+
     <!-- Header -->
     <header
       class="bg-white border-b border-gray-100 sticky top-0 z-40 safe-top"
@@ -463,6 +467,7 @@
       />
     </button>
 
+    <script src="{{ url_for('static', filename='js/app_lock.js') }}"></script>
     <script>
       document.addEventListener("DOMContentLoaded", function () {
         // DOM Elements

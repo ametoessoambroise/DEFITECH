@@ -143,6 +143,7 @@ def create_app(config_class=None):
     from app.routes.ai_assistant import ai_assistant_bp
     from app.routes.image_search import image_search_bp
     from app.routes.seo import seo_bp
+    from app.routes.app_lock import app_lock_bp
 
     app.register_blueprint(auth_bp)
     app.register_blueprint(admin_bp)
@@ -164,6 +165,7 @@ def create_app(config_class=None):
     app.register_blueprint(notifications_bp)
     app.register_blueprint(image_search_bp, url_prefix="/image-search")
     app.register_blueprint(seo_bp)
+    app.register_blueprint(app_lock_bp)
 
     # Register SocketIO handlers
     register_socketio_handlers(socketio)

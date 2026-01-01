@@ -9,7 +9,9 @@ Expose des classes clés pour permettre des imports du type:
 # Import léger pour exposer au niveau du package
 try:
     from .user import User  # noqa: F401
-    from .teacher_profile_update_request import TeacherProfileUpdateRequest  # noqa: F401
+    from .teacher_profile_update_request import (
+        TeacherProfileUpdateRequest,
+    )  # noqa: F401
     from .resource import Resource  # noqa: F401
     from .message import Message  # noqa: F401
     from .pomodoro_session import PomodoroSession  # noqa: F401
@@ -25,6 +27,7 @@ try:
     from .quiz_models import Quiz, Question, QuizAttempt, QuizAnswer  # noqa: F401
     from .flashcard import Flashcard, FlashcardReview  # noqa: F401
     from .study_progress import StudyProgress  # noqa: F401
+    from .webauthn_credential import WebauthnCredential  # noqa: F401
 except Exception:
     # Laisser silencieux pendant l'initialisation; init_models fera les imports complets
     User = None  # type: ignore
@@ -50,9 +53,11 @@ except Exception:
     Flashcard = None  # type: ignore
     FlashcardReview = None  # type: ignore
     StudyProgress = None  # type: ignore
+    WebauthnCredential = None  # type: ignore
 
     from .annee import Annee
     from .matiere import Matiere
+
     # Retourne un dictionnaire des modèles pour faciliter l'import
 
 
@@ -79,6 +84,7 @@ def init_models():
     from .devoir_vu import DevoirVu
     from .suggestion import Suggestion
     from .ai_assistant import AIConversation, AIMessage, Dataset
+    from .webauthn_credential import WebauthnCredential
 
     # Retourne un dictionnaire des modèles pour faciliter l'import
     return {
@@ -108,6 +114,7 @@ def init_models():
         "AIConversation": AIConversation,
         "AIMessage": AIMessage,
         "Dataset": Dataset,
+        "WebauthnCredential": WebauthnCredential,
     }
 
 
@@ -149,4 +156,5 @@ __all__ = [
     "AIConversation",
     "AIMessage",
     "Dataset",
+    "WebauthnCredential",
 ]

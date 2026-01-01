@@ -28,3 +28,4 @@ email_validator
 gunicorn
 eventlet
 cloudinary
+webauthn

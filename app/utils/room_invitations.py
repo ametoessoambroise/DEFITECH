@@ -1,6 +1,10 @@
 """
 Module pour gérer l'envoi d'invitations aux salles de visioconférence
+DEPRECATED: Utiliser app.utils.room_utils à la place pour une logique consolidée et robuste.
 """
+
+import warnings
+
 
 from datetime import datetime, timedelta
 import logging
@@ -14,6 +18,10 @@ from app.models.videoconference import RoomParticipant, Inscription, RoomInvitat
 # Configuration du logger
 logger = logging.getLogger(__name__)
 
+warnings.warn(
+    "app.utils.room_invitations is deprecated, use app.utils.room_utils instead",
+    DeprecationWarning,
+)
 
 def get_students_for_course(course_id):
     """

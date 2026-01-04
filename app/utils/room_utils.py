@@ -3,14 +3,52 @@ Utils pour la gestion des salles de cours virtuelles
 """
 
 from app.extensions import db
-from app.models.videoconference import Room, RoomInvitation
+from app.models.videoconference import Room, RoomInvitation, Inscription
 from app.models.etudiant import Etudiant
 from app.models.enseignant import Enseignant
 from app.models.matiere import Matiere
 from app.models.emploi_temps import EmploiTemps
 from app.models.filiere import Filiere
 from app.email_utils import send_room_invitation
-from datetime import datetime
+from datetime import datetime, timedelta
+import logging
+
+logger = logging.getLogger(__name__)
+
+
+def is_course_scheduled_now(course, current_time=None):
+    """Vérifie si le cours est prévu à l'heure actuelle"""
+    if not current_time:
+        current_time = datetime.now()
+
+    current_weekday = current_time.weekday()
+    weekdays = [
+        "monday",
+        "tuesday",
+        "wednesday",
+        "thursday",
+        "friday",
+        "saturday",
+        "sunday",
+    ]
+    current_weekday_str = weekdays[current_weekday]
+
+    if not getattr(course, f"jour_{current_weekday_str}", False):
+        return False
+
+    course_start = course.heure_debut
+    course_end = course.heure_fin
+    current_time_only = current_time.time()
+
+    # Marge de 30 minutes avant et 15 minutes après
+    start_time = (
+        datetime.combine(datetime.today(), course_start) - timedelta(minutes=30)
+    ).time()
+    end_time = (
+        datetime.combine(datetime.today(), course_end) + timedelta(minutes=15)
+    ).time()
+
+    return start_time <= current_time_only <= end_time
 
 
 def send_room_invitations(room_id, app):
@@ -85,53 +123,44 @@ def send_room_invitations(room_id, app):
                 "errors": 0,
             }
 
-    # Récupérer les étudiants ayant cette matière dans leur emploi du temps
-    app.logger.info(f"Recherche des étudiants pour le cours ID: {course.id}")
+    # Stratégie 1: Étudiants explicitement inscrits via Inscription (plus précis)
+    etudiants_inscrits = [
+        i.user.etudiant
+        for i in Inscription.query.filter_by(course_id=course.id, statut="active").all()
+        if i.user and i.user.etudiant
+    ]
+    app.logger.info(f"Etudiants via Inscription: {len(etudiants_inscrits)}")
 
-    # D'abord, on récupère les filières qui ont cette matière dans leur emploi du temps
-    filieres_avec_matiere = [
+    # Stratégie 2: Étudiants via l'emploi du temps de la filière (fallback)
+    filieres_ids = [
         f[0]
         for f in db.session.query(EmploiTemps.filiere_id)
         .filter(EmploiTemps.matiere_id == course.id)
         .distinct()
         .all()
     ]
-
-    app.logger.info(f"Filières avec cette matière: {filieres_avec_matiere}")
-
-    # Ensuite, on récupère les noms des filières
-    if filieres_avec_matiere:
+    etudiants_filiere = []
+    if filieres_ids:
+        # On récupère les filières pour avoir les noms exacts
         noms_filieres = [
-            f[0]
-            for f in db.session.query(Filiere.nom)
-            .filter(Filiere.id.in_(filieres_avec_matiere))
-            .all()
+            f.nom for f in Filiere.query.filter(Filiere.id.in_(filieres_ids)).all()
         ]
-        app.logger.info(f"Noms des filières: {noms_filieres}")
-
-        # Enfin, on récupère les étudiants de ces filières par nom
-        if noms_filieres:
-            etudiants = (
-                db.session.query(Etudiant)
-                .filter(Etudiant.filiere.in_(noms_filieres))
-                .all()
+        # Recherche robuste des étudiants (insensible à la casse)
+        for nom in noms_filieres:
+            etudiants_filiere.extend(
+                Etudiant.query.filter(Etudiant.filiere.ilike(nom)).all()
             )
-        else:
-            etudiants = []
-            app.logger.warning("Aucun nom de filière trouvé pour les IDs fournis")
-    else:
-        etudiants = []
-        app.logger.warning(
-            "Aucune filière trouvée avec cette matière dans l'emploi du temps"
-        )
 
-    app.logger.info(f"Nombre d'étudiants trouvés via emploi du temps: {len(etudiants)}")
-    if etudiants:
-        app.logger.info(
-            f"Premier étudiant: {etudiants[0].user.email if etudiants[0].user else 'Pas d\'email'}"
-        )
+    app.logger.info(f"Etudiants via Filière/EmploiTemps: {len(etudiants_filiere)}")
 
-    inscriptions = etudiants  # Pour maintenir la compatibilité avec le reste du code
+    # Union des deux listes par ID utilisateur pour éviter les doublons
+    etudiants_dict = {e.user_id: e for e in etudiants_inscrits if e}
+    for e in etudiants_filiere:
+        if e and e.user_id not in etudiants_dict:
+            etudiants_dict[e.user_id] = e
+
+    inscriptions = list(etudiants_dict.values())
+    app.logger.info(f"Total étudiants uniques à inviter: {len(inscriptions)}")
 
     sent_count = 0
     error_count = 0

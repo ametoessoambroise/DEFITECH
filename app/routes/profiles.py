@@ -134,6 +134,7 @@ def view_profile(user_id):
     """
 
     user = User.query.get_or_404(user_id)
+    filiere_id = None
 
     # Vérifier les permissions d'accès
     if current_user.role == "etudiant" and user.role == "etudiant":
@@ -141,6 +142,13 @@ def view_profile(user_id):
         if hasattr(current_user, "etudiant") and hasattr(user, "etudiant"):
             if current_user.etudiant.filiere != user.etudiant.filiere:
                 abort(403)
+            # Récupérer l'ID de la filière pour le template
+            from app.models.filiere import Filiere
+
+            filiere_obj = Filiere.query.filter_by(nom=user.etudiant.filiere).first()
+            if filiere_obj:
+                filiere_id = filiere_obj.id
+
     elif current_user.role == "enseignant" and user.role == "etudiant":
         # Les enseignants peuvent voir les profils des étudiants de leurs filières
         if hasattr(current_user, "enseignant") and hasattr(user, "etudiant"):
@@ -148,17 +156,36 @@ def view_profile(user_id):
             from app.models.matiere import Matiere
             from app.models.filiere import Filiere
 
-            filiere = Filiere.query.filter_by(nom=user.etudiant.filiere).first()
-            if filiere:
-                matieres = Matiere.query.filter_by(
-                    filiere_id=filiere.id, enseignant_id=current_user.enseignant.id
-                ).all()
-                if not matieres:
+            filiere_obj = Filiere.query.filter_by(nom=user.etudiant.filiere).first()
+            if filiere_obj:
+                filiere_id = filiere_obj.id
+                # Si l'enseignant est admin, il a accès à tout
+                if not current_user.is_admin():
+                    matieres = Matiere.query.filter_by(
+                        filiere_id=filiere_obj.id, enseignant_id=current_user.id
+                    ).all()
+                    if not matieres:
+                        # Vérifier si l'enseignant est admin de cette filière
+                        from app.models.filiere import FiliereAdmin
+
+                        is_filiere_admin = FiliereAdmin.query.filter_by(
+                            filiere_id=filiere_obj.id, enseignant_id=current_user.id
+                        ).first()
+                        if not is_filiere_admin:
+                            abort(403)
+            else:
+                # Si la filière n'existe pas en tant qu'objet, on limite l'accès par précaution
+                if not current_user.is_admin():
                     abort(403)
     elif current_user.role != "admin" and current_user.id != user.id:
-        abort(403)
+        # Autoriser les enseignants à voir les profils d'autres enseignants ou admins ?
+        # Pour l'instant on garde restreint sauf si admin ou soi-même
+        if current_user.role != "enseignant":
+            abort(403)
 
-    return render_template("profile/view_profile.html", user=user)
+    return render_template(
+        "profile/view_profile.html", user=user, filiere_id=filiere_id or 1
+    )
 
 
 @profile_bp.route("/mon-profil", methods=["GET", "POST"])

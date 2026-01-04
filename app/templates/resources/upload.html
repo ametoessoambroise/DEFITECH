@@ -129,6 +129,7 @@ endblock %} {% block content %}
                     <input
                       id="fichier_input"
                       type="file"
+                      multiple
                       class="sr-only"
                       accept=".pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.txt,.zip,.rar,.7z,.jpg,.jpeg,.png"
                     />
@@ -147,44 +148,116 @@ endblock %} {% block content %}
           </div>
         </div>
 
+        <!-- Script de gestion de l'upload et validation -->
         <script>
           document.addEventListener("DOMContentLoaded", () => {
-            // Attach Cloudinary upload with 'documents_upload' preset
-            // We'll use a custom callback to populate extra fields
             const fileInput = document.getElementById("fichier_input");
-            const urlInput = document.getElementById("file_url");
             const feedback = document.getElementById("upload_feedback");
+            const matiereSelect = document.getElementById("matiere_id");
+            const filiereSelect = document.getElementById("filiere");
+            const submitBtn = document.querySelector('button[type="submit"]');
+
+            const CLOUD_NAME = "dmokvhpjt";
+            const UPLOAD_PRESET = "documents_upload";
+
+            // Types autorisés
+            const allowedTypes = [
+              "application/pdf",
+              "application/msword",
+              "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+              "application/vnd.ms-powerpoint",
+              "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+              "application/vnd.ms-excel",
+              "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+              "text/plain",
+              "application/zip",
+              "application/x-rar-compressed",
+              "application/x-7z-compressed",
+              "image/jpeg",
+              "image/png",
+            ];
+            const maxSize = 50 * 1024 * 1024; // 50MB
 
             if (fileInput) {
               fileInput.addEventListener("change", async (e) => {
                 const file = e.target.files[0];
                 if (!file) return;
 
+                // 1. Validation locale et population du titre
+                if (file) {
+                  const titreInput = document.getElementById("titre");
+                  if (
+                    titreInput &&
+                    (!titreInput.value || titreInput.value.trim() === "")
+                  ) {
+                    const fileNameWithoutExt = file.name.replace(
+                      /\.[^/.]+$/,
+                      ""
+                    );
+                    titreInput.value = fileNameWithoutExt;
+                  }
+                }
+
+                if (file.size > maxSize) {
+                  showNotification("Le fichier dépasse 50MB.", "erreur");
+                  fileInput.value = "";
+                  return;
+                }
+
+                if (
+                  !allowedTypes.includes(file.type) &&
+                  !file.name.match(/\.(zip|rar|7z)$/i)
+                ) {
+                  // Fallback check for archives if MIME type is generic
+                  if (
+                    !file.name.match(
+                      /\.(pdf|doc|docx|ppt|pptx|xls|xlsx|txt|jpg|jpeg|png)$/i
+                    )
+                  ) {
+                    showNotification(
+                      "Format de fichier non supporté.",
+                      "erreur"
+                    );
+                    fileInput.value = "";
+                    return;
+                  }
+                }
+
+                // 2. Upload Cloudinary
                 try {
+                  submitBtn.disabled = true;
+                  submitBtn.innerHTML =
+                    '<i class="fas fa-spinner fa-spin mr-2"></i> Upload en cours...';
+
                   feedback.innerHTML =
-                    '<i class="fas fa-spinner fa-spin"></i> Upload en cours...';
+                    '<i class="fas fa-spinner fa-spin"></i> Transfert vers le cloud...';
                   feedback.className = "mt-2 text-sm text-blue-600 font-medium";
 
                   const formData = new FormData();
                   formData.append("file", file);
-                  formData.append("upload_preset", "documents_upload"); // Unsigned preset
+                  formData.append("upload_preset", UPLOAD_PRESET);
 
                   const response = await fetch(
-                    `https://api.cloudinary.com/v1_1/defitech/auto/upload`,
+                    `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/auto/upload`,
                     {
                       method: "POST",
                       body: formData,
                     }
                   );
 
-                  if (!response.ok) throw new Error("Upload failed");
+                  if (!response.ok) {
+                    const errorDetails = await response.json();
+                    throw new Error(
+                      errorDetails.error?.message || "Erreur serveur Cloudinary"
+                    );
+                  }
 
                   const data = await response.json();
 
-                  // Populate hidden fields
+                  // Remplissage des champs cachés
                   document.getElementById("file_url").value = data.secure_url;
                   document.getElementById("file_type").value =
-                    data.resource_type; // 'image', 'raw', 'auto'
+                    data.resource_type;
                   document.getElementById("file_size").value = data.bytes;
                   document.getElementById("file_format").value =
                     data.format || file.name.split(".").pop();
@@ -196,16 +269,50 @@ endblock %} {% block content %}
                   feedback.className =
                     "mt-2 text-sm text-green-600 font-medium";
                 } catch (error) {
-                  console.error("Error:", error);
+                  console.error("Cloudinary Error:", error);
+                  showNotification(
+                    "Échec de l'upload: " + error.message,
+                    "erreur"
+                  );
                   feedback.innerHTML =
-                    '<i class="fas fa-times"></i> Erreur lors de l\'upload';
+                    '<i class="fas fa-times"></i> Échec de l\'upload';
                   feedback.className = "mt-2 text-sm text-red-600 font-medium";
+                  fileInput.value = "";
+                } finally {
+                  submitBtn.disabled = false;
+                  submitBtn.innerHTML =
+                    '<i class="fas fa-upload mr-2"></i> Uploader la ressource';
                 }
               });
             }
+
+            function showNotification(message, type = "info") {
+              const notification = document.createElement("div");
+              notification.className =
+                "fixed top-4 right-4 z-[10001] px-6 py-4 rounded-lg shadow-xl text-white transform transition-all duration-500 flex items-center";
+
+              const colors = {
+                success: "bg-green-600",
+                erreur: "bg-red-600",
+                warning: "bg-yellow-500",
+                info: "bg-blue-600",
+              };
+
+              notification.classList.add(colors[type] || colors.info);
+              notification.innerHTML = `<i class="fas ${
+                type === "success"
+                  ? "fa-check-circle"
+                  : "fa-exclamation-triangle"
+              } mr-3"></i> <span>${message}</span>`;
+
+              document.body.appendChild(notification);
+              setTimeout(() => {
+                notification.style.opacity = "0";
+                setTimeout(() => notification.remove(), 500);
+              }, 4000);
+            }
           });
         </script>
-
         <!-- Cible (filière et année) -->
         <div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
           <!-- Filière -->
@@ -316,98 +423,4 @@ endblock %} {% block content %}
     </div>
   </div>
 </div>
-
-<!-- Script pour la prévisualisation du fichier -->
-<script>
-  document.addEventListener("DOMContentLoaded", function () {
-    const fileInput = document.getElementById("fichier");
-    const matiereSelect = document.getElementById("matiere_id");
-
-    // Mettre à jour les matières selon la filière sélectionnée
-    document.getElementById("filiere").addEventListener("change", function () {
-      const filiere = this.value;
-      // Réinitialiser la sélection de matière
-      matiereSelect.value = "";
-      // Ici on pourrait faire une requête AJAX pour filtrer les matières
-      // selon la filière sélectionnée
-    });
-
-    // Validation du fichier côté client
-    fileInput.addEventListener("change", function () {
-      const file = this.files[0];
-      if (file) {
-        const maxSize = 50 * 1024 * 1024; // 50MB
-        if (file.size > maxSize) {
-          alert(
-            "Le fichier est trop volumineux. Taille maximale autorisée : 50MB"
-          );
-          this.value = "";
-          return;
-        }
-
-        const allowedTypes = [
-          "application/pdf",
-          "application/msword",
-          "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-          "application/vnd.ms-powerpoint",
-          "application/vnd.openxmlformats-officedocument.presentationml.presentation",
-          "application/vnd.ms-excel",
-          "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-          "text/plain",
-          "application/zip",
-          "application/x-rar-compressed",
-          "application/x-7z-compressed",
-          "image/jpeg",
-          "image/png",
-        ];
-
-        if (!allowedTypes.includes(file.type)) {
-          showNotification(
-            "Type de fichier non autorisé. Consultez la liste des formats acceptés.",
-            "erreur"
-          );
-          this.value = "";
-          return;
-        }
-      }
-    });
-    function showNotification(message, type = "info") {
-      const notification = document.createElement("div");
-
-      // Styles de base
-      notification.className =
-        "text-white p-4 rounded mb-4 fixed top-4 right-4 shadow-lg transition-opacity duration-500";
-
-      // Couleur selon le type
-      switch (type) {
-        case "success":
-          notification.classList.add("bg-green-500");
-          break;
-        case "erreur":
-          notification.classList.add("bg-red-500");
-          break;
-        case "warning":
-          notification.classList.add("bg-yellow-500", "text-black");
-          break;
-        case "info":
-          notification.classList.add("bg-blue-500", "text-black");
-          break;
-        default:
-          notification.classList.add("bg-blue-500");
-      }
-
-      // Message
-      notification.textContent = message;
-
-      // Ajout au DOM
-      document.body.appendChild(notification);
-
-      // Disparition douce
-      setTimeout(() => {
-        notification.style.opacity = "0";
-        setTimeout(() => notification.remove(), 500);
-      }, 3000);
-    }
-  });
-</script>
 {% endblock %}

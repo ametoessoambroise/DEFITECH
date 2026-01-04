@@ -210,8 +210,14 @@ function createPeer(targetId, initiator) {
     const peer = new SimplePeer({
         initiator: initiator,
         trickle: true,
-        stream: State.isSharingScreen ? State.screenStream : State.localStream
-        // ICE servers usually configured here or default
+        stream: State.isSharingScreen ? State.screenStream : State.localStream,
+        config: {
+            iceServers: [
+                { urls: 'stun:stun.l.google.com:19302' },
+                { urls: 'stun:stun1.l.google.com:19302' },
+                { urls: 'stun:stun2.l.google.com:19302' }
+            ]
+        }
     });
 
     peer.on('signal', data => {
@@ -254,7 +260,8 @@ function handleUserJoined(data) {
     if (data.user_id == window.USER_ID) return;
     showToast(`${data.username} a rejoint la réunion.`);
 
-    const isInitiator = window.USER_ID < data.user_id; // Logic consistency
+    // Use numeric comparison for stable tie-breaking
+    const isInitiator = Number(window.USER_ID) < Number(data.user_id);
     if (isInitiator) createPeer(data.user_id, true);
 
     State.participants.set(data.user_id, { name: data.username });

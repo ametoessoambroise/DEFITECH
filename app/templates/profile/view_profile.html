@@ -1,259 +1,283 @@
-{% extends "base.html" %}
-
-{% block title %}Profil de {{ user.prenom }} {{ user.nom }} | DEFITECH{% endblock %}
-
-{% block content %}
+{% extends "base.html" %} {% block title %}Profil de {{ user.prenom }} {{
+user.nom }} | DEFITECH{% endblock %} {% block content %}
 <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-    <!-- En-tête du profil -->
-    <div class="bg-white shadow rounded-lg mb-6">
-        <div class="px-6 py-4">
-            <div class="flex items-center">
-                <div class="h-24 w-24 rounded-full bg-gray-200 flex items-center justify-center overflow-hidden mr-6">
-                    {% if user.photo_profil %}
-                    <img src="{{ user.photo_profil | profile_image }}"
-                        alt="Photo de profil" class="h-full w-full object-cover">
-                    {% else %}
-                    <i class="fas fa-user text-4xl text-gray-400"></i>
-                    {% endif %}
-                </div>
-
-                <!-- Informations principales -->
-                <div class="flex-grow">
-                    <h1 class="text-2xl font-bold text-gray-900">{{ user.prenom }} {{ user.nom }}</h1>
-                    <p class="text-lg text-gray-600 capitalize">{{ user.role }}</p>
-                    <div class="mt-2">
-                        <span class="inline-flex px-2 py-1 text-sm font-semibold rounded-full
-                            {% if user.statut == 'approuve' %}bg-green-100 text-green-800
-                            {% elif user.statut == 'en_attente' %}bg-yellow-100 text-yellow-800
-                            {% else %}bg-red-100 text-red-800{% endif %}">
-                            {{ user.statut|title }}
-                        </span>
-                        {% if user.role == 'etudiant' and user.etudiant %}
-                        <span
-                            class="ml-2 inline-flex px-2 py-1 text-sm font-semibold rounded-full bg-blue-100 text-blue-800">
-                            {{ user.etudiant.filiere }} - {{ user.etudiant.annee }}
-                        </span>
-                        {% endif %}
-                        {% if user.role == 'enseignant' and user.enseignant %}
-                        <span
-                            class="ml-2 inline-flex px-2 py-1 text-sm font-semibold rounded-full bg-purple-100 text-purple-800">
-                            {{ user.enseignant.specialite }}
-                        </span>
-                        {% endif %}
-                    </div>
-                </div>
-
-                <!-- Actions -->
-                <div class="flex space-x-2">
-                    {% if current_user.id == user.id %}
-                    <a href="{{ url_for('profile.mon_profil') }}"
-                        class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium">
-                        <i class="fas fa-edit mr-2"></i>Modifier
-                    </a>
-                    {% elif current_user.role == 'admin' %}
-                    <a href="{{ url_for('admin.admin_users') }}"
-                        class="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-md text-sm font-medium">
-                        <i class="fas fa-cog mr-2"></i>Gérer
-                    </a>
-                    {% endif %}
-                </div>
-            </div>
+  <!-- En-tête du profil -->
+  <div class="bg-white shadow rounded-lg mb-6">
+    <div class="px-6 py-4">
+      <div class="flex items-center">
+        <div
+          class="h-24 w-24 rounded-full bg-gray-200 flex items-center justify-center overflow-hidden mr-6"
+        >
+          {% if user.photo_profil %}
+          <img
+            src="{{ user.photo_profil | profile_image }}"
+            alt="Photo de profil"
+            class="h-full w-full object-cover"
+          />
+          {% else %}
+          <i class="fas fa-user text-4xl text-gray-400"></i>
+          {% endif %}
         </div>
-    </div>
 
-    <!-- Informations détaillées -->
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <!-- Informations personnelles -->
-        <div class="lg:col-span-2">
-            <div class="bg-white shadow rounded-lg mb-6">
-                <div class="px-6 py-4 border-b border-gray-200">
-                    <h2 class="text-lg font-semibold text-gray-900">Informations personnelles</h2>
-                </div>
-                <div class="px-6 py-4">
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div>
-                            <p class="text-sm font-medium text-gray-600">Nom complet</p>
-                            <p class="text-lg text-gray-900">{{ user.nom }} {{ user.prenom }}</p>
-                        </div>
-                        <div>
-                            <p class="text-sm font-medium text-gray-600">Email</p>
-                            <p class="text-lg text-gray-900">{{ user.email }}</p>
-                        </div>
-                        <div>
-                            <p class="text-sm font-medium text-gray-600">Date de naissance</p>
-                            <p class="text-lg text-gray-900">{{ user.date_naissance }}</p>
-                        </div>
-                        <div>
-                            <p class="text-sm font-medium text-gray-600">Sexe</p>
-                            <p class="text-lg text-gray-900">{{ user.sexe|title }}</p>
-                        </div>
-                        <div>
-                            <p class="text-sm font-medium text-gray-600">Âge</p>
-                            <p class="text-lg text-gray-900">{{ user.age }} ans</p>
-                        </div>
-                        <div>
-                            <p class="text-sm font-medium text-gray-600">Date d'inscription</p>
-                            <p class="text-lg text-gray-900">{{ user.date_creation }}</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Informations spécifiques au rôle -->
+        <!-- Informations principales -->
+        <div class="flex-grow">
+          <h1 class="text-2xl font-bold text-gray-900">
+            {{ user.prenom }} {{ user.nom }}
+          </h1>
+          <p class="text-lg text-gray-600 capitalize">{{ user.role }}</p>
+          <div class="mt-2">
+            <span
+              class="inline-flex px-2 py-1 text-sm font-semibold rounded-full {% if user.statut == 'approuve' %}bg-green-100 text-green-800 {% elif user.statut == 'en_attente' %}bg-yellow-100 text-yellow-800 {% else %}bg-red-100 text-red-800{% endif %}"
+            >
+              {{ user.statut|title }}
+            </span>
             {% if user.role == 'etudiant' and user.etudiant %}
-            <div class="bg-white shadow rounded-lg">
-                <div class="px-6 py-4 border-b border-gray-200">
-                    <h2 class="text-lg font-semibold text-gray-900">Informations académiques</h2>
-                </div>
-                <div class="px-6 py-4">
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div>
-                            <p class="text-sm font-medium text-gray-600">Filière</p>
-                            <p class="text-lg text-gray-900">{{ user.etudiant.filiere }}</p>
-                        </div>
-                        <div>
-                            <p class="text-sm font-medium text-gray-600">Année</p>
-                            <p class="text-lg text-gray-900">{{ user.etudiant.annee }}</p>
-                        </div>
-                        <div class="md:col-span-2">
-                            <p class="text-sm font-medium text-gray-600">Numéro étudiant</p>
-                            <p class="text-lg text-gray-900 font-mono">{{ user.etudiant.numero_etudiant }}</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
+            <span
+              class="ml-2 inline-flex px-2 py-1 text-sm font-semibold rounded-full bg-blue-100 text-blue-800"
+            >
+              {{ user.etudiant.filiere }} - {{ user.etudiant.annee }}
+            </span>
+            {% endif %} {% if user.role == 'enseignant' and user.enseignant %}
+            <span
+              class="ml-2 inline-flex px-2 py-1 text-sm font-semibold rounded-full bg-purple-100 text-purple-800"
+            >
+              {{ user.enseignant.specialite }}
+            </span>
             {% endif %}
-
-            {% if user.role == 'enseignant' and user.enseignant %}
-            <div class="bg-white shadow rounded-lg">
-                <div class="px-6 py-4 border-b border-gray-200">
-                    <h2 class="text-lg font-semibold text-gray-900">Informations professionnelles</h2>
-                </div>
-                <div class="px-6 py-4">
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div>
-                            <p class="text-sm font-medium text-gray-600">Spécialité</p>
-                            <p class="text-lg text-gray-900">{{ user.enseignant.specialite or 'Non spécifiée' }}</p>
-                        </div>
-                        <div>
-                            <p class="text-sm font-medium text-gray-600">Filières enseignées</p>
-                            <p class="text-lg text-gray-900">
-                                {% if user.enseignant.filieres_enseignees %}
-                                {% set data = user.enseignant.filieres_enseignees | from_json %}
-                                {{ data.filieres | join(', ') if data.filieres else 'Aucune' }}
-                                {% else %}
-                                Aucune
-                                {% endif %}
-                            </p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            {% endif %}
+          </div>
         </div>
 
-        <!-- Actions et statistiques -->
-        <div class="space-y-6">
-            {% if user.role == 'etudiant' %}
-            <!-- Statistiques étudiant -->
-            <div class="bg-white shadow rounded-lg">
-                <div class="px-6 py-4 border-b border-gray-200">
-                    <h3 class="text-lg font-semibold text-gray-900">Statistiques</h3>
-                </div>
-                <div class="px-6 py-4">
-                    <div class="space-y-4">
-                        <div class="flex items-center justify-between">
-                            <span class="text-sm text-gray-600">Moyenne générale</span>
-                            <span class="text-lg font-semibold text-gray-900">
-                                {% if notes %}
-                                {{ "%.2f"|format(notes|map(attribute='note')|sum / notes|length) }}/20
-                                {% else %}
-                                N/A
-                                {% endif %}
-                            </span>
-                        </div>
-                        <div class="flex items-center justify-between">
-                            <span class="text-sm text-gray-600">Matières</span>
-                            <span class="text-lg font-semibold text-gray-900">{{ notes|length }}</span>
-                        </div>
-                        <div class="flex items-center justify-between">
-                            <span class="text-sm text-gray-600">Présence</span>
-                            <span class="text-lg font-semibold text-gray-900">
-                                {% if presence is defined %}{{ presence }}%{% else %}N/A{% endif %}
-                            </span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            {% endif %}
-
-            <!-- Actions -->
-            <div class="bg-white shadow rounded-lg">
-                <div class="px-6 py-4 border-b border-gray-200">
-                    <h3 class="text-lg font-semibold text-gray-900">Actions</h3>
-                </div>
-                <div class="px-6 py-4">
-                    <div class="space-y-3">
-                        {% if current_user.role in ['admin', 'enseignant'] %}
-                        <a href="{{ url_for('community.create_post', filiere_id=user.etudiant.filiere.id if user.etudiant and user.etudiant.filiere else 1) }}"
-                            class="w-full flex items-center justify-center p-3 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors text-blue-900">
-                            <i class="fas fa-plus mr-2"></i>
-                            Créer un post
-                        </a>
-                        {% endif %}
-
-                        <button onclick="window.history.back()"
-                            class="w-full flex items-center justify-center p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors text-gray-700">
-                            <i class="fas fa-arrow-left mr-2"></i>
-                            Retour
-                        </button>
-                    </div>
-                </div>
-            </div>
+        <!-- Actions -->
+        <div class="flex space-x-2">
+          {% if current_user.id == user.id %}
+          <a
+            href="{{ url_for('profile.mon_profil') }}"
+            class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium"
+          >
+            <i class="fas fa-edit mr-2"></i>Modifier
+          </a>
+          {% elif current_user.role == 'admin' %}
+          <a
+            href="{{ url_for('admin.admin_users') }}"
+            class="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-md text-sm font-medium"
+          >
+            <i class="fas fa-cog mr-2"></i>Gérer
+          </a>
+          {% endif %}
         </div>
+      </div>
     </div>
+  </div>
+
+  <!-- Informations détaillées -->
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <!-- Informations personnelles -->
+    <div class="lg:col-span-2">
+      <div class="bg-white shadow rounded-lg mb-6">
+        <div class="px-6 py-4 border-b border-gray-200">
+          <h2 class="text-lg font-semibold text-gray-900">
+            Informations personnelles
+          </h2>
+        </div>
+        <div class="px-6 py-4">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <p class="text-sm font-medium text-gray-600">Nom complet</p>
+              <p class="text-lg text-gray-900">
+                {{ user.nom }} {{ user.prenom }}
+              </p>
+            </div>
+            <div>
+              <p class="text-sm font-medium text-gray-600">Email</p>
+              <p class="text-lg text-gray-900">{{ user.email }}</p>
+            </div>
+            <div>
+              <p class="text-sm font-medium text-gray-600">Date de naissance</p>
+              <p class="text-lg text-gray-900">{{ user.date_naissance }}</p>
+            </div>
+            <div>
+              <p class="text-sm font-medium text-gray-600">Sexe</p>
+              <p class="text-lg text-gray-900">{{ user.sexe|title }}</p>
+            </div>
+            <div>
+              <p class="text-sm font-medium text-gray-600">Âge</p>
+              <p class="text-lg text-gray-900">{{ user.age }} ans</p>
+            </div>
+            <div>
+              <p class="text-sm font-medium text-gray-600">
+                Date d'inscription
+              </p>
+              <p class="text-lg text-gray-900">{{ user.date_creation }}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Informations spécifiques au rôle -->
+      {% if user.role == 'etudiant' and user.etudiant %}
+      <div class="bg-white shadow rounded-lg">
+        <div class="px-6 py-4 border-b border-gray-200">
+          <h2 class="text-lg font-semibold text-gray-900">
+            Informations académiques
+          </h2>
+        </div>
+        <div class="px-6 py-4">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <p class="text-sm font-medium text-gray-600">Filière</p>
+              <p class="text-lg text-gray-900">{{ user.etudiant.filiere }}</p>
+            </div>
+            <div>
+              <p class="text-sm font-medium text-gray-600">Année</p>
+              <p class="text-lg text-gray-900">{{ user.etudiant.annee }}</p>
+            </div>
+            <div class="md:col-span-2">
+              <p class="text-sm font-medium text-gray-600">Numéro étudiant</p>
+              <p class="text-lg text-gray-900 font-mono">
+                {{ user.etudiant.numero_etudiant }}
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+      {% endif %} {% if user.role == 'enseignant' and user.enseignant %}
+      <div class="bg-white shadow rounded-lg">
+        <div class="px-6 py-4 border-b border-gray-200">
+          <h2 class="text-lg font-semibold text-gray-900">
+            Informations professionnelles
+          </h2>
+        </div>
+        <div class="px-6 py-4">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <p class="text-sm font-medium text-gray-600">Spécialité</p>
+              <p class="text-lg text-gray-900">
+                {{ user.enseignant.specialite or 'Non spécifiée' }}
+              </p>
+            </div>
+            <div>
+              <p class="text-sm font-medium text-gray-600">
+                Filières enseignées
+              </p>
+              <p class="text-lg text-gray-900">
+                {% if user.enseignant.filieres_enseignees %} {% set data =
+                user.enseignant.filieres_enseignees | from_json %} {{
+                data.filieres | join(', ') if data.filieres else 'Aucune' }} {%
+                else %} Aucune {% endif %}
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+      {% endif %}
+    </div>
+
+    <!-- Actions et statistiques -->
+    <div class="space-y-6">
+      {% if user.role == 'etudiant' %}
+      <!-- Statistiques étudiant -->
+      <div class="bg-white shadow rounded-lg">
+        <div class="px-6 py-4 border-b border-gray-200">
+          <h3 class="text-lg font-semibold text-gray-900">Statistiques</h3>
+        </div>
+        <div class="px-6 py-4">
+          <div class="space-y-4">
+            <div class="flex items-center justify-between">
+              <span class="text-sm text-gray-600">Moyenne générale</span>
+              <span class="text-lg font-semibold text-gray-900">
+                {% if notes %} {{ "%.2f"|format(notes|map(attribute='note')|sum
+                / notes|length) }}/20 {% else %} N/A {% endif %}
+              </span>
+            </div>
+            <div class="flex items-center justify-between">
+              <span class="text-sm text-gray-600">Matières</span>
+              <span class="text-lg font-semibold text-gray-900"
+                >{{ notes|length }}</span
+              >
+            </div>
+            <div class="flex items-center justify-between">
+              <span class="text-sm text-gray-600">Présence</span>
+              <span class="text-lg font-semibold text-gray-900">
+                {% if presence is defined %}{{ presence }}%{% else %}N/A{% endif
+                %}
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+      {% endif %}
+
+      <!-- Actions -->
+      <div class="bg-white shadow rounded-lg">
+        <div class="px-6 py-4 border-b border-gray-200">
+          <h3 class="text-lg font-semibold text-gray-900">Actions</h3>
+        </div>
+        <div class="px-6 py-4">
+          <div class="space-y-3">
+            {% if current_user.role in ['admin', 'enseignant'] %}
+            <a
+              href="{{ url_for('community.create_post', filiere_id=filiere_id) }}"
+              class="w-full flex items-center justify-center p-3 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors text-blue-900"
+            >
+              <i class="fas fa-plus mr-2"></i>
+              Créer un post
+            </a>
+            {% endif %}
+
+            <button
+              onclick="window.history.back()"
+              class="w-full flex items-center justify-center p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors text-gray-700"
+            >
+              <i class="fas fa-arrow-left mr-2"></i>
+              Retour
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
 </div>
 
 <!-- Styles spécifiques -->
 <style>
-    .bg-green-100 {
-        background-color: #dcfce7;
-    }
+  .bg-green-100 {
+    background-color: #dcfce7;
+  }
 
-    .bg-blue-100 {
-        background-color: #dbeafe;
-    }
+  .bg-blue-100 {
+    background-color: #dbeafe;
+  }
 
-    .bg-purple-100 {
-        background-color: #e9d5ff;
-    }
+  .bg-purple-100 {
+    background-color: #e9d5ff;
+  }
 
-    .bg-yellow-100 {
-        background-color: #fef3c7;
-    }
+  .bg-yellow-100 {
+    background-color: #fef3c7;
+  }
 
-    .bg-red-100 {
-        background-color: #fee2e2;
-    }
+  .bg-red-100 {
+    background-color: #fee2e2;
+  }
 
-    .text-green-800 {
-        color: #166534;
-    }
+  .text-green-800 {
+    color: #166534;
+  }
 
-    .text-blue-800 {
-        color: #1e40af;
-    }
+  .text-blue-800 {
+    color: #1e40af;
+  }
 
-    .text-purple-800 {
-        color: #7c3aed;
-    }
+  .text-purple-800 {
+    color: #7c3aed;
+  }
 
-    .text-yellow-800 {
-        color: #92400e;
-    }
+  .text-yellow-800 {
+    color: #92400e;
+  }
 
-    .text-red-800 {
-        color: #991b1b;
-    }
+  .text-red-800 {
+    color: #991b1b;
+  }
 </style>
 {% endblock %}

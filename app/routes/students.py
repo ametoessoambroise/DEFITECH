@@ -12,6 +12,7 @@ from app.models.devoir_vu import DevoirVu
 from app.models.emploi_temps import EmploiTemps
 from app.models.filiere import Filiere
 from app.models.matiere import Matiere
+from app.services.validation_service import ValidationService
 
 students_bp = Blueprint("students", __name__, url_prefix="/etudiant")
 
@@ -217,6 +218,59 @@ def voir_devoir(devoir_id):
         db.session.add(vu)
         db.session.commit()
     return render_template("etudiant/voir_devoir.html", devoir=devoir)
+
+
+@students_bp.route("/mes-rattrapages")
+@login_required
+def mes_rattrapages():
+    """
+    Affiche la liste des rattrapages de l'étudiant.
+    """
+    if current_user.role != "etudiant":
+        return redirect(url_for("main.index"))
+
+    etudiant = Etudiant.query.filter_by(user_id=current_user.id).first()
+    if not etudiant:
+        return redirect(url_for("main.index"))
+
+    filiere_obj = Filiere.query.filter_by(nom=etudiant.filiere).first()
+    if not filiere_obj:
+        flash("Erreur de configuration (Filière introuvable).", "error")
+        return redirect(url_for("students.dashboard"))
+
+    matieres = Matiere.query.filter_by(
+        filiere_id=filiere_obj.id, annee=etudiant.annee
+    ).all()
+
+    rattrapages_list = []
+
+    for matiere in matieres:
+        is_valid, moyenne, message = ValidationService.valider_matiere(
+            etudiant.id, matiere.id
+        )
+
+        # On affiche si non validé OU si en attente
+        if not is_valid:
+            # Récupérer la note de rattrapage si elle existe
+            notes = ValidationService.get_notes(etudiant.id, matiere.id)
+            note_rattrapage = next(
+                (n for n in notes if n.type_evaluation == "Rattrapage"), None
+            )
+
+            rattrapage_data = {
+                "matiere": matiere,
+                "moyenne_initiale": moyenne,
+                "statut": message,
+                "date_rattrapage": None,  # A implémenter si gestion planning
+                "salle": None,  # A implémenter si gestion planning
+                "note_rattrapage": note_rattrapage.note if note_rattrapage else None,
+            }
+            rattrapages_list.append(rattrapage_data)
+
+    return render_template(
+        "etudiant/mes-rattrapages.html", rattrapages=rattrapages_list
+    )
+
 
 
 @students_bp.route("/api/emploi-temps", methods=["GET"])

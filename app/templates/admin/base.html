@@ -5,8 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>{% block title %}{% endblock %}</title>
 
-    
-
     <!-- Font Awesome -->
     <link
       href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
@@ -221,7 +219,7 @@
   </head>
 
   <body
-    class="bg-gradient-to-br from-gray-50 via-blue-50/30 to-gray-50 min-h-screen flex flex-col w-full font-['Inter'] antialiased"
+    class="bg-gradient-to-br from-gray-50 via-blue-50/30 to-gray-50 min-h-screen flex flex-col w-full font-['Inter'] antialiased text-black"
   >
     <!-- Global Loading Component -->
     {% include 'components/loading.html' %}
@@ -229,7 +227,6 @@
     <!-- App Lock Overlay -->
     {% if current_user.is_authenticated and current_user.is_app_lock_enabled %}
     {% include 'components/lock_screen.html' %} {% endif %}
-
 
     <!-- HEADER avec effet glassmorphism moderne -->
     <header
@@ -469,19 +466,19 @@
     <div id="sidebar-overlay" class="sidebar-overlay"></div>
 
     <!-- Curseur personnalisé -->
-    <div
+    <!-- <div
       id="cursor"
       class="fixed w-10 h-10 p-2 shadow-lg rounded-full bg-gradient-to-br from-blue-500/20 to-purple-500/20 backdrop-blur-sm z-[9999] pointer-events-none hidden lg:block"
       aria-hidden="true"
-    ></div>
+    ></div> -->
 
     <button
       id="defaiBtn"
       onclick="window.location.href='/defAI'"
       title="Defai Votre Assistant"
-      class="w-12 h-12 z-[9999] rounded-full outline-none fixed bottom-4 right-4 shadow-lg hover:scale-110 transition-all duration-150"
     >
       <img
+        class="w-12 h-12 z-[9999] rounded-full outline-none fixed bottom-4 right-4 shadow-lg hover:scale-110 transition-all duration-150"
         src="https://res.cloudinary.com/dmokvhpjt/image/upload/v1766894468/gep1294qd7tbddgvtmpj.png"
         alt="logo"
       />
@@ -491,7 +488,7 @@
     {% include 'components/sidebar.html' %}
 
     <!-- Contenu principal -->
-    <main class="flex-grow w-full pt-20 bg-gray-50">
+    <main class="flex-grow w-full pt-20 bg-gray-50 text-black">
       <!-- Messages flash -->
       {% with messages = get_flashed_messages(with_categories=true) %} {% if
       messages %}

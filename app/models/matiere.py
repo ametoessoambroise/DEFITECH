@@ -12,8 +12,16 @@ class Matiere(db.Model):
     enseignant_id = db.Column(
         db.Integer, db.ForeignKey("enseignant.id"), nullable=False
     )
-    annee = db.Column(db.String(20), nullable=False, default="1ère année")  # Ajout de l'année
+    annee = db.Column(
+        db.String(20), nullable=False, default="1ère année"
+    )  # Ajout de l'année
     credit = db.Column(db.Integer, nullable=False, default=6)  # Ajout des crédits
+
+    def validate_credits(self):
+        """Valide que les crédits sont entre 2 et 6 selon la norme ECTS"""
+        if not (2 <= self.credit <= 6):
+            return False, "Les crédits doivent être entre 2 et 6 selon la norme ECTS"
+        return True, ""
 
     # Relations
     filiere = db.relationship("Filiere", backref="matieres")

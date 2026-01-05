@@ -63,14 +63,32 @@
             </tr>
         </thead>
         <tbody class="bg-white divide-y divide-gray-100">
-            {% for user, info in etudiants_data %}
+            {% for user, info, status in etudiants_data %}
             <tr class="hover:bg-blue-50 transition">
                 <td class="px-4 py-2">{{ user.nom }}</td>
                 <td class="px-4 py-2">{{ user.prenom }}</td>
                 <td class="px-4 py-2">{{ user.email }}</td>
                 <td class="px-4 py-2">{{ info.filiere if info else '-' }}</td>
                 <td class="px-4 py-2">{{ info.annee if info else '-' }}</td>
-                <td class="px-4 py-2">{{ user.statut }}</td>
+                <td class="px-4 py-2">
+                    {% if status == 'VALIDE' %}
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                            Validé
+                        </span>
+                    {% elif status == 'ATTENTE_RATTRAPAGE' %}
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                            Rattrapage
+                        </span>
+                    {% elif status == 'NON_VALIDE' %}
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                            Non Validé
+                        </span>
+                    {% else %}
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                            {{ status }}
+                        </span>
+                    {% endif %}
+                </td>
             </tr>
             {% endfor %}
         </tbody>

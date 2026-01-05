@@ -164,6 +164,18 @@
         </div>
         <span class="font-semibold">Notes</span>
       </a>
+
+      <a
+        href="{{ url_for('admin.note_requests') }}"
+        class="flex items-center px-4 py-3 text-gray-700 hover:bg-gradient-to-r hover:from-amber-50 hover:to-amber-100 hover:text-amber-600 rounded-xl transition-all duration-200 group {{ 'bg-gradient-to-r from-amber-50 to-amber-100 text-amber-600 shadow-sm' if request.endpoint == 'admin.note_requests' else '' }}"
+      >
+        <div
+          class="w-10 h-10 rounded-xl bg-amber-100 text-amber-600 flex items-center justify-center mr-3 group-hover:scale-110 transition-transform"
+        >
+          <i class="fas fa-exchange-alt"></i>
+        </div>
+        <span class="font-semibold">Demandes Modif.</span>
+      </a>
       <a
         href="{{ url_for('bug_reports.list_bug_reports') }}"
         class="flex items-center px-4 py-3 text-gray-700 hover:bg-gradient-to-r hover:from-amber-50 hover:to-amber-100 hover:text-amber-600 rounded-xl transition-all duration-200 group {{ 'bg-gradient-to-r from-amber-50 to-amber-100 text-amber-600 shadow-sm' if request.endpoint == 'admin_suggestions' else '' }}"

@@ -24,6 +24,14 @@ async function uploadToCloudinary(file, uploadPreset, resourceType = 'auto') {
 
     const formData = new FormData();
     formData.append("file", file);
+
+    // Auto-detect raw files (PDF, Documents) to avoid q_auto errors
+    const rawExtensions = ['.pdf', '.doc', '.docx', '.xls', '.xlsx', '.ppt', '.pptx', '.txt', '.csv', '.zip', '.rar'];
+    const fileName = file.name.toLowerCase();
+    if (rawExtensions.some(ext => fileName.endsWith(ext))) {
+        resourceType = 'raw';
+    }
+
     formData.append("upload_preset", uploadPreset);
 
     try {

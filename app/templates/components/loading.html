@@ -1,8 +1,7 @@
-
 <!-- Loading Component - Intercepts all navigation redirects -->
 <div
   id="globalLoader"
-  class="fixed inset-0 bg-white dark:bg-gray-900 z-[9999] flex items-center justify-center transition-opacity duration-300 opacity-0 pointer-events-none"
+  class="fixed inset-0 bg-white dark:bg-gray-900 z-[9999] flex items-center justify-center transition-opacity duration-300 opacity-0 pointer-events-none text-black"
 >
   <div class="text-center">
     <!-- Spinner Animation -->
@@ -205,19 +204,7 @@
       }, 10000);
     };
 
-    // Override window.location for programmatic navigation
-    const originalLocationHref = Object.getOwnPropertyDescriptor(
-      window.location,
-      "href"
-    );
-    Object.defineProperty(window.location, "href", {
-      set: function (url) {
-        if (!isInternalAnchor(url)) {
-          showLoader();
-        }
-        originalLocationHref.set.call(this, url);
-      },
-      get: originalLocationHref.get,
-    });
+    // Override removed to prevent TypeError: Cannot redefine property: href
+    // Programmatic navigation will not trigger the loader, but this ensures stability.
   })();
 </script>

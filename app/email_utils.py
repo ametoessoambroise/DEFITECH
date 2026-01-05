@@ -1260,10 +1260,11 @@ def send_room_invitation(etudiant, enseignant, course, room_token, app):
     from flask import url_for
 
     # Construire l'URL complète pour rejoindre la salle
-    join_url = url_for("room", token=room_token, _external=True)
+    join_url = url_for("videoconference.join_room", token=room_token, _external=True)
 
-    # Rendre l'URL HTTPS si en production
-    if app.config.get("PREFERRED_URL_SCHEME") == "https":
+    # Rendre l'URL HTTPS uniquement si on n'est pas en local
+    # (Évite les erreurs 400 quand le serveur de dev est en HTTP mais que le lien force HTTPS)
+    if "127.0.0.1" not in join_url and "localhost" not in join_url:
         join_url = join_url.replace("http://", "https://")
 
     # Envoyer l'email

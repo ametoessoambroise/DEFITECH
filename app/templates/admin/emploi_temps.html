@@ -371,7 +371,7 @@
                     try {
                         // Direct usage of global uploadToCloudinary with 'documents_upload' preset and 'raw' resource type
                         // We use 'raw' because JSON/Excel files are better handled as raw files in Cloudinary for this purpose
-                        const result = await uploadToCloudinary(file, 'documents_upload', null, null, 'raw');
+                        const result = await uploadToCloudinary(file, 'documents_upload', 'raw');
                         
                         if (result && result.secure_url) {
                             showStatus(`Traitement du fichier en cours...`, false);

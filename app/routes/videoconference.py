@@ -143,7 +143,7 @@ def join_room(token):
     if current_user.role == "etudiant":
         # Vérifier si l'étudiant est inscrit au cours
         etudiant = Etudiant.query.filter_by(user_id=current_user.id).first()
-        has_access = etudiant and etudiant.filiere_id == room.course.filiere_id
+        has_access = etudiant and etudiant.filiere == room.course.filiere.nom
     elif current_user.role == "enseignant":
         # Les enseignants ont accès s'ils enseignent le cours ou sont admins
         has_access = (

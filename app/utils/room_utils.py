@@ -7,8 +7,6 @@ from app.models.videoconference import Room, RoomInvitation, Inscription
 from app.models.etudiant import Etudiant
 from app.models.enseignant import Enseignant
 from app.models.matiere import Matiere
-from app.models.emploi_temps import EmploiTemps
-from app.models.filiere import Filiere
 from app.email_utils import send_room_invitation
 from datetime import datetime, timedelta
 import logging
@@ -131,27 +129,71 @@ def send_room_invitations(room_id, app):
     ]
     app.logger.info(f"Etudiants via Inscription: {len(etudiants_inscrits)}")
 
-    # Stratégie 2: Étudiants via l'emploi du temps de la filière (fallback)
-    filieres_ids = [
-        f[0]
-        for f in db.session.query(EmploiTemps.filiere_id)
-        .filter(EmploiTemps.matiere_id == course.id)
-        .distinct()
-        .all()
-    ]
+    # Stratégie 2: Étudiants via la Filière et l'Année du cours (Robust Fallback)
+    # Plus fiable que l'EmploiTemps car ne dépend pas de la planification
     etudiants_filiere = []
-    if filieres_ids:
-        # On récupère les filières pour avoir les noms exacts
-        noms_filieres = [
-            f.nom for f in Filiere.query.filter(Filiere.id.in_(filieres_ids)).all()
-        ]
-        # Recherche robuste des étudiants (insensible à la casse)
-        for nom in noms_filieres:
-            etudiants_filiere.extend(
-                Etudiant.query.filter(Etudiant.filiere.ilike(nom)).all()
+    if course and course.filiere and course.annee:
+        filiere_nom = course.filiere.nom
+        annee = course.annee
+
+        app.logger.info(
+            f"Recherche étudiants pour Filière: '{filiere_nom}', Année: '{annee}'"
+        )
+
+        # Générer des variations pour l'année pour gérer les incohérences de saisie (accents, formats)
+        # Ex: "2ème année" vs "2eme annee" vs "2eme année"
+        annees_possibles = [annee]
+
+        # Variations courantes
+        replacements = {
+            "è": "e",
+            "é": "e",
+            "1ère": "1ere",
+            "1ere": "1ère",
+            "ème": "eme",
+            "eme": "ème",
+            "année": "annee",
+            "annee": "année",
+        }
+
+        # Créer une variation sans accents / normalisée
+        normalized = annee
+        for char, repl in replacements.items():
+            if char in normalized:
+                normalized = normalized.replace(char, repl)
+
+        if normalized not in annees_possibles:
+            annees_possibles.append(normalized)
+
+        # Bruteforce des variations communes si ça ressemble à une année standard
+        if "1" in annee:
+            annees_possibles.extend(["1ère année", "1ere annee", "1ere année"])
+        if "2" in annee:
+            annees_possibles.extend(
+                ["2ème année", "2eme annee", "2eme année", "2ème annee", "2eme annee"]
+            )
+        if "3" in annee:
+            annees_possibles.extend(
+                ["3ème année", "3eme annee", "3eme année", "3ème annee"]
             )
 
-    app.logger.info(f"Etudiants via Filière/EmploiTemps: {len(etudiants_filiere)}")
+        # Dédoublonnage
+        annees_possibles = list(set(annees_possibles))
+
+        app.logger.info(
+            f"Recherche étudiants pour Filière: '{filiere_nom}', Années possibles: {annees_possibles}"
+        )
+
+        etudiants_filiere = Etudiant.query.filter(
+            Etudiant.filiere.ilike(filiere_nom),  # Insensible à la casse
+            Etudiant.annee.in_(annees_possibles),
+        ).all()
+    else:
+        app.logger.warning(
+            "Filière ou Année non définies pour ce cours, recherche par filière impossible"
+        )
+
+    app.logger.info(f"Etudiants via Filière/Année: {len(etudiants_filiere)}")
 
     # Union des deux listes par ID utilisateur pour éviter les doublons
     etudiants_dict = {e.user_id: e for e in etudiants_inscrits if e}

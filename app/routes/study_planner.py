@@ -248,18 +248,14 @@ def call_gemini_api(prompt, temperature=0.7):
                         if parts and "text" in parts[0]:
                             text_response = parts[0]["text"].strip()
 
-                            # Nettoyage de la réponse
-                            if text_response.startswith("```json"):
-                                text_response = text_response[7:]
-                            if text_response.endswith("```"):
-                                text_response = text_response[:-3].strip()
+                            # Utiliser la fonction de nettoyage robuste
+                            parsed_json = clean_json_response(text_response)
 
-                            try:
-                                parsed_json = json.loads(text_response)
+                            if parsed_json:
                                 return {"success": True, "data": parsed_json}
-                            except json.JSONDecodeError as e:
+                            else:
                                 current_app.logger.error(
-                                    f"Erreur de parsing JSON: {str(e)}"
+                                    f"Echec du parsing JSON même après nettoyage. Texte brut: {text_response[:200]}..."
                                 )
                                 return {
                                     "success": False,
@@ -1548,16 +1544,15 @@ FORMAT JSON ATTENDU :
                 502,
             )
 
-        # 5. Nettoyage et Parsing de la réponse
-        raw_text = result.get("data", {}).get("text", "{}")
-        # Supprime les balises Markdown ```json si Gemini les ajoute malgré les instructions
-        clean_json = re.sub(r"```json|```", "", raw_text).strip()
+        # 5. Extraction de la réponse déjà parsée par call_gemini_api
+        plan_data = result.get("data", {})
 
         try:
-            plan_data = json.loads(clean_json)
-
             # Validation sommaire de la structure
             if "plan" not in plan_data:
+                current_app.logger.error(
+                    f"Clé 'plan' absente de la réponse IA | Données reçues: {plan_data}"
+                )
                 raise ValueError("Clé 'plan' absente de la réponse IA")
 
             # Formatage final pour le front-end
@@ -1574,9 +1569,9 @@ FORMAT JSON ATTENDU :
 
             return jsonify({"success": True, "data": {"plan": formatted_plan}})
 
-        except (json.JSONDecodeError, ValueError) as e:
+        except (ValueError, KeyError) as e:
             current_app.logger.error(
-                f"Erreur parsing JSON IA: {str(e)} | Brut: {raw_text}"
+                f"Erreur validation structure IA: {str(e)} | Données: {plan_data}"
             )
             return (
                 jsonify({"success": False, "error": "Le format généré est invalide"}),

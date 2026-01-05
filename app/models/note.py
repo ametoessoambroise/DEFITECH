@@ -24,6 +24,9 @@ class Note(db.Model):
     type_evaluation = db.Column(db.String(100), nullable=True)
     note = db.Column(db.Float, nullable=True)
     date_evaluation = db.Column(db.DateTime, default=datetime.utcnow)
+    date_saisie = db.Column(
+        db.DateTime, default=datetime.utcnow
+    )  # Date de saisie initiale
 
     # Relations
     etudiant = db.relationship("Etudiant", backref="notes")

@@ -30,178 +30,31 @@ endblock %} {% block extra_css %} {{ super() }}
     box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1),
       0 4px 6px -2px rgba(0, 0, 0, 0.05);
     border: 1px solid rgba(255, 255, 255, 0.05);
+    /* Ensure card doesn't overflow or cover controls */
+    max-height: calc(100vh - 140px);
+    width: 100%;
+    margin: 0 auto;
   }
 
   .video-card:hover {
     transform: translateY(-2px);
-    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.2),
+    box-shadow: 20px 25px -5px rgba(0, 0, 0, 0.2),
       0 10px 10px -5px rgba(0, 0, 0, 0.1);
     border-color: rgba(255, 255, 255, 0.1);
+    z-index: 20;
   }
 
   .video-card video {
     width: 100%;
     height: 100%;
     object-fit: contain;
-    /* Like Meet, ensure whole video sees */
     background-color: #000;
     transform: scaleX(-1);
-    /* Mirror effect by default for local, toggleable */
   }
 
   .video-card.screen-share video {
     transform: none !important;
     object-fit: contain;
-  }
-
-  /* Avatar Placeholder (when video off) */
-  .avatar-placeholder {
-    position: absolute;
-    inset: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background-color: #334155;
-    z-index: 10;
-  }
-
-  /* Participant Info Label */
-  .participant-label {
-    position: absolute;
-    bottom: 12px;
-    left: 12px;
-    background: rgba(0, 0, 0, 0.6);
-    backdrop-filter: blur(4px);
-    padding: 4px 12px;
-    border-radius: 6px;
-    color: white;
-    font-size: 0.875rem;
-    font-weight: 500;
-    z-index: 20;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    max-width: 80%;
-  }
-
-  /* Active Speaker Ring */
-  .active-speaker-ring {
-    position: absolute;
-    inset: 0;
-    border: 3px solid #3b82f6;
-    border-radius: 12px;
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity 0.2s;
-    z-index: 30;
-  }
-
-  .is-speaking .active-speaker-ring {
-    opacity: 1;
-  }
-
-  /* Audio Visu / Status Icons */
-  .status-indicator {
-    width: 24px;
-    height: 24px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 50%;
-    background: rgba(255, 255, 255, 0.1);
-  }
-
-  .status-indicator.is-muted {
-    background: rgba(239, 68, 68, 0.2);
-    color: #ef4444;
-  }
-
-  /* Control Bar Glassmorphism */
-  .control-bar {
-    position: fixed;
-    bottom: 24px;
-    left: 50%;
-    transform: translateX(-50%);
-    background: rgba(15, 23, 42, 0.75);
-    backdrop-filter: blur(20px) saturate(180%);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    padding: 12px 24px;
-    border-radius: 24px;
-    display: flex;
-    align-items: center;
-    gap: 16px;
-    z-index: 100;
-    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
-  }
-
-  .control-btn {
-    width: 48px;
-    height: 48px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: all 0.2s;
-    color: white;
-    background: rgba(255, 255, 255, 0.05);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-  }
-
-  .control-btn:hover {
-    background: rgba(255, 255, 255, 0.15);
-    transform: translateY(-2px);
-  }
-
-  .control-btn.active {
-    background: var(--primary-accent);
-    border-color: transparent;
-  }
-
-  .control-btn.danger {
-    background: rgba(239, 68, 68, 0.2);
-    border-color: rgba(239, 68, 68, 0.3);
-    color: #ef4444;
-  }
-
-  .control-btn.danger:hover {
-    background: #ef4444;
-    color: white;
-  }
-
-  /* Hand Raised Icon */
-  .hand-raised-badge {
-    position: absolute;
-    top: 12px;
-    right: 12px;
-    background: #fbbf24;
-    color: #000;
-    width: 32px;
-    height: 32px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
-    z-index: 40;
-    animation: bounce 0.5s infinite alternate;
-  }
-
-  @keyframes bounce {
-    from {
-      transform: translateY(0);
-    }
-    to {
-      transform: translateY(-5px);
-    }
-  }
-
-  /* Control Bar Glassmorphism */
-  .control-bar {
-    background: rgba(30, 41, 59, 0.8);
-    backdrop-filter: blur(12px);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1),
-      0 10px 10px -5px rgba(0, 0, 0, 0.04);
   }
 
   /* Layout Modes */
@@ -211,14 +64,29 @@ endblock %} {% block extra_css %} {{ super() }}
     height: 100%;
     width: 100%;
     padding: 16px;
+    padding-bottom: 100px; /* Space for control bar */
+    overflow-y: auto; /* Allow scrolling if too many people */
+    align-items: center; /* Center vertically */
   }
 
   /* Grid Mode (Default) */
   .layout-grid {
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-    grid-auto-rows: 1fr;
-    align-content: center;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    grid-auto-rows: minmax(200px, 1fr);
     justify-content: center;
+  }
+
+  /* Handle single participant nicely */
+  .layout-grid:has(> .video-card:only-child) {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .layout-grid:has(> .video-card:only-child) .video-card {
+    max-width: 1200px;
+    aspect-ratio: 16/9;
+    height: auto;
   }
 
   /* Spotlight Mode (Stage + Filmstrip) */
@@ -226,12 +94,22 @@ endblock %} {% block extra_css %} {{ super() }}
     display: flex !important;
     flex-direction: column;
     gap: 16px;
+    overflow: hidden; /* Prevent body scroll */
   }
 
   .layout-spotlight .stage-area {
     flex: 1;
     width: 100%;
     position: relative;
+    min-height: 0; /* Flex fix */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .layout-spotlight .stage-area .video-card {
+    height: 100%;
+    max-height: none;
   }
 
   .layout-spotlight .filmstrip-area {
@@ -242,11 +120,12 @@ endblock %} {% block extra_css %} {{ super() }}
     overflow-x: auto;
     padding-bottom: 4px;
     justify-content: center;
+    padding-bottom: 100px; /* Push up for controls */
   }
 
   .layout-spotlight .filmstrip-area .video-card {
     width: 220px;
-    height: 100%;
+    height: 100px; /* Fixed height for filmstrip */
     flex-shrink: 0;
   }
 

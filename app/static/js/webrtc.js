@@ -27,13 +27,27 @@ const State = {
 
     // Devices
     videoDevice: null,
-    audioDevice: null
+    audioDevice: null,
+
+    // Resource Tracking
+    visualizerLoops: new Map(), // userId (or 'preflight') -> cancelFunction
+
+    // Connection State
+    isJoined: false
 };
 
 // ==========================================
 // CONFIGURATION & UTILS
 // ==========================================
 const socket = io();
+// Handle reconnection automatically
+socket.on('connect', () => {
+    Logger.log('Socket connected/reconnected', socket.id);
+    if (State.isJoined) {
+        Logger.log('Re-joining room after reconnection...');
+        joinRoom(true); // true = isReconnection
+    }
+});
 const DOM = {
     layoutContainer: document.getElementById('layout-container'),
     preflightModal: document.getElementById('preflight-modal'),
@@ -185,12 +199,16 @@ async function startPreflightLoop() {
 // ==========================================
 // JOINING ROOM
 // ==========================================
-async function joinRoom() {
+async function joinRoom(isReconnection = false) {
     DOM.preflightModal.classList.add('hidden'); // Hide modal based on new class handling or direct style
     DOM.preflightModal.style.display = 'none';
 
-    // Add local user to UI
-    addParticipantToUI(window.USER_ID, window.USER_NAME, true, State.localStream);
+    State.isJoined = true;
+
+    // Add local user to UI only if it's not a reconnection (already there)
+    if (!isReconnection) {
+        addParticipantToUI(window.USER_ID, window.USER_NAME, true, State.localStream);
+    }
 
     // Join Socket Room
     socket.emit('join_room', {
@@ -207,6 +225,12 @@ async function joinRoom() {
 // WEBRTC LOGIC (SimplePeer)
 // ==========================================
 function createPeer(targetId, initiator) {
+    if (State.peers[targetId]) {
+        Logger.log(`Destroying existing peer for ${targetId} before creating new one.`);
+        State.peers[targetId].destroy();
+        delete State.peers[targetId];
+    }
+
     const peer = new SimplePeer({
         initiator: initiator,
         trickle: true,
@@ -243,9 +267,10 @@ function handleRoomInfo(data) {
     participants.forEach(p => {
         if (p.id == window.USER_ID) return; // Skip self
 
-        // Determine initiator (lower ID calls higher ID)
-        // Using string comparison is fine for UUIDs/ActiveRecord IDs
-        const isInitiator = window.USER_ID < p.id;
+        // Determine initiator using NUMERIC comparison for consistency
+        const isInitiator = shouldInitiate(window.USER_ID, p.id);
+
+        Logger.log(`Processing participant ${p.id}. Initiator: ${isInitiator}`);
 
         // Wait for specific signaling if not initiator
         if (isInitiator) createPeer(p.id, true);
@@ -260,8 +285,10 @@ function handleUserJoined(data) {
     if (data.user_id == window.USER_ID) return;
     showToast(`${data.username} a rejoint la réunion.`);
 
-    // Use numeric comparison for stable tie-breaking
-    const isInitiator = Number(window.USER_ID) < Number(data.user_id);
+    // Use consistent NUMERIC comparison
+    const isInitiator = shouldInitiate(window.USER_ID, data.user_id);
+    Logger.log(`User joined ${data.user_id}. Initiator: ${isInitiator}`);
+
     if (isInitiator) createPeer(data.user_id, true);
 
     State.participants.set(data.user_id, { name: data.username });
@@ -277,6 +304,12 @@ function removeParticipant(userId) {
     if (State.peers[userId]) {
         State.peers[userId].destroy();
         delete State.peers[userId];
+    }
+
+    // Stop visualizer loop if exists
+    if (State.visualizerLoops.has(userId)) {
+        State.visualizerLoops.get(userId)(); // Call cancel function
+        State.visualizerLoops.delete(userId);
     }
 
     // Remove UI
@@ -665,6 +698,18 @@ function getInitials(name) {
     return name ? name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase() : '?';
 }
 
+function shouldInitiate(myId, theirId) {
+    // Robust comparison: Convert to Number if possible to avoid "10" < "2" issues
+    const myNum = Number(myId);
+    const theirNum = Number(theirId);
+
+    if (!isNaN(myNum) && !isNaN(theirNum)) {
+        return myNum < theirNum;
+    }
+    // Fallback to string comparison if IDs are not numeric
+    return String(myId) < String(theirId);
+}
+
 function handleRemoteAudioChange(data) {
     const icon = document.getElementById(`mute-icon-${data.user_id}`);
     if (icon) icon.classList.toggle('hidden', !data.is_muted);
@@ -729,12 +774,30 @@ function setupAudioVisualizer(stream, barId, userId) {
             const card = document.getElementById(`video-card-${userId}`);
             if (card) {
                 card.classList.toggle('is-speaking', avg > 20); // Threshold
+            } else {
+                // If card is gone, stop loop
+                cancelAnimationFrame(frameId);
+                return;
             }
         }
 
-        requestAnimationFrame(loop);
+        frameId = requestAnimationFrame(loop);
     };
-    loop();
+    let frameId = requestAnimationFrame(loop);
+
+    // Register cancel function
+    const cancelFunc = () => {
+        cancelAnimationFrame(frameId);
+        source.disconnect();
+        analyser.disconnect();
+        ctx.close(); // Clean up context if possible/needed
+    };
+
+    if (userId) {
+        State.visualizerLoops.set(userId, cancelFunc);
+    } else if (barId === 'preflight-audio-bar') {
+        State.visualizerLoops.set('preflight', cancelFunc);
+    }
 }
 
 // Side Panel

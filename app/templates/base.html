@@ -22,12 +22,6 @@
       rel="stylesheet"
     />
 
-    <!-- Tailwind CSS (local) -->
-    <link
-      rel="stylesheet"
-      href="{{ url_for('static', filename='css/compiled.css') }}"
-    />
-
     <!-- Custom CSS -->
     <link
       rel="stylesheet"
@@ -137,7 +131,7 @@
     {% block extra_css %}{% endblock %}
   </head>
 
-  <body class="bg-gray-50 min-h-screen flex flex-col w-full font-['Inter']">
+  <body class="bg-gray-50 min-h-screen flex flex-col w-full font-['Inter'] text-black">
     <!-- Global Loading Component -->
     {% include 'components/loading.html' %}
 
@@ -146,11 +140,11 @@
     {% include 'components/lock_screen.html' %} {% endif %}
 
     <!-- Curseur personnalisé -->
-    <div
+    <!-- <div
       id="cursor"
       class="fixed w-10 h-10 p-2 shadow-md rounded-full bg-black/20 z-[9999] pointer-events-none hidden"
       aria-hidden="true"
-    ></div>
+    ></div> -->
 
     <!-- Tooltip personnalisé -->
     <div id="customTooltip" class="custom-tooltip"></div>
@@ -303,6 +297,24 @@
                   Buddy
                 </a>
 
+                {% if current_user.role == 'etudiant' %}
+                <a
+                  href="{{ url_for('students.mes_rattrapages') }}"
+                  class="block px-4 py-2 text-sm text-gray-700 hover:bg-red-50 transition"
+                >
+                  <i class="fas fa-clipboard-check mr-2 text-red-600"></i>Mes
+                  Rattrapages
+                </a>
+                {% endif %}
+                {% if current_user.role == 'enseignant' %}
+                <a
+                  href="{{ url_for('teachers.manage_rattrapage') }}"
+                  class="block px-4 py-2 text-sm text-gray-700 hover:bg-orange-50 transition"
+                >
+                  <i class="fas fa-user-clock mr-2 text-orange-600"></i
+                  >Rattrapages
+                </a>
+                {% endif %} 
                 {% if matiere is defined and matiere %}
                 <a
                   href="{{ url_for('videoconference.room', course_id=matiere.id) }}"

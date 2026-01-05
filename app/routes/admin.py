@@ -42,8 +42,12 @@ from app.models.emploi_temps import EmploiTemps
 try:
     from app.models.teacher_profile_update_request import TeacherProfileUpdateRequest
     from app.models.global_notification import GlobalNotification
+    from app.models.note_modification_request import NoteModificationRequest
+    from app.services.validation_service import ValidationService
 except ImportError:
     TeacherProfileUpdateRequest = None
+    NoteModificationRequest = None
+    ValidationService = None
 
 from app.email_utils import send_account_validation_email
 
@@ -108,8 +112,97 @@ def dashboard():
         total_enseignants=total_enseignants,
         total_filieres=total_filieres,
         notifications_admin=notifications_admin,
+        requests_modifs_notes=(
+            NoteModificationRequest.query.filter_by(statut="pending").count()
+            if NoteModificationRequest
+            else 0
+        ),
         pending_teacher_requests=pending_teacher_requests,
     )
+
+@admin_bp.route("/requests/notes")
+@login_required
+def note_requests():
+    """Page de gestion des demandes de modification de notes."""
+    if current_user.role != "admin":
+        flash("Accès non autorisé.", "error")
+        return redirect(url_for("main.index"))
+
+    requests_list = (
+        NoteModificationRequest.query.filter_by(statut="pending")
+        .order_by(NoteModificationRequest.date_demande.desc())
+        .all()
+    )
+    return render_template("admin/requests.html", requests=requests_list)
+
+
+@admin_bp.route("/requests/notes/approve/<int:request_id>", methods=["POST"])
+@login_required
+def approve_modification(request_id):
+    """Approuve une demande de modification de note."""
+    if current_user.role != "admin":
+        return redirect(url_for("main.index"))
+
+    req = NoteModificationRequest.query.get_or_404(request_id)
+    if req.statut != "pending":
+        flash("Cette demande a déjà été traitée.", "warning")
+        return redirect(url_for("admin.note_requests"))
+
+    # Appliquer la modification
+    note = req.note
+    ancienne_valeur = note.note
+    note.note = req.nouvelle_valeur
+
+    req.statut = "approved"
+    req.date_traitement = datetime.utcnow()
+
+    # Notifications
+    # 1. Enseignant
+    Notification.creer_notification(
+        user_id=req.enseignant.user_id,
+        titre="Modification approuvée",
+        message=f"Votre demande pour {note.etudiant.user.nom} a été acceptée ({ancienne_valeur} -> {note.note}).",
+        type="success",
+    )
+
+    # 2. Etudiant
+    Notification.creer_notification(
+        user_id=note.etudiant.user_id,
+        titre="Note modifiée",
+        message=f"Votre note en {note.matiere.nom} ({note.type_evaluation}) a été corrigée : {note.note}/20.",
+        type="info",
+    )
+
+    db.session.commit()
+    flash("Demande approuvée et note mise à jour.", "success")
+    return redirect(url_for("admin.note_requests"))
+
+
+@admin_bp.route("/requests/notes/reject/<int:request_id>", methods=["POST"])
+@login_required
+def reject_modification(request_id):
+    """Rejette une demande de modification de note."""
+    if current_user.role != "admin":
+        return redirect(url_for("main.index"))
+
+    req = NoteModificationRequest.query.get_or_404(request_id)
+    if req.statut != "pending":
+        return redirect(url_for("admin.note_requests"))
+
+    req.statut = "rejected"
+    req.date_traitement = datetime.utcnow()
+
+    # Notification Enseignant
+    Notification.creer_notification(
+        user_id=req.enseignant.user_id,
+        titre="Modification refusée",
+        message=f"Votre demande pour la note de {req.note.etudiant.user.nom} a été refusée par l'administration.",
+        type="error",
+    )
+
+    db.session.commit()
+    flash("Demande rejetée.", "info")
+    return redirect(url_for("admin.note_requests"))
 
 
 @admin_bp.route("/etudiants")
@@ -158,7 +251,14 @@ def admin_etudiants():
             continue
         if annee_filter and (not info or info.annee != annee_filter):
             continue
-        filtered_data.append((user, info))
+
+        # Calcul du statut académique
+        status = "INCONNU"
+        if info and ValidationService:
+            # Utiliser la méthode statique du service
+            status = ValidationService.calculer_etat_academique(info, info.annee)
+
+        filtered_data.append((user, info, status))
 
     return render_template(
         "admin/etudiants.html",

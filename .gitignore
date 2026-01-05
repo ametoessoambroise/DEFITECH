@@ -59,3 +59,7 @@ docs/
 migrations/
 diag_db.py
 node_modules/
+result.txt
+image.png
+new_fonc.md
+app.py

@@ -23,7 +23,11 @@ from app.models.devoir import Devoir
 from app.models.devoir_vu import DevoirVu
 from app.models.notification import Notification
 from app.models.presence import Presence
+from app.models.presence import Presence
 from app.models.note import Note
+from app.models.note_modification_request import NoteModificationRequest
+from app.models.user import User  # Ensure User is imported for admin query
+from app.services.validation_service import ValidationService
 
 teachers_bp = Blueprint("teachers", __name__, url_prefix="/enseignant")
 
@@ -190,23 +194,36 @@ def notes():
 
     matieres = Matiere.query.filter_by(enseignant_id=enseignant.id).all()
 
-    # Récupérer les notes existantes pour pré-remplir le formulaire
-    notes_existantes = {}
+    # Récupérer les demandes de modification en attente pour cet enseignant
+    pending_requests = NoteModificationRequest.query.filter_by(
+        enseignant_id=enseignant.id, statut="pending"
+    ).all()
+    # Set des IDs de notes ayant une demande en attente
+    pending_note_ids = {req.note_id for req in pending_requests}
+
+    # Structure pour le frontend:
+    # Key: "etudiant_id_matiere_id_type_eval" -> {valeur, note_id, has_pending}
+    notes_existantes_js = {}
     dates_evaluations = {}
+
     for matiere in matieres:
         notes_matiere = Note.query.filter_by(matiere_id=matiere.id).all()
         for note in notes_matiere:
             key = f"{note.etudiant_id}_{matiere.id}_{note.type_evaluation}"
-            notes_existantes[key] = note.note
 
-            # Récupérer la date d'évaluation pour cette matière et ce type
+            # Vérifier si cette note a une modification en attente
+            has_pending = note.id in pending_note_ids
+
+            notes_existantes_js[key] = {
+                "valeur": note.note,
+                "note_id": note.id,
+                "has_pending": has_pending,
+            }
+
+            # Récupérer la date d'évaluation si elle existe
             date_key = f"{matiere.id}_{note.type_evaluation}"
-            if date_key not in dates_evaluations:
-                dates_evaluations[date_key] = (
-                    note.date_evaluation.strftime("%Y-%m-%d")
-                    if note.date_evaluation
-                    else ""
-                )
+            if date_key not in dates_evaluations and note.date_evaluation:
+                dates_evaluations[date_key] = note.date_evaluation.strftime("%Y-%m-%d")
 
     if request.method == "POST":
         etudiant_id = request.form["etudiant_id"]
@@ -240,9 +257,187 @@ def notes():
         "enseignant/notes.html",
         etudiants=etudiants,
         matieres=matieres,
-        notes_existantes=notes_existantes,
+        notes_existantes=notes_existantes_js,
         dates_evaluations=dates_evaluations,
     )
+
+
+@teachers_bp.route("/rattrapages", methods=["GET", "POST"])
+@login_required
+def manage_rattrapage():
+    """
+    Similaire à 'notes', mais affiche uniquement les étudiants
+    ayant une moyenne < 10 dans les matières de l'enseignant.
+    Permet de saisir la note de rattrapage.
+    """
+    if current_user.role != "enseignant":
+        return redirect(url_for("main.index"))
+
+    enseignant = Enseignant.query.filter_by(user_id=current_user.id).first()
+    matieres = Matiere.query.filter_by(enseignant_id=enseignant.id).all()
+
+    # Récupérer les étudiants concernés
+    # On itère sur toutes les matières de l'enseignant
+    # Pour chaque matière, on récupère les étudiants de la filière/année
+    # On calcule leur moyenne via ValidationService
+    # Si < 10, on les ajoute à la liste
+
+    rattrapage_data = []  # [(Etudiant, Matiere, Moyenne, NoteRattrapageActual, NoteID)]
+
+    # Optimisation: charger les étudiants une fois par filière/année si possible
+    # Pour faire simple : boucle car ValidationService est granulaire
+
+    # D'abord identifier les groupes (Filiere, Annee)
+    try:
+        data = json.loads(enseignant.filieres_enseignees)
+        filieres_noms = data.get("filieres", [])
+        annees_noms = data.get("annees", [])
+    except:
+        filieres_noms = []
+        annees_noms = []
+
+    # Charger tous les étudiants potentiels
+    candidats = Etudiant.query.filter(
+        Etudiant.filiere.in_(filieres_noms), Etudiant.annee.in_(annees_noms)
+    ).all()
+
+    # Pour chaque étudiant, vérifier chaque matière de l'enseignant
+    # qui correspond à sa filière/année
+
+    for etu in candidats:
+        for mat in matieres:
+            # Vérifier correspondance filière/année (si la matière est spécifique)
+            # Matiere a filier_id.
+            if mat.filiere.nom == etu.filiere and mat.annee == etu.annee:
+                is_valid, moyenne, msg = ValidationService.valider_matiere(
+                    etu.id, mat.id
+                )
+                if not is_valid:
+                    # Il est en rattrapage
+                    # Chercher note rattrapage existante
+                    notes = ValidationService.get_notes(etu.id, mat.id)
+                    note_rattrapage_obj = next(
+                        (n for n in notes if n.type_evaluation == "Rattrapage"), None
+                    )
+                    valeur_r = note_rattrapage_obj.note if note_rattrapage_obj else None
+
+                    rattrapage_data.append(
+                        {
+                            "etudiant": etu,
+                            "matiere": mat,
+                            "moyenne": moyenne,
+                            "note_actuelle": valeur_r,
+                            "user": User.query.get(etu.user_id),
+                        }
+                    )
+
+    if request.method == "POST":
+        etu_id = request.form.get("etudiant_id")
+        matiere_id = request.form.get("matiere_id")
+        note_val_str = request.form.get("note")
+
+        if etu_id and matiere_id and note_val_str:
+            try:
+                val = float(note_val_str)
+                # Sauvegarder/Mettre à jour
+                # Type = Rattrapage
+                note_obj = Note.query.filter_by(
+                    etudiant_id=etu_id,
+                    matiere_id=matiere_id,
+                    type_evaluation="Rattrapage",
+                ).first()
+
+                if note_obj:
+                    # Rattrapage: peut-on modifier directement ?
+                    # Suppose admin approval ?
+                    # Pour simplifier le rattrapage, disons que c'est direct
+                    # ou soumis à la même regle.
+                    # Appliquons la règle de demande si modification
+                    # Sauf si c'est la première saisie (None -> Val)
+                    # ICI on fait simple: update direct pour Rattrapage (souvent session unique)
+                    note_obj.note = val
+                else:
+                    note_obj = Note(
+                        etudiant_id=etu_id,
+                        matiere_id=matiere_id,
+                        type_evaluation="Rattrapage",
+                        note=val,
+                    )
+                    db.session.add(note_obj)
+
+                db.session.commit()
+                flash("Note de rattrapage enregistrée", "success")
+            except ValueError:
+                flash("Note invalide", "error")
+
+        return redirect(url_for("teachers.manage_rattrapage"))
+
+    return render_template("enseignant/manage_rattrapage.html", liste=rattrapage_data)
+
+
+@teachers_bp.route("/request-modification", methods=["POST"])
+@login_required
+def request_modification():
+    """
+    Crée une demande de modification de note.
+    """
+    if current_user.role != "enseignant":
+        return jsonify({"success": False, "message": "Accès non autorisé"}), 403
+
+    enseignant = Enseignant.query.filter_by(user_id=current_user.id).first()
+
+    note_id = request.form.get("note_id")
+    nouvelle_valeur = request.form.get("nouvelle_valeur")
+    raison = request.form.get("raison")
+
+    if not all([note_id, nouvelle_valeur, raison]):
+        return jsonify({"success": False, "message": "Données manquantes"}), 400
+
+    note = Note.query.get(note_id)
+    if not note:
+        return jsonify({"success": False, "message": "Note introuvable"}), 404
+
+    # Vérifier que la note appartient à une matière de l'enseignant
+    if note.matiere.enseignant_id != enseignant.id:
+        return (
+            jsonify(
+                {"success": False, "message": "Vous ne pouvez pas modifier cette note"}
+            ),
+            403,
+        )
+
+    # Créer la demande
+    demande = NoteModificationRequest(
+        note_id=note.id,
+        enseignant_id=enseignant.id,
+        nouvelle_valeur=float(nouvelle_valeur),
+        raison=raison,
+        statut="pending",
+    )
+    db.session.add(demande)
+    db.session.commit()
+
+    # NOTIFICATIONS
+    # 1. Aux Admins
+    admins = User.query.filter_by(role="admin").all()
+    for admin in admins:
+        Notification.creer_notification(
+            user_id=admin.id,
+            titre="Demande de modification de note",
+            message=f"L'enseignant {current_user.nom} souhaite modifier une note en {note.matiere.nom}. Raison: {raison}",
+            type="info",
+        )
+
+    # 2. A l'enseignant (confirmation)
+    Notification.creer_notification(
+        user_id=current_user.id,
+        titre="Demande envoyée",
+        message=f"Votre demande de modification pour {note.etudiant.user.nom} a bien été transmise.",
+        type="success",
+    )
+    db.session.commit()
+
+    return jsonify({"success": True, "message": "Demande envoyée avec succès"})
 
 
 @teachers_bp.route("/devoirs", methods=["GET", "POST"])
@@ -306,6 +501,7 @@ def devoirs():
         return redirect(url_for("teachers.devoirs"))
 
     return render_template("enseignant/devoirs.html", filieres=filieres, annees=annees)
+
 
 @teachers_bp.route("/emploi-temps")
 @login_required

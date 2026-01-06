@@ -748,20 +748,21 @@
 
             const data = await response.json();
             if (data.success && data.url) {
-              // Ouvrir l'URL Cloudinary dans un nouvel onglet
+              // Ouvrir l'URL (Cloudinary ou LinkedIn Share)
               const win = window.open(data.url, "_blank");
               if (!win) {
-                // Si le popup est bloqué, essayer de déclencher un lien de téléchargement
                 const a = document.createElement("a");
                 a.href = data.url;
-                a.download = data.filename || `mon_cv.${format}`;
+                if (format !== "linkedin") {
+                   a.download = data.filename || `mon_cv.${format}`;
+                }
                 document.body.appendChild(a);
                 a.click();
                 a.remove();
               }
-              showToast(`CV ${format.toUpperCase()} généré avec succès`);
+              showToast(`${format === 'linkedin' ? 'Partage LinkedIn' : 'CV ' + format.toUpperCase()} prêt`);
             } else {
-              throw new Error(data.message || "Erreur lors de la génération");
+              showToast(data.message || "Erreur lors de la génération", "error");
             }
           } catch (error) {
             console.error("Erreur:", error);

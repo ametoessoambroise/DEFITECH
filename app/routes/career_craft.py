@@ -224,13 +224,40 @@ def generate_cv():
         elif format_type == "linkedin":
             # Generate LinkedIn data
             linkedin_data = cv_generator.generate_linkedin_data()
-            return jsonify(
-                {
-                    "success": True,
-                    "data": linkedin_data,
-                    "url": "#",  # This would be the URL to export to LinkedIn
-                }
+
+            if "error" in linkedin_data:
+                return (
+                    jsonify({"success": False, "message": linkedin_data["error"]}),
+                    500,
+                )
+
+            # Check if user has a linkedin profile set in their database profile
+            if not current_user.linkedin:
+                return (
+                    jsonify(
+                        {
+                            "success": False,
+                            "message": "Veuillez renseigner votre profil LinkedIn dans vos paramètres pour utiliser cette fonctionnalité.",
+                            "requires_profile": True,
+                        }
+                    ),
+                    400,
+                )
+
+            # Construct LinkedIn Share URL
+            # https://www.linkedin.com/sharing/share-offsite/?url=[URL]&text=[TEXT]
+            import urllib.parse
+
+            share_text = linkedin_data.get(
+                "share_text", "Mon profil mis à jour avec CareerCraft !"
             )
+            encoded_text = urllib.parse.quote(share_text)
+
+            # Since we don't have a public profile URL yet, we can share the app URL or just the text
+            app_url = "request.host_url" or "https://defitech-42v7.onrender.com/"
+            share_url = f"https://www.linkedin.com/sharing/share-offsite/?url={urllib.parse.quote(app_url)}&summary={encoded_text}"
+
+            return jsonify({"success": True, "data": linkedin_data, "url": share_url})
         else:
             return jsonify({"success": False, "message": "Format non supporté"}), 400
 

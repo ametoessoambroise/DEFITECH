@@ -9,7 +9,6 @@ import logging
 import re
 import io
 import requests
-import uuid
 from datetime import datetime
 from typing import Dict, Optional, Any, List, Tuple
 from pathlib import Path
@@ -20,10 +19,7 @@ from reportlab.lib.pagesizes import letter
 from reportlab.platypus import (
     SimpleDocTemplate,
     Paragraph,
-    Spacer,
-    Image,
-    Table,
-    TableStyle,
+    Spacer
 )
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib import colors
@@ -632,6 +628,45 @@ Génère uniquement le texte formaté, prêt à être inséré dans le CV, sans 
         if isinstance(data, dict):
             return "\n".join([f"• {k}: {v}" for k, v in data.items() if v])
         return str(data)
+
+    def _get_profile_pic_buffer(self) -> Optional[io.BytesIO]:
+        """Récupère la photo de profil de l'utilisateur et la retourne sous forme de buffer"""
+        if not self.user or not self.user.photo_profil:
+            return None
+
+        photo_url = self.user.photo_profil
+
+        # Si c'est une URL (Cloudinary)
+        if photo_url.startswith(("http://", "https://")):
+            try:
+                response = requests.get(photo_url, timeout=15)
+                if response.status_code == 200:
+                    return io.BytesIO(response.content)
+                else:
+                    logger.error(
+                        f"Erreur téléchargement photo ({response.status_code}): {photo_url}"
+                    )
+            except Exception as e:
+                logger.error(f"Erreur récupération photo distante {photo_url}: {e}")
+            return None
+
+        # Si c'est un chemin local (fallback legacy)
+        try:
+            # Chemins possibles
+            paths_to_try = [
+                photo_url,
+                os.path.join(current_app.root_path, photo_url),
+                os.path.join(current_app.root_path, "static", photo_url),
+            ]
+
+            for path in paths_to_try:
+                if os.path.exists(path) and os.path.isfile(path):
+                    with open(path, "rb") as f:
+                        return io.BytesIO(f.read())
+        except Exception as e:
+            logger.error(f"Erreur lecture photo locale {photo_url}: {e}")
+
+        return None
 
     def generate_pdf(
         self, template_id: str = "modern"
@@ -1671,6 +1706,20 @@ INSTRUCTIONS FINALES :
                     user_data.get("projets", [])
                 ),
             }
+
+            # Création d'un texte de partage professionnel
+            share_text = "Ravi de partager mon profil mis à jour ! 🚀\n\n"
+            share_text += f"Je suis actuellement {linkedin_data['profile']['headline']}.\n"
+            if linkedin_data['profile']['summary']:
+                share_text += f"\nÀ propos de moi : {linkedin_data['profile']['summary'][:150]}...\n"
+            
+            if linkedin_data['skills']:
+                top_skills = [s['name'] for s in linkedin_data['skills'][:5]]
+                share_text += f"\nMes compétences clés : {', '.join(top_skills)}\n"
+            
+            share_text += "\n#CareerCraft #Carrière #Recrutement #CV #Portfolio"
+            
+            linkedin_data["share_text"] = share_text
 
             logger.info("Données LinkedIn générées avec succès")
             return linkedin_data

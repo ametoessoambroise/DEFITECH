@@ -1,300 +1,250 @@
-2026-01-06T00:50:55.559988523Z            ~~~~~~~~~~^^
-2026-01-06T00:50:55.559990883Z   File "/opt/render/project/src/.venv/lib/python3.13/site-packages/eventlet/hubs/hub.py", line 310, in switch
-2026-01-06T00:50:55.559993453Z     return self.greenlet.switch()
-2026-01-06T00:50:55.559995893Z            ~~~~~~~~~~~~~~~~~~~~^^
-2026-01-06T00:50:55.559998353Z   File "/opt/render/project/src/.venv/lib/python3.13/site-packages/eventlet/hubs/hub.py", line 362, in run
-2026-01-06T00:50:55.560001833Z     self.wait(sleep_time)
-2026-01-06T00:50:55.560004423Z     ~~~~~~~~~^^^^^^^^^^^^
-2026-01-06T00:50:55.560006853Z   File "/opt/render/project/src/.venv/lib/python3.13/site-packages/eventlet/hubs/poll.py", line 80, in wait
-2026-01-06T00:50:55.560009214Z     presult = self.do_poll(seconds)
-2026-01-06T00:50:55.560011694Z   File "/opt/render/project/src/.venv/lib/python3.13/site-packages/eventlet/hubs/epolls.py", line 31, in do_poll
-2026-01-06T00:50:55.560014034Z     return self.poll.poll(seconds)
-2026-01-06T00:50:55.560016374Z            ~~~~~~~~~~~~~~^^^^^^^^^
-2026-01-06T00:50:55.560018724Z   File "/opt/render/project/src/.venv/lib/python3.13/site-packages/gunicorn/arbiter.py", line 193, in signal
-2026-01-06T00:50:55.560021244Z     self.wakeup()
-2026-01-06T00:50:55.560023524Z     ~~~~~~~~~~~^^
-2026-01-06T00:50:55.560025974Z   File "/opt/render/project/src/.venv/lib/python3.13/site-packages/gunicorn/arbiter.py", line 334, in wakeup
-2026-01-06T00:50:55.560028244Z     os.write(self.PIPE[1], b'.')
-2026-01-06T00:50:55.560030634Z     ~~~~~~~~^^^^^^^^^^^^^^^^^^^^
-2026-01-06T00:50:55.560032874Z   File "/opt/render/project/src/.venv/lib/python3.13/site-packages/eventlet/green/os.py", line 74, in write
-2026-01-06T00:50:55.560035284Z     hubs.trampoline(fd, write=True)
-2026-01-06T00:50:55.560037564Z     ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^
-2026-01-06T00:50:55.560040894Z   File "/opt/render/project/src/.venv/lib/python3.13/site-packages/eventlet/hubs/__init__.py", line 139, in trampoline
-2026-01-06T00:50:55.560043394Z     raise RuntimeError('do not call blocking functions from the mainloop')
-2026-01-06T00:50:55.560045904Z RuntimeError: do not call blocking functions from the mainloop
-2026-01-06T00:50:55.605678268Z [2026-01-06 00:50:55 +0000] [65] [INFO] Worker exiting (pid: 65)
-2026-01-06T00:51:00.06134847Z 
-2026-01-06T00:51:00.06137988Z Error: do not call blocking functions from the mainloop
-2026-01-06T00:51:00.061384811Z 
-2026-01-06T01:32:21.644587392Z ==> Setting WEB_CONCURRENCY=1 by default, based on available CPUs in the instance
-2026-01-06T01:32:21.660154986Z ==> Deploying...
-2026-01-06T01:32:58.792504698Z ==> Running 'gunicorn --worker-class eventlet -w 1 wsgi:app'
-2026-01-06T01:33:24.50479241Z ==> No open ports detected, continuing to scan...
-2026-01-06T01:33:24.587111338Z ==> Docs on specifying a port: https://render.com/docs/web-services#port-binding
-2026-01-06T01:33:30.204830351Z [2026-01-06 01:33:30 +0000] [57] [INFO] Starting gunicorn 23.0.0
-2026-01-06T01:33:30.290971009Z [2026-01-06 01:33:30 +0000] [57] [INFO] Listening at: http://0.0.0.0:10000 (57)
-2026-01-06T01:33:30.291034141Z [2026-01-06 01:33:30 +0000] [57] [INFO] Using worker: eventlet
-2026-01-06T01:33:30.300714293Z [2026-01-06 01:33:30 +0000] [65] [INFO] Booting worker with pid: 65
-2026-01-06T01:33:32.433735953Z ==> Your service is live 🎉
-2026-01-06T01:33:32.467760128Z ==> 
-2026-01-06T01:33:32.498084913Z ==> ///////////////////////////////////////////////////////////
-2026-01-06T01:33:32.526932839Z ==> 
-2026-01-06T01:33:32.556317455Z ==> Available at your primary URL https://defitech-42v7.onrender.com
-2026-01-06T01:33:32.583704421Z ==> 
-2026-01-06T01:33:32.823313136Z ==> ///////////////////////////////////////////////////////////
-2026-01-06T01:33:33.662133085Z 127.0.0.1 - - [06/Jan/2026:01:33:33 +0000] "HEAD / HTTP/1.1" 200 0 "-" "Go-http-client/1.1"
-2026-01-06T01:33:34.257361744Z 127.0.0.1 - - [06/Jan/2026:01:33:34 +0000] "GET / HTTP/1.1" 200 51015 "-" "Go-http-client/2.0"
-2026-01-06T01:38:11.60275808Z INFO:app.sockets.videoconference:🧹 Nettoyage terminé. 0 mappings supprimés
-2026-01-06T01:38:38.523189128Z ==> Detected service running on port 10000
-2026-01-06T01:38:38.604639212Z ==> Docs on specifying a port: https://render.com/docs/web-services#port-binding
-2026-01-06T01:43:11.603958274Z INFO:app.sockets.videoconference:🧹 Nettoyage terminé. 0 mappings supprimés
-2026-01-06T01:56:50.158441827Z 127.0.0.1 - - [06/Jan/2026:01:56:50 +0000] "GET /static/sounds/notification.mp3 HTTP/1.1" 206 40704 "https://defitech-42v7.onrender.com/profile/profil-avance" "Mozilla/5.0 (iPhone; CPU iPhone OS 15_8_4 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/15.6.7 Mobile/15E148 Safari/604.1"
-2026-01-06T01:57:19.65098109Z 127.0.0.1 - - [06/Jan/2026:01:57:19 +0000] "GET /notifications/api/count HTTP/1.1" 200 48 "https://defitech-42v7.onrender.com/profile/profil-avance" "Mozilla/5.0 (iPhone; CPU iPhone OS 15_8_4 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/15.6.7 Mobile/15E148 Safari/604.1"
-2026-01-06T01:57:35.486164442Z 127.0.0.1 - - [06/Jan/2026:01:57:35 +0000] "GET /profile/formations/ajouter HTTP/1.1" 200 65733 "https://defitech-42v7.onrender.com/profile/profil-avance" "Mozilla/5.0 (iPhone; CPU iPhone OS 15_8_4 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/15.6.7 Mobile/15E148 Safari/604.1"
-2026-01-06T01:57:36.641579312Z 127.0.0.1 - - [06/Jan/2026:01:57:36 +0000] "GET /static/js/cloudinary_uploader.js HTTP/1.1" 304 0 "https://defitech-42v7.onrender.com/profile/formations/ajouter" "Mozilla/5.0 (iPhone; CPU iPhone OS 15_8_4 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/15.6.7 Mobile/15E148 Safari/604.1"
-2026-01-06T01:57:36.647614834Z 127.0.0.1 - - [06/Jan/2026:01:57:36 +0000] "GET /static/js/notifications.js HTTP/1.1" 304 0 "https://defitech-42v7.onrender.com/profile/formations/ajouter" "Mozilla/5.0 (iPhone; CPU iPhone OS 15_8_4 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/15.6.7 Mobile/15E148 Safari/604.1"
-2026-01-06T01:57:36.649138378Z 127.0.0.1 - - [06/Jan/2026:01:57:36 +0000] "GET /static/js/app_lock.js HTTP/1.1" 304 0 "https://defitech-42v7.onrender.com/profile/formations/ajouter" "Mozilla/5.0 (iPhone; CPU iPhone OS 15_8_4 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/15.6.7 Mobile/15E148 Safari/604.1"
-2026-01-06T01:57:36.650508558Z 127.0.0.1 - - [06/Jan/2026:01:57:36 +0000] "GET /static/css/compiled.css HTTP/1.1" 304 0 "https://defitech-42v7.onrender.com/profile/formations/ajouter" "Mozilla/5.0 (iPhone; CPU iPhone OS 15_8_4 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/15.6.7 Mobile/15E148 Safari/604.1"
-2026-01-06T01:57:36.651718834Z 127.0.0.1 - - [06/Jan/2026:01:57:36 +0000] "GET /static/css/style.css HTTP/1.1" 304 0 "https://defitech-42v7.onrender.com/profile/formations/ajouter" "Mozilla/5.0 (iPhone; CPU iPhone OS 15_8_4 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/15.6.7 Mobile/15E148 Safari/604.1"
-2026-01-06T01:57:37.276768844Z 127.0.0.1 - - [06/Jan/2026:01:57:37 +0000] "GET /static/manifest.json HTTP/1.1" 304 0 "https://defitech-42v7.onrender.com/profile/formations/ajouter" "Mozilla/5.0 (iPhone; CPU iPhone OS 15_8_4 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/15.6.7 Mobile/15E148 Safari/604.1"
-2026-01-06T01:57:37.843034382Z 127.0.0.1 - - [06/Jan/2026:01:57:37 +0000] "GET /static/sounds/notification.mp3 HTTP/1.1" 206 2 "https://defitech-42v7.onrender.com/profile/formations/ajouter" "Mozilla/5.0 (iPhone; CPU iPhone OS 15_8_4 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/15.6.7 Mobile/15E148 Safari/604.1"
-2026-01-06T01:57:38.085582156Z 127.0.0.1 - - [06/Jan/2026:01:57:38 +0000] "GET /notifications/api HTTP/1.1" 200 53 "https://defitech-42v7.onrender.com/profile/formations/ajouter" "Mozilla/5.0 (iPhone; CPU iPhone OS 15_8_4 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/15.6.7 Mobile/15E148 Safari/604.1"
-2026-01-06T01:57:38.126447213Z 127.0.0.1 - - [06/Jan/2026:01:57:38 +0000] "GET /api/app-lock/status HTTP/1.1" 200 74 "https://defitech-42v7.onrender.com/profile/formations/ajouter" "Mozilla/5.0 (iPhone; CPU iPhone OS 15_8_4 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/15.6.7 Mobile/15E148 Safari/604.1"
-2026-01-06T01:57:38.508340565Z 127.0.0.1 - - [06/Jan/2026:01:57:38 +0000] "GET /static/sounds/notification.mp3 HTTP/1.1" 206 40704 "https://defitech-42v7.onrender.com/profile/formations/ajouter" "Mozilla/5.0 (iPhone; CPU iPhone OS 15_8_4 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/15.6.7 Mobile/15E148 Safari/604.1"
-2026-01-06T01:58:08.009539679Z 127.0.0.1 - - [06/Jan/2026:01:58:08 +0000] "GET /notifications/api/count HTTP/1.1" 200 48 "https://defitech-42v7.onrender.com/profile/formations/ajouter" "Mozilla/5.0 (iPhone; CPU iPhone OS 15_8_4 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/15.6.7 Mobile/15E148 Safari/604.1"
-2026-01-06T01:58:11.608474097Z INFO:app.sockets.videoconference:🧹 Nettoyage terminé. 0 mappings supprimés
-2026-01-06T01:58:38.025696281Z 127.0.0.1 - - [06/Jan/2026:01:58:38 +0000] "GET /notifications/api/count HTTP/1.1" 200 48 "https://defitech-42v7.onrender.com/profile/formations/ajouter" "Mozilla/5.0 (iPhone; CPU iPhone OS 15_8_4 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/15.6.7 Mobile/15E148 Safari/604.1"
-2026-01-06T01:59:08.19860668Z 127.0.0.1 - - [06/Jan/2026:01:59:08 +0000] "GET /notifications/api/count HTTP/1.1" 200 48 "https://defitech-42v7.onrender.com/profile/formations/ajouter" "Mozilla/5.0 (iPhone; CPU iPhone OS 15_8_4 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/15.6.7 Mobile/15E148 Safari/604.1"
-2026-01-06T01:59:38.001543925Z 127.0.0.1 - - [06/Jan/2026:01:59:38 +0000] "GET /notifications/api/count HTTP/1.1" 200 48 "https://defitech-42v7.onrender.com/profile/formations/ajouter" "Mozilla/5.0 (iPhone; CPU iPhone OS 15_8_4 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/15.6.7 Mobile/15E148 Safari/604.1"
-2026-01-06T02:00:08.067157002Z 127.0.0.1 - - [06/Jan/2026:02:00:08 +0000] "GET /notifications/api/count HTTP/1.1" 200 48 "https://defitech-42v7.onrender.com/profile/formations/ajouter" "Mozilla/5.0 (iPhone; CPU iPhone OS 15_8_4 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/15.6.7 Mobile/15E148 Safari/604.1"
-2026-01-06T02:00:38.01679615Z 127.0.0.1 - - [06/Jan/2026:02:00:38 +0000] "GET /notifications/api/count HTTP/1.1" 200 48 "https://defitech-42v7.onrender.com/profile/formations/ajouter" "Mozilla/5.0 (iPhone; CPU iPhone OS 15_8_4 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/15.6.7 Mobile/15E148 Safari/604.1"
-2026-01-06T02:01:02.733084929Z 127.0.0.1 - - [06/Jan/2026:02:01:02 +0000] "POST /profile/formations/ajouter HTTP/1.1" 302 231 "https://defitech-42v7.onrender.com/profile/formations/ajouter" "Mozilla/5.0 (iPhone; CPU iPhone OS 15_8_4 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/15.6.7 Mobile/15E148 Safari/604.1"
-2026-01-06T02:01:04.101374853Z INFO:app.services.cv_generator:Utilisateur chargé: Ambroise AMETOESSO (ID: 2)
-2026-01-06T02:01:04.17276883Z INFO:app.services.cv_generator:Profil étudiant chargé: ID 1
-2026-01-06T02:01:04.172815231Z INFO:app.services.cv_generator:Récupération des données pour l'utilisateur 2
-2026-01-06T02:01:04.807640671Z 127.0.0.1 - - [06/Jan/2026:02:01:04 +0000] "GET /profile/profil-avance HTTP/1.1" 200 77116 "https://defitech-42v7.onrender.com/profile/formations/ajouter" "Mozilla/5.0 (iPhone; CPU iPhone OS 15_8_4 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/15.6.7 Mobile/15E148 Safari/604.1"
-2026-01-06T02:01:06.384093433Z 127.0.0.1 - - [06/Jan/2026:02:01:06 +0000] "GET /static/js/cloudinary_uploader.js HTTP/1.1" 304 0 "https://defitech-42v7.onrender.com/profile/profil-avance" "Mozilla/5.0 (iPhone; CPU iPhone OS 15_8_4 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/15.6.7 Mobile/15E148 Safari/604.1"
-2026-01-06T02:01:06.392800214Z 127.0.0.1 - - [06/Jan/2026:02:01:06 +0000] "GET /static/css/style.css HTTP/1.1" 304 0 "https://defitech-42v7.onrender.com/profile/profil-avance" "Mozilla/5.0 (iPhone; CPU iPhone OS 15_8_4 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/15.6.7 Mobile/15E148 Safari/604.1"
-2026-01-06T02:01:07.035755742Z 127.0.0.1 - - [06/Jan/2026:02:01:07 +0000] "GET /static/css/compiled.css HTTP/1.1" 304 0 "https://defitech-42v7.onrender.com/profile/profil-avance" "Mozilla/5.0 (iPhone; CPU iPhone OS 15_8_4 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/15.6.7 Mobile/15E148 Safari/604.1"
-2026-01-06T02:01:07.041841796Z 127.0.0.1 - - [06/Jan/2026:02:01:07 +0000] "GET /static/js/notifications.js HTTP/1.1" 304 0 "https://defitech-42v7.onrender.com/profile/profil-avance" "Mozilla/5.0 (iPhone; CPU iPhone OS 15_8_4 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/15.6.7 Mobile/15E148 Safari/604.1"
-2026-01-06T02:01:07.071139269Z 127.0.0.1 - - [06/Jan/2026:02:01:07 +0000] "GET /static/js/app_lock.js HTTP/1.1" 304 0 "https://defitech-42v7.onrender.com/profile/profil-avance" "Mozilla/5.0 (iPhone; CPU iPhone OS 15_8_4 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/15.6.7 Mobile/15E148 Safari/604.1"
-2026-01-06T02:01:08.776890448Z 127.0.0.1 - - [06/Jan/2026:02:01:08 +0000] "GET /static/sounds/notification.mp3 HTTP/1.1" 206 2 "https://defitech-42v7.onrender.com/profile/profil-avance" "Mozilla/5.0 (iPhone; CPU iPhone OS 15_8_4 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/15.6.7 Mobile/15E148 Safari/604.1"
-2026-01-06T02:01:08.896750588Z 127.0.0.1 - - [06/Jan/2026:02:01:08 +0000] "GET /notifications/api HTTP/1.1" 200 53 "https://defitech-42v7.onrender.com/profile/profil-avance" "Mozilla/5.0 (iPhone; CPU iPhone OS 15_8_4 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/15.6.7 Mobile/15E148 Safari/604.1"
-2026-01-06T02:01:09.015937724Z 127.0.0.1 - - [06/Jan/2026:02:01:09 +0000] "GET /api/app-lock/status HTTP/1.1" 200 74 "https://defitech-42v7.onrender.com/profile/profil-avance" "Mozilla/5.0 (iPhone; CPU iPhone OS 15_8_4 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/15.6.7 Mobile/15E148 Safari/604.1"
-2026-01-06T02:01:09.238539218Z 127.0.0.1 - - [06/Jan/2026:02:01:09 +0000] "GET /static/sounds/notification.mp3 HTTP/1.1" 206 40704 "https://defitech-42v7.onrender.com/profile/profil-avance" "Mozilla/5.0 (iPhone; CPU iPhone OS 15_8_4 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/15.6.7 Mobile/15E148 Safari/604.1"
-2026-01-06T02:01:09.382012196Z 127.0.0.1 - - [06/Jan/2026:02:01:09 +0000] "GET /static/manifest.json HTTP/1.1" 304 0 "https://defitech-42v7.onrender.com/profile/profil-avance" "Mozilla/5.0 (iPhone; CPU iPhone OS 15_8_4 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/15.6.7 Mobile/15E148 Safari/604.1"
-2026-01-06T02:01:24.262630187Z 127.0.0.1 - - [06/Jan/2026:02:01:24 +0000] "GET /profile/langues/ajouter HTTP/1.1" 200 64332 "https://defitech-42v7.onrender.com/profile/profil-avance" "Mozilla/5.0 (iPhone; CPU iPhone OS 15_8_4 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/15.6.7 Mobile/15E148 Safari/604.1"
-2026-01-06T02:01:25.252732003Z 127.0.0.1 - - [06/Jan/2026:02:01:25 +0000] "GET /static/css/compiled.css HTTP/1.1" 304 0 "https://defitech-42v7.onrender.com/profile/langues/ajouter" "Mozilla/5.0 (iPhone; CPU iPhone OS 15_8_4 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/15.6.7 Mobile/15E148 Safari/604.1"
-2026-01-06T02:01:25.254127283Z 127.0.0.1 - - [06/Jan/2026:02:01:25 +0000] "GET /static/js/notifications.js HTTP/1.1" 304 0 "https://defitech-42v7.onrender.com/profile/langues/ajouter" "Mozilla/5.0 (iPhone; CPU iPhone OS 15_8_4 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/15.6.7 Mobile/15E148 Safari/604.1"
-2026-01-06T02:01:25.255226567Z 127.0.0.1 - - [06/Jan/2026:02:01:25 +0000] "GET /static/js/cloudinary_uploader.js HTTP/1.1" 304 0 "https://defitech-42v7.onrender.com/profile/langues/ajouter" "Mozilla/5.0 (iPhone; CPU iPhone OS 15_8_4 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/15.6.7 Mobile/15E148 Safari/604.1"
-2026-01-06T02:01:25.256106967Z 127.0.0.1 - - [06/Jan/2026:02:01:25 +0000] "GET /static/css/style.css HTTP/1.1" 304 0 "https://defitech-42v7.onrender.com/profile/langues/ajouter" "Mozilla/5.0 (iPhone; CPU iPhone OS 15_8_4 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/15.6.7 Mobile/15E148 Safari/604.1"
-2026-01-06T02:01:25.2571419Z 127.0.0.1 - - [06/Jan/2026:02:01:25 +0000] "GET /static/js/app_lock.js HTTP/1.1" 304 0 "https://defitech-42v7.onrender.com/profile/langues/ajouter" "Mozilla/5.0 (iPhone; CPU iPhone OS 15_8_4 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/15.6.7 Mobile/15E148 Safari/604.1"
-2026-01-06T02:01:25.855632352Z 127.0.0.1 - - [06/Jan/2026:02:01:25 +0000] "GET /static/manifest.json HTTP/1.1" 304 0 "https://defitech-42v7.onrender.com/profile/langues/ajouter" "Mozilla/5.0 (iPhone; CPU iPhone OS 15_8_4 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/15.6.7 Mobile/15E148 Safari/604.1"
-2026-01-06T02:01:26.838199212Z 127.0.0.1 - - [06/Jan/2026:02:01:26 +0000] "GET /static/sounds/notification.mp3 HTTP/1.1" 206 2 "https://defitech-42v7.onrender.com/profile/langues/ajouter" "Mozilla/5.0 (iPhone; CPU iPhone OS 15_8_4 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/15.6.7 Mobile/15E148 Safari/604.1"
-2026-01-06T02:01:26.947385988Z 127.0.0.1 - - [06/Jan/2026:02:01:26 +0000] "GET /notifications/api HTTP/1.1" 200 53 "https://defitech-42v7.onrender.com/profile/langues/ajouter" "Mozilla/5.0 (iPhone; CPU iPhone OS 15_8_4 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/15.6.7 Mobile/15E148 Safari/604.1"
-2026-01-06T02:01:27.116965339Z 127.0.0.1 - - [06/Jan/2026:02:01:27 +0000] "GET /api/app-lock/status HTTP/1.1" 200 74 "https://defitech-42v7.onrender.com/profile/langues/ajouter" "Mozilla/5.0 (iPhone; CPU iPhone OS 15_8_4 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/15.6.7 Mobile/15E148 Safari/604.1"
-2026-01-06T02:01:27.543003527Z 127.0.0.1 - - [06/Jan/2026:02:01:27 +0000] "GET /static/sounds/notification.mp3 HTTP/1.1" 206 40704 "https://defitech-42v7.onrender.com/profile/langues/ajouter" "Mozilla/5.0 (iPhone; CPU iPhone OS 15_8_4 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/15.6.7 Mobile/15E148 Safari/604.1"
-2026-01-06T02:01:44.264640147Z 127.0.0.1 - - [06/Jan/2026:02:01:44 +0000] "POST /profile/langues/ajouter HTTP/1.1" 302 231 "https://defitech-42v7.onrender.com/profile/langues/ajouter" "Mozilla/5.0 (iPhone; CPU iPhone OS 15_8_4 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/15.6.7 Mobile/15E148 Safari/604.1"
-2026-01-06T02:01:45.275378805Z INFO:app.services.cv_generator:Utilisateur chargé: Ambroise AMETOESSO (ID: 2)
-2026-01-06T02:01:45.305411844Z INFO:app.services.cv_generator:Profil étudiant chargé: ID 1
-2026-01-06T02:01:45.305437204Z INFO:app.services.cv_generator:Récupération des données pour l'utilisateur 2
-2026-01-06T02:01:45.731566114Z 127.0.0.1 - - [06/Jan/2026:02:01:45 +0000] "GET /profile/profil-avance HTTP/1.1" 200 78210 "https://defitech-42v7.onrender.com/profile/langues/ajouter" "Mozilla/5.0 (iPhone; CPU iPhone OS 15_8_4 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/15.6.7 Mobile/15E148 Safari/604.1"
-2026-01-06T02:01:46.699771379Z 127.0.0.1 - - [06/Jan/2026:02:01:46 +0000] "GET /static/js/cloudinary_uploader.js HTTP/1.1" 304 0 "https://defitech-42v7.onrender.com/profile/profil-avance" "Mozilla/5.0 (iPhone; CPU iPhone OS 15_8_4 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/15.6.7 Mobile/15E148 Safari/604.1"
-2026-01-06T02:01:46.70620735Z 127.0.0.1 - - [06/Jan/2026:02:01:46 +0000] "GET /static/css/style.css HTTP/1.1" 304 0 "https://defitech-42v7.onrender.com/profile/profil-avance" "Mozilla/5.0 (iPhone; CPU iPhone OS 15_8_4 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/15.6.7 Mobile/15E148 Safari/604.1"
-2026-01-06T02:01:46.707788235Z 127.0.0.1 - - [06/Jan/2026:02:01:46 +0000] "GET /static/js/app_lock.js HTTP/1.1" 304 0 "https://defitech-42v7.onrender.com/profile/profil-avance" "Mozilla/5.0 (iPhone; CPU iPhone OS 15_8_4 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/15.6.7 Mobile/15E148 Safari/604.1"
-2026-01-06T02:01:46.709158085Z 127.0.0.1 - - [06/Jan/2026:02:01:46 +0000] "GET /static/css/compiled.css HTTP/1.1" 304 0 "https://defitech-42v7.onrender.com/profile/profil-avance" "Mozilla/5.0 (iPhone; CPU iPhone OS 15_8_4 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/15.6.7 Mobile/15E148 Safari/604.1"
-2026-01-06T02:01:46.710711929Z 127.0.0.1 - - [06/Jan/2026:02:01:46 +0000] "GET /static/js/notifications.js HTTP/1.1" 304 0 "https://defitech-42v7.onrender.com/profile/profil-avance" "Mozilla/5.0 (iPhone; CPU iPhone OS 15_8_4 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/15.6.7 Mobile/15E148 Safari/604.1"
-2026-01-06T02:01:47.435390649Z 127.0.0.1 - - [06/Jan/2026:02:01:47 +0000] "GET /static/manifest.json HTTP/1.1" 304 0 "https://defitech-42v7.onrender.com/profile/profil-avance" "Mozilla/5.0 (iPhone; CPU iPhone OS 15_8_4 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/15.6.7 Mobile/15E148 Safari/604.1"
-2026-01-06T02:01:48.437909887Z 127.0.0.1 - - [06/Jan/2026:02:01:48 +0000] "GET /static/sounds/notification.mp3 HTTP/1.1" 206 2 "https://defitech-42v7.onrender.com/profile/profil-avance" "Mozilla/5.0 (iPhone; CPU iPhone OS 15_8_4 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/15.6.7 Mobile/15E148 Safari/604.1"
-2026-01-06T02:01:48.440122375Z 127.0.0.1 - - [06/Jan/2026:02:01:48 +0000] "GET /notifications/api HTTP/1.1" 200 53 "https://defitech-42v7.onrender.com/profile/profil-avance" "Mozilla/5.0 (iPhone; CPU iPhone OS 15_8_4 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/15.6.7 Mobile/15E148 Safari/604.1"
-2026-01-06T02:01:48.676494822Z 127.0.0.1 - - [06/Jan/2026:02:01:48 +0000] "GET /api/app-lock/status HTTP/1.1" 200 74 "https://defitech-42v7.onrender.com/profile/profil-avance" "Mozilla/5.0 (iPhone; CPU iPhone OS 15_8_4 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/15.6.7 Mobile/15E148 Safari/604.1"
-2026-01-06T02:01:49.265315892Z 127.0.0.1 - - [06/Jan/2026:02:01:49 +0000] "GET /static/sounds/notification.mp3 HTTP/1.1" 206 40704 "https://defitech-42v7.onrender.com/profile/profil-avance" "Mozilla/5.0 (iPhone; CPU iPhone OS 15_8_4 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/15.6.7 Mobile/15E148 Safari/604.1"
-2026-01-06T02:01:52.85405154Z 127.0.0.1 - - [06/Jan/2026:02:01:52 +0000] "GET /profile/langues/ajouter HTTP/1.1" 200 64332 "https://defitech-42v7.onrender.com/profile/profil-avance" "Mozilla/5.0 (iPhone; CPU iPhone OS 15_8_4 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/15.6.7 Mobile/15E148 Safari/604.1"
-2026-01-06T02:01:53.29466743Z 127.0.0.1 - - [06/Jan/2026:02:01:53 +0000] "GET /static/manifest.json HTTP/1.1" 304 0 "https://defitech-42v7.onrender.com/profile/langues/ajouter" "Mozilla/5.0 (iPhone; CPU iPhone OS 15_8_4 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/15.6.7 Mobile/15E148 Safari/604.1"
-2026-01-06T02:01:53.358240192Z 127.0.0.1 - - [06/Jan/2026:02:01:53 +0000] "GET /static/css/compiled.css HTTP/1.1" 304 0 "https://defitech-42v7.onrender.com/profile/langues/ajouter" "Mozilla/5.0 (iPhone; CPU iPhone OS 15_8_4 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/15.6.7 Mobile/15E148 Safari/604.1"
-2026-01-06T02:01:53.359273265Z 127.0.0.1 - - [06/Jan/2026:02:01:53 +0000] "GET /static/js/notifications.js HTTP/1.1" 304 0 "https://defitech-42v7.onrender.com/profile/langues/ajouter" "Mozilla/5.0 (iPhone; CPU iPhone OS 15_8_4 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/15.6.7 Mobile/15E148 Safari/604.1"
-2026-01-06T02:01:53.360626735Z 127.0.0.1 - - [06/Jan/2026:02:01:53 +0000] "GET /static/js/cloudinary_uploader.js HTTP/1.1" 304 0 "https://defitech-42v7.onrender.com/profile/langues/ajouter" "Mozilla/5.0 (iPhone; CPU iPhone OS 15_8_4 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/15.6.7 Mobile/15E148 Safari/604.1"
-2026-01-06T02:01:53.363248812Z 127.0.0.1 - - [06/Jan/2026:02:01:53 +0000] "GET /static/css/style.css HTTP/1.1" 304 0 "https://defitech-42v7.onrender.com/profile/langues/ajouter" "Mozilla/5.0 (iPhone; CPU iPhone OS 15_8_4 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/15.6.7 Mobile/15E148 Safari/604.1"
-2026-01-06T02:01:54.001901309Z 127.0.0.1 - - [06/Jan/2026:02:01:54 +0000] "GET /static/js/app_lock.js HTTP/1.1" 304 0 "https://defitech-42v7.onrender.com/profile/langues/ajouter" "Mozilla/5.0 (iPhone; CPU iPhone OS 15_8_4 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/15.6.7 Mobile/15E148 Safari/604.1"
-2026-01-06T02:01:54.765262277Z 127.0.0.1 - - [06/Jan/2026:02:01:54 +0000] "GET /static/sounds/notification.mp3 HTTP/1.1" 206 2 "https://defitech-42v7.onrender.com/profile/langues/ajouter" "Mozilla/5.0 (iPhone; CPU iPhone OS 15_8_4 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/15.6.7 Mobile/15E148 Safari/604.1"
-2026-01-06T02:01:55.023103384Z 127.0.0.1 - - [06/Jan/2026:02:01:55 +0000] "GET /notifications/api HTTP/1.1" 200 53 "https://defitech-42v7.onrender.com/profile/langues/ajouter" "Mozilla/5.0 (iPhone; CPU iPhone OS 15_8_4 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/15.6.7 Mobile/15E148 Safari/604.1"
-2026-01-06T02:01:55.085812577Z 127.0.0.1 - - [06/Jan/2026:02:01:55 +0000] "GET /api/app-lock/status HTTP/1.1" 200 74 "https://defitech-42v7.onrender.com/profile/langues/ajouter" "Mozilla/5.0 (iPhone; CPU iPhone OS 15_8_4 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/15.6.7 Mobile/15E148 Safari/604.1"
-2026-01-06T02:01:55.295650433Z 127.0.0.1 - - [06/Jan/2026:02:01:55 +0000] "GET /static/sounds/notification.mp3 HTTP/1.1" 206 40704 "https://defitech-42v7.onrender.com/profile/langues/ajouter" "Mozilla/5.0 (iPhone; CPU iPhone OS 15_8_4 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/15.6.7 Mobile/15E148 Safari/604.1"
-2026-01-06T02:02:10.48694614Z 127.0.0.1 - - [06/Jan/2026:02:02:10 +0000] "POST /profile/langues/ajouter HTTP/1.1" 302 231 "https://defitech-42v7.onrender.com/profile/langues/ajouter" "Mozilla/5.0 (iPhone; CPU iPhone OS 15_8_4 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/15.6.7 Mobile/15E148 Safari/604.1"
-2026-01-06T02:02:11.505058817Z INFO:app.services.cv_generator:Utilisateur chargé: Ambroise AMETOESSO (ID: 2)
-2026-01-06T02:02:11.534236526Z INFO:app.services.cv_generator:Profil étudiant chargé: ID 1
-2026-01-06T02:02:11.534422Z INFO:app.services.cv_generator:Récupération des données pour l'utilisateur 2
-2026-01-06T02:02:11.948672392Z 127.0.0.1 - - [06/Jan/2026:02:02:11 +0000] "GET /profile/profil-avance HTTP/1.1" 200 79904 "https://defitech-42v7.onrender.com/profile/langues/ajouter" "Mozilla/5.0 (iPhone; CPU iPhone OS 15_8_4 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/15.6.7 Mobile/15E148 Safari/604.1"
-2026-01-06T02:02:12.4517741Z 127.0.0.1 - - [06/Jan/2026:02:02:12 +0000] "GET /static/js/app_lock.js HTTP/1.1" 304 0 "https://defitech-42v7.onrender.com/profile/profil-avance" "Mozilla/5.0 (iPhone; CPU iPhone OS 15_8_4 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/15.6.7 Mobile/15E148 Safari/604.1"
-2026-01-06T02:02:12.458342464Z 127.0.0.1 - - [06/Jan/2026:02:02:12 +0000] "GET /static/css/compiled.css HTTP/1.1" 304 0 "https://defitech-42v7.onrender.com/profile/profil-avance" "Mozilla/5.0 (iPhone; CPU iPhone OS 15_8_4 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/15.6.7 Mobile/15E148 Safari/604.1"
-2026-01-06T02:02:12.459738695Z 127.0.0.1 - - [06/Jan/2026:02:02:12 +0000] "GET /static/js/cloudinary_uploader.js HTTP/1.1" 304 0 "https://defitech-42v7.onrender.com/profile/profil-avance" "Mozilla/5.0 (iPhone; CPU iPhone OS 15_8_4 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/15.6.7 Mobile/15E148 Safari/604.1"
-2026-01-06T02:02:12.4613741Z 127.0.0.1 - - [06/Jan/2026:02:02:12 +0000] "GET /static/js/notifications.js HTTP/1.1" 304 0 "https://defitech-42v7.onrender.com/profile/profil-avance" "Mozilla/5.0 (iPhone; CPU iPhone OS 15_8_4 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/15.6.7 Mobile/15E148 Safari/604.1"
-2026-01-06T02:02:12.469241623Z 127.0.0.1 - - [06/Jan/2026:02:02:12 +0000] "GET /static/css/style.css HTTP/1.1" 304 0 "https://defitech-42v7.onrender.com/profile/profil-avance" "Mozilla/5.0 (iPhone; CPU iPhone OS 15_8_4 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/15.6.7 Mobile/15E148 Safari/604.1"
-2026-01-06T02:02:13.050774349Z 127.0.0.1 - - [06/Jan/2026:02:02:13 +0000] "GET /static/manifest.json HTTP/1.1" 304 0 "https://defitech-42v7.onrender.com/profile/profil-avance" "Mozilla/5.0 (iPhone; CPU iPhone OS 15_8_4 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/15.6.7 Mobile/15E148 Safari/604.1"
-2026-01-06T02:02:14.013102354Z 127.0.0.1 - - [06/Jan/2026:02:02:14 +0000] "GET /static/sounds/notification.mp3 HTTP/1.1" 206 2 "https://defitech-42v7.onrender.com/profile/profil-avance" "Mozilla/5.0 (iPhone; CPU iPhone OS 15_8_4 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/15.6.7 Mobile/15E148 Safari/604.1"
-2026-01-06T02:02:14.170599543Z 127.0.0.1 - - [06/Jan/2026:02:02:14 +0000] "GET /notifications/api HTTP/1.1" 200 53 "https://defitech-42v7.onrender.com/profile/profil-avance" "Mozilla/5.0 (iPhone; CPU iPhone OS 15_8_4 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/15.6.7 Mobile/15E148 Safari/604.1"
-2026-01-06T02:02:14.279802835Z 127.0.0.1 - - [06/Jan/2026:02:02:14 +0000] "GET /api/app-lock/status HTTP/1.1" 200 74 "https://defitech-42v7.onrender.com/profile/profil-avance" "Mozilla/5.0 (iPhone; CPU iPhone OS 15_8_4 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/15.6.7 Mobile/15E148 Safari/604.1"
-2026-01-06T02:02:14.522091861Z 127.0.0.1 - - [06/Jan/2026:02:02:14 +0000] "GET /static/sounds/notification.mp3 HTTP/1.1" 206 40704 "https://defitech-42v7.onrender.com/profile/profil-avance" "Mozilla/5.0 (iPhone; CPU iPhone OS 15_8_4 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/15.6.7 Mobile/15E148 Safari/604.1"
-2026-01-06T02:02:18.480355138Z 127.0.0.1 - - [06/Jan/2026:02:02:18 +0000] "GET /profile/projets/ajouter HTTP/1.1" 200 65630 "https://defitech-42v7.onrender.com/profile/profil-avance" "Mozilla/5.0 (iPhone; CPU iPhone OS 15_8_4 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/15.6.7 Mobile/15E148 Safari/604.1"
-2026-01-06T02:02:19.506127743Z 127.0.0.1 - - [06/Jan/2026:02:02:19 +0000] "GET /static/js/app_lock.js HTTP/1.1" 304 0 "https://defitech-42v7.onrender.com/profile/projets/ajouter" "Mozilla/5.0 (iPhone; CPU iPhone OS 15_8_4 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/15.6.7 Mobile/15E148 Safari/604.1"
-2026-01-06T02:02:19.511345557Z 127.0.0.1 - - [06/Jan/2026:02:02:19 +0000] "GET /static/css/style.css HTTP/1.1" 304 0 "https://defitech-42v7.onrender.com/profile/projets/ajouter" "Mozilla/5.0 (iPhone; CPU iPhone OS 15_8_4 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/15.6.7 Mobile/15E148 Safari/604.1"
-2026-01-06T02:02:19.512295428Z 127.0.0.1 - - [06/Jan/2026:02:02:19 +0000] "GET /static/js/notifications.js HTTP/1.1" 304 0 "https://defitech-42v7.onrender.com/profile/projets/ajouter" "Mozilla/5.0 (iPhone; CPU iPhone OS 15_8_4 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/15.6.7 Mobile/15E148 Safari/604.1"
-2026-01-06T02:02:19.513735379Z 127.0.0.1 - - [06/Jan/2026:02:02:19 +0000] "GET /static/js/cloudinary_uploader.js HTTP/1.1" 304 0 "https://defitech-42v7.onrender.com/profile/projets/ajouter" "Mozilla/5.0 (iPhone; CPU iPhone OS 15_8_4 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/15.6.7 Mobile/15E148 Safari/604.1"
-2026-01-06T02:02:19.515557249Z 127.0.0.1 - - [06/Jan/2026:02:02:19 +0000] "GET /static/css/compiled.css HTTP/1.1" 304 0 "https://defitech-42v7.onrender.com/profile/projets/ajouter" "Mozilla/5.0 (iPhone; CPU iPhone OS 15_8_4 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/15.6.7 Mobile/15E148 Safari/604.1"
-2026-01-06T02:02:20.352757594Z 127.0.0.1 - - [06/Jan/2026:02:02:20 +0000] "GET /static/manifest.json HTTP/1.1" 304 0 "https://defitech-42v7.onrender.com/profile/projets/ajouter" "Mozilla/5.0 (iPhone; CPU iPhone OS 15_8_4 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/15.6.7 Mobile/15E148 Safari/604.1"
-2026-01-06T02:02:21.341180841Z 127.0.0.1 - - [06/Jan/2026:02:02:21 +0000] "GET /static/sounds/notification.mp3 HTTP/1.1" 206 2 "https://defitech-42v7.onrender.com/profile/projets/ajouter" "Mozilla/5.0 (iPhone; CPU iPhone OS 15_8_4 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/15.6.7 Mobile/15E148 Safari/604.1"
-2026-01-06T02:02:21.535455336Z 127.0.0.1 - - [06/Jan/2026:02:02:21 +0000] "GET /notifications/api HTTP/1.1" 200 53 "https://defitech-42v7.onrender.com/profile/projets/ajouter" "Mozilla/5.0 (iPhone; CPU iPhone OS 15_8_4 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/15.6.7 Mobile/15E148 Safari/604.1"
-2026-01-06T02:02:21.669386689Z 127.0.0.1 - - [06/Jan/2026:02:02:21 +0000] "GET /api/app-lock/status HTTP/1.1" 200 74 "https://defitech-42v7.onrender.com/profile/projets/ajouter" "Mozilla/5.0 (iPhone; CPU iPhone OS 15_8_4 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/15.6.7 Mobile/15E148 Safari/604.1"
-2026-01-06T02:02:22.384300055Z 127.0.0.1 - - [06/Jan/2026:02:02:22 +0000] "GET /static/sounds/notification.mp3 HTTP/1.1" 206 40704 "https://defitech-42v7.onrender.com/profile/projets/ajouter" "Mozilla/5.0 (iPhone; CPU iPhone OS 15_8_4 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/15.6.7 Mobile/15E148 Safari/604.1"
-2026-01-06T02:02:53.107174105Z ==> Setting WEB_CONCURRENCY=1 by default, based on available CPUs in the instance
-2026-01-06T02:02:53.121983617Z ==> Deploying...
-2026-01-06T02:02:51.480672876Z 127.0.0.1 - - [06/Jan/2026:02:02:51 +0000] "GET /notifications/api/count HTTP/1.1" 200 48 "https://defitech-42v7.onrender.com/profile/projets/ajouter" "Mozilla/5.0 (iPhone; CPU iPhone OS 15_8_4 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/15.6.7 Mobile/15E148 Safari/604.1"
-2026-01-06T02:03:11.609424487Z INFO:app.sockets.videoconference:🧹 Nettoyage terminé. 0 mappings supprimés
-2026-01-06T02:03:21.495322903Z 127.0.0.1 - - [06/Jan/2026:02:03:21 +0000] "GET /notifications/api/count HTTP/1.1" 200 48 "https://defitech-42v7.onrender.com/profile/projets/ajouter" "Mozilla/5.0 (iPhone; CPU iPhone OS 15_8_4 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/15.6.7 Mobile/15E148 Safari/604.1"
-2026-01-06T02:03:30.072730146Z ==> Running 'gunicorn --worker-class eventlet -w 1 wsgi:app'
-2026-01-06T02:04:00.52367493Z ==> No open ports detected, continuing to scan...
-2026-01-06T02:04:00.754130424Z ==> Docs on specifying a port: https://render.com/docs/web-services#port-binding
-2026-01-06T02:03:51.427274925Z 127.0.0.1 - - [06/Jan/2026:02:03:51 +0000] "GET /notifications/api/count HTTP/1.1" 200 48 "https://defitech-42v7.onrender.com/profile/projets/ajouter" "Mozilla/5.0 (iPhone; CPU iPhone OS 15_8_4 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/15.6.7 Mobile/15E148 Safari/604.1"
-2026-01-06T02:04:04.310110044Z ==> Your service is live 🎉
-2026-01-06T02:04:04.343289379Z ==> 
-2026-01-06T02:04:04.374259775Z ==> ///////////////////////////////////////////////////////////
-2026-01-06T02:04:04.40621509Z ==> 
-2026-01-06T02:04:04.437514416Z ==> Available at your primary URL https://defitech-42v7.onrender.com
-2026-01-06T02:04:04.470397291Z ==> 
-2026-01-06T02:04:04.506674726Z ==> ///////////////////////////////////////////////////////////
-2026-01-06T02:04:03.056001614Z [2026-01-06 02:04:03 +0000] [57] [INFO] Starting gunicorn 23.0.0
-2026-01-06T02:04:03.056732599Z [2026-01-06 02:04:03 +0000] [57] [INFO] Listening at: http://0.0.0.0:10000 (57)
-2026-01-06T02:04:03.056788253Z [2026-01-06 02:04:03 +0000] [57] [INFO] Using worker: eventlet
-2026-01-06T02:04:03.152090081Z [2026-01-06 02:04:03 +0000] [66] [INFO] Booting worker with pid: 66
-2026-01-06T02:04:06.928985398Z 127.0.0.1 - - [06/Jan/2026:02:04:06 +0000] "HEAD / HTTP/1.1" 200 0 "-" "Go-http-client/1.1"
-2026-01-06T02:04:06.935946915Z 127.0.0.1 - - [06/Jan/2026:02:04:06 +0000] "GET / HTTP/1.1" 200 51015 "-" "Go-http-client/2.0"
-2026-01-06T02:04:21.376390069Z 127.0.0.1 - - [06/Jan/2026:02:04:21 +0000] "GET /notifications/api/count HTTP/1.1" 200 48 "https://defitech-42v7.onrender.com/profile/projets/ajouter" "Mozilla/5.0 (iPhone; CPU iPhone OS 15_8_4 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/15.6.7 Mobile/15E148 Safari/604.1"
-2026-01-06T02:04:31.911574479Z 127.0.0.1 - - [06/Jan/2026:02:04:31 +0000] "POST /profile/projets/ajouter HTTP/1.1" 302 231 "https://defitech-42v7.onrender.com/profile/projets/ajouter" "Mozilla/5.0 (iPhone; CPU iPhone OS 15_8_4 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/15.6.7 Mobile/15E148 Safari/604.1"
-2026-01-06T02:04:33.654009285Z INFO:app.services.cv_generator:Utilisateur chargé: Ambroise AMETOESSO (ID: 2)
-2026-01-06T02:04:33.684400342Z INFO:app.services.cv_generator:Profil étudiant chargé: ID 1
-2026-01-06T02:04:33.684907524Z INFO:app.services.cv_generator:Récupération des données pour l'utilisateur 2
-2026-01-06T02:04:34.349456068Z 127.0.0.1 - - [06/Jan/2026:02:04:34 +0000] "GET /profile/profil-avance HTTP/1.1" 200 81068 "https://defitech-42v7.onrender.com/profile/projets/ajouter" "Mozilla/5.0 (iPhone; CPU iPhone OS 15_8_4 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/15.6.7 Mobile/15E148 Safari/604.1"
-2026-01-06T02:04:35.488214898Z 127.0.0.1 - - [06/Jan/2026:02:04:35 +0000] "GET /static/js/notifications.js HTTP/1.1" 200 0 "https://defitech-42v7.onrender.com/profile/profil-avance" "Mozilla/5.0 (iPhone; CPU iPhone OS 15_8_4 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/15.6.7 Mobile/15E148 Safari/604.1"
-2026-01-06T02:04:36.108462834Z 127.0.0.1 - - [06/Jan/2026:02:04:36 +0000] "GET /static/css/style.css HTTP/1.1" 200 0 "https://defitech-42v7.onrender.com/profile/profil-avance" "Mozilla/5.0 (iPhone; CPU iPhone OS 15_8_4 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/15.6.7 Mobile/15E148 Safari/604.1"
-2026-01-06T02:04:36.161891675Z 127.0.0.1 - - [06/Jan/2026:02:04:36 +0000] "GET /static/css/compiled.css HTTP/1.1" 200 0 "https://defitech-42v7.onrender.com/profile/profil-avance" "Mozilla/5.0 (iPhone; CPU iPhone OS 15_8_4 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/15.6.7 Mobile/15E148 Safari/604.1"
-2026-01-06T02:04:36.354739792Z 127.0.0.1 - - [06/Jan/2026:02:04:36 +0000] "GET /static/js/app_lock.js HTTP/1.1" 200 0 "https://defitech-42v7.onrender.com/profile/profil-avance" "Mozilla/5.0 (iPhone; CPU iPhone OS 15_8_4 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/15.6.7 Mobile/15E148 Safari/604.1"
-2026-01-06T02:04:36.360513494Z 127.0.0.1 - - [06/Jan/2026:02:04:36 +0000] "GET /static/js/cloudinary_uploader.js HTTP/1.1" 200 0 "https://defitech-42v7.onrender.com/profile/profil-avance" "Mozilla/5.0 (iPhone; CPU iPhone OS 15_8_4 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/15.6.7 Mobile/15E148 Safari/604.1"
-2026-01-06T02:04:37.085107515Z 127.0.0.1 - - [06/Jan/2026:02:04:37 +0000] "GET /static/manifest.json HTTP/1.1" 200 0 "https://defitech-42v7.onrender.com/profile/profil-avance" "Mozilla/5.0 (iPhone; CPU iPhone OS 15_8_4 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/15.6.7 Mobile/15E148 Safari/604.1"
-2026-01-06T02:04:38.110503794Z 127.0.0.1 - - [06/Jan/2026:02:04:38 +0000] "GET /static/sounds/notification.mp3 HTTP/1.1" 206 2 "https://defitech-42v7.onrender.com/profile/profil-avance" "Mozilla/5.0 (iPhone; CPU iPhone OS 15_8_4 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/15.6.7 Mobile/15E148 Safari/604.1"
-2026-01-06T02:04:38.192667608Z 127.0.0.1 - - [06/Jan/2026:02:04:38 +0000] "GET /notifications/api HTTP/1.1" 200 53 "https://defitech-42v7.onrender.com/profile/profil-avance" "Mozilla/5.0 (iPhone; CPU iPhone OS 15_8_4 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/15.6.7 Mobile/15E148 Safari/604.1"
-2026-01-06T02:04:38.345971395Z 127.0.0.1 - - [06/Jan/2026:02:04:38 +0000] "GET /api/app-lock/status HTTP/1.1" 200 74 "https://defitech-42v7.onrender.com/profile/profil-avance" "Mozilla/5.0 (iPhone; CPU iPhone OS 15_8_4 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/15.6.7 Mobile/15E148 Safari/604.1"
-2026-01-06T02:04:38.595769133Z 127.0.0.1 - - [06/Jan/2026:02:04:38 +0000] "GET /static/sounds/notification.mp3 HTTP/1.1" 206 40704 "https://defitech-42v7.onrender.com/profile/profil-avance" "Mozilla/5.0 (iPhone; CPU iPhone OS 15_8_4 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/15.6.7 Mobile/15E148 Safari/604.1"
-2026-01-06T02:05:03.857884085Z [2026-01-06 02:05:03 +0000] [57] [ERROR] Unhandled exception in main loop
-2026-01-06T02:05:03.857906036Z Traceback (most recent call last):
-2026-01-06T02:05:03.857911506Z   File "/opt/render/project/src/.venv/lib/python3.13/site-packages/gunicorn/arbiter.py", line 208, in run
-2026-01-06T02:05:03.857934006Z     self.sleep()
-2026-01-06T02:05:03.857940997Z     ~~~~~~~~~~^^
-2026-01-06T02:05:03.857944997Z   File "/opt/render/project/src/.venv/lib/python3.13/site-packages/gunicorn/arbiter.py", line 359, in sleep
-2026-01-06T02:05:03.857950077Z     ready = select.select([self.PIPE[0]], [], [], 1.0)
-2026-01-06T02:05:03.857954467Z   File "/opt/render/project/src/.venv/lib/python3.13/site-packages/eventlet/green/select.py", line 80, in select
-2026-01-06T02:05:03.857958907Z     return hub.switch()
-2026-01-06T02:05:03.857962997Z            ~~~~~~~~~~^^
-2026-01-06T02:05:03.857967077Z   File "/opt/render/project/src/.venv/lib/python3.13/site-packages/eventlet/hubs/hub.py", line 310, in switch
-2026-01-06T02:05:03.857971297Z     return self.greenlet.switch()
-2026-01-06T02:05:03.857975257Z            ~~~~~~~~~~~~~~~~~~~~^^
-2026-01-06T02:05:03.857979417Z   File "/opt/render/project/src/.venv/lib/python3.13/site-packages/eventlet/hubs/hub.py", line 362, in run
-2026-01-06T02:05:03.857996108Z     self.wait(sleep_time)
-2026-01-06T02:05:03.857998658Z     ~~~~~~~~~^^^^^^^^^^^^
-2026-01-06T02:05:03.858001628Z   File "/opt/render/project/src/.venv/lib/python3.13/site-packages/eventlet/hubs/poll.py", line 80, in wait
-2026-01-06T02:05:03.858004258Z     presult = self.do_poll(seconds)
-2026-01-06T02:05:03.858006678Z   File "/opt/render/project/src/.venv/lib/python3.13/site-packages/eventlet/hubs/epolls.py", line 31, in do_poll
-2026-01-06T02:05:03.858009238Z     return self.poll.poll(seconds)
-2026-01-06T02:05:03.858011628Z            ~~~~~~~~~~~~~~^^^^^^^^^
-2026-01-06T02:05:03.858014168Z   File "/opt/render/project/src/.venv/lib/python3.13/site-packages/gunicorn/arbiter.py", line 193, in signal
-2026-01-06T02:05:03.858016608Z     self.wakeup()
-2026-01-06T02:05:03.858020378Z     ~~~~~~~~~~~^^
-2026-01-06T02:05:03.858023308Z   File "/opt/render/project/src/.venv/lib/python3.13/site-packages/gunicorn/arbiter.py", line 334, in wakeup
-2026-01-06T02:05:03.858025768Z     os.write(self.PIPE[1], b'.')
-2026-01-06T02:05:03.858028448Z     ~~~~~~~~^^^^^^^^^^^^^^^^^^^^
-2026-01-06T02:05:03.858031099Z   File "/opt/render/project/src/.venv/lib/python3.13/site-packages/eventlet/green/os.py", line 74, in write
-2026-01-06T02:05:03.858033628Z     hubs.trampoline(fd, write=True)
-2026-01-06T02:05:03.858036009Z     ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^
-2026-01-06T02:05:03.858039059Z   File "/opt/render/project/src/.venv/lib/python3.13/site-packages/eventlet/hubs/__init__.py", line 139, in trampoline
-2026-01-06T02:05:03.858041619Z     raise RuntimeError('do not call blocking functions from the mainloop')
-2026-01-06T02:05:03.858044189Z RuntimeError: do not call blocking functions from the mainloop
-2026-01-06T02:05:03.866739519Z [2026-01-06 02:05:03 +0000] [65] [INFO] Worker exiting (pid: 65)
-2026-01-06T02:05:09.093062314Z 
-2026-01-06T02:05:09.093093115Z Error: do not call blocking functions from the mainloop
-2026-01-06T02:05:09.093097855Z 
-2026-01-06T02:05:16.522632538Z 127.0.0.1 - - [06/Jan/2026:02:05:16 +0000] "GET /notifications/api HTTP/1.1" 200 53 "https://defitech-42v7.onrender.com/profile/profil-avance" "Mozilla/5.0 (iPhone; CPU iPhone OS 15_8_4 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/15.6.7 Mobile/15E148 Safari/604.1"
-2026-01-06T02:05:19.535670368Z 127.0.0.1 - - [06/Jan/2026:02:05:19 +0000] "GET /profile/experiences/ajouter HTTP/1.1" 200 65697 "https://defitech-42v7.onrender.com/profile/profil-avance" "Mozilla/5.0 (iPhone; CPU iPhone OS 15_8_4 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/15.6.7 Mobile/15E148 Safari/604.1"
-2026-01-06T02:05:20.689985275Z 127.0.0.1 - - [06/Jan/2026:02:05:20 +0000] "GET /static/js/notifications.js HTTP/1.1" 304 0 "https://defitech-42v7.onrender.com/profile/experiences/ajouter" "Mozilla/5.0 (iPhone; CPU iPhone OS 15_8_4 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/15.6.7 Mobile/15E148 Safari/604.1"
-2026-01-06T02:05:20.691261896Z 127.0.0.1 - - [06/Jan/2026:02:05:20 +0000] "GET /static/css/style.css HTTP/1.1" 304 0 "https://defitech-42v7.onrender.com/profile/experiences/ajouter" "Mozilla/5.0 (iPhone; CPU iPhone OS 15_8_4 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/15.6.7 Mobile/15E148 Safari/604.1"
-2026-01-06T02:05:20.692230666Z 127.0.0.1 - - [06/Jan/2026:02:05:20 +0000] "GET /static/js/cloudinary_uploader.js HTTP/1.1" 304 0 "https://defitech-42v7.onrender.com/profile/experiences/ajouter" "Mozilla/5.0 (iPhone; CPU iPhone OS 15_8_4 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/15.6.7 Mobile/15E148 Safari/604.1"
-2026-01-06T02:05:21.342955275Z 127.0.0.1 - - [06/Jan/2026:02:05:21 +0000] "GET /static/css/compiled.css HTTP/1.1" 304 0 "https://defitech-42v7.onrender.com/profile/experiences/ajouter" "Mozilla/5.0 (iPhone; CPU iPhone OS 15_8_4 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/15.6.7 Mobile/15E148 Safari/604.1"
-2026-01-06T02:05:21.375657776Z 127.0.0.1 - - [06/Jan/2026:02:05:21 +0000] "GET /static/js/app_lock.js HTTP/1.1" 304 0 "https://defitech-42v7.onrender.com/profile/experiences/ajouter" "Mozilla/5.0 (iPhone; CPU iPhone OS 15_8_4 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/15.6.7 Mobile/15E148 Safari/604.1"
-2026-01-06T02:05:22.626540401Z 127.0.0.1 - - [06/Jan/2026:02:05:22 +0000] "GET /static/manifest.json HTTP/1.1" 304 0 "https://defitech-42v7.onrender.com/profile/experiences/ajouter" "Mozilla/5.0 (iPhone; CPU iPhone OS 15_8_4 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/15.6.7 Mobile/15E148 Safari/604.1"
-2026-01-06T02:05:23.024345504Z 127.0.0.1 - - [06/Jan/2026:02:05:23 +0000] "GET /static/sounds/notification.mp3 HTTP/1.1" 206 2 "https://defitech-42v7.onrender.com/profile/experiences/ajouter" "Mozilla/5.0 (iPhone; CPU iPhone OS 15_8_4 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/15.6.7 Mobile/15E148 Safari/604.1"
-2026-01-06T02:05:23.406208698Z 127.0.0.1 - - [06/Jan/2026:02:05:23 +0000] "GET /notifications/api HTTP/1.1" 200 53 "https://defitech-42v7.onrender.com/profile/experiences/ajouter" "Mozilla/5.0 (iPhone; CPU iPhone OS 15_8_4 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/15.6.7 Mobile/15E148 Safari/604.1"
-2026-01-06T02:05:23.603984564Z 127.0.0.1 - - [06/Jan/2026:02:05:23 +0000] "GET /api/app-lock/status HTTP/1.1" 200 74 "https://defitech-42v7.onrender.com/profile/experiences/ajouter" "Mozilla/5.0 (iPhone; CPU iPhone OS 15_8_4 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/15.6.7 Mobile/15E148 Safari/604.1"
-2026-01-06T02:05:24.223277921Z 127.0.0.1 - - [06/Jan/2026:02:05:24 +0000] "GET /static/sounds/notification.mp3 HTTP/1.1" 206 40704 "https://defitech-42v7.onrender.com/profile/experiences/ajouter" "Mozilla/5.0 (iPhone; CPU iPhone OS 15_8_4 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/15.6.7 Mobile/15E148 Safari/604.1"
-2026-01-06T02:05:53.208291836Z 127.0.0.1 - - [06/Jan/2026:02:05:53 +0000] "GET /notifications/api/count HTTP/1.1" 200 48 "https://defitech-42v7.onrender.com/profile/experiences/ajouter" "Mozilla/5.0 (iPhone; CPU iPhone OS 15_8_4 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/15.6.7 Mobile/15E148 Safari/604.1"
-2026-01-06T02:06:23.294592159Z 127.0.0.1 - - [06/Jan/2026:02:06:23 +0000] "GET /notifications/api/count HTTP/1.1" 200 48 "https://defitech-42v7.onrender.com/profile/experiences/ajouter" "Mozilla/5.0 (iPhone; CPU iPhone OS 15_8_4 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/15.6.7 Mobile/15E148 Safari/604.1"
-2026-01-06T02:06:53.231346217Z 127.0.0.1 - - [06/Jan/2026:02:06:53 +0000] "GET /notifications/api/count HTTP/1.1" 200 48 "https://defitech-42v7.onrender.com/profile/experiences/ajouter" "Mozilla/5.0 (iPhone; CPU iPhone OS 15_8_4 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/15.6.7 Mobile/15E148 Safari/604.1"
-2026-01-06T02:07:00.509668689Z 127.0.0.1 - - [06/Jan/2026:02:07:00 +0000] "POST /profile/experiences/ajouter HTTP/1.1" 302 231 "https://defitech-42v7.onrender.com/profile/experiences/ajouter" "Mozilla/5.0 (iPhone; CPU iPhone OS 15_8_4 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/15.6.7 Mobile/15E148 Safari/604.1"
-2026-01-06T02:07:01.524908246Z INFO:app.services.cv_generator:Utilisateur chargé: Ambroise AMETOESSO (ID: 2)
-2026-01-06T02:07:01.552815476Z INFO:app.services.cv_generator:Profil étudiant chargé: ID 1
-2026-01-06T02:07:01.553004998Z INFO:app.services.cv_generator:Récupération des données pour l'utilisateur 2
-2026-01-06T02:07:01.954857906Z 127.0.0.1 - - [06/Jan/2026:02:07:01 +0000] "GET /profile/profil-avance HTTP/1.1" 200 82110 "https://defitech-42v7.onrender.com/profile/experiences/ajouter" "Mozilla/5.0 (iPhone; CPU iPhone OS 15_8_4 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/15.6.7 Mobile/15E148 Safari/604.1"
-2026-01-06T02:07:02.858068795Z 127.0.0.1 - - [06/Jan/2026:02:07:02 +0000] "GET /static/js/notifications.js HTTP/1.1" 304 0 "https://defitech-42v7.onrender.com/profile/profil-avance" "Mozilla/5.0 (iPhone; CPU iPhone OS 15_8_4 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/15.6.7 Mobile/15E148 Safari/604.1"
-2026-01-06T02:07:02.859446702Z 127.0.0.1 - - [06/Jan/2026:02:07:02 +0000] "GET /static/css/style.css HTTP/1.1" 304 0 "https://defitech-42v7.onrender.com/profile/profil-avance" "Mozilla/5.0 (iPhone; CPU iPhone OS 15_8_4 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/15.6.7 Mobile/15E148 Safari/604.1"
-2026-01-06T02:07:02.866930721Z 127.0.0.1 - - [06/Jan/2026:02:07:02 +0000] "GET /static/js/app_lock.js HTTP/1.1" 304 0 "https://defitech-42v7.onrender.com/profile/profil-avance" "Mozilla/5.0 (iPhone; CPU iPhone OS 15_8_4 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/15.6.7 Mobile/15E148 Safari/604.1"
-2026-01-06T02:07:03.509173189Z 127.0.0.1 - - [06/Jan/2026:02:07:03 +0000] "GET /static/js/cloudinary_uploader.js HTTP/1.1" 304 0 "https://defitech-42v7.onrender.com/profile/profil-avance" "Mozilla/5.0 (iPhone; CPU iPhone OS 15_8_4 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/15.6.7 Mobile/15E148 Safari/604.1"
-2026-01-06T02:07:03.510500833Z 127.0.0.1 - - [06/Jan/2026:02:07:03 +0000] "GET /static/css/compiled.css HTTP/1.1" 304 0 "https://defitech-42v7.onrender.com/profile/profil-avance" "Mozilla/5.0 (iPhone; CPU iPhone OS 15_8_4 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/15.6.7 Mobile/15E148 Safari/604.1"
-2026-01-06T02:07:04.693487292Z 127.0.0.1 - - [06/Jan/2026:02:07:04 +0000] "GET /static/manifest.json HTTP/1.1" 304 0 "https://defitech-42v7.onrender.com/profile/profil-avance" "Mozilla/5.0 (iPhone; CPU iPhone OS 15_8_4 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/15.6.7 Mobile/15E148 Safari/604.1"
-2026-01-06T02:07:05.127891403Z 127.0.0.1 - - [06/Jan/2026:02:07:05 +0000] "GET /static/sounds/notification.mp3 HTTP/1.1" 206 2 "https://defitech-42v7.onrender.com/profile/profil-avance" "Mozilla/5.0 (iPhone; CPU iPhone OS 15_8_4 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/15.6.7 Mobile/15E148 Safari/604.1"
-2026-01-06T02:07:05.2050023Z 127.0.0.1 - - [06/Jan/2026:02:07:05 +0000] "GET /notifications/api HTTP/1.1" 200 53 "https://defitech-42v7.onrender.com/profile/profil-avance" "Mozilla/5.0 (iPhone; CPU iPhone OS 15_8_4 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/15.6.7 Mobile/15E148 Safari/604.1"
-2026-01-06T02:07:05.90801487Z 127.0.0.1 - - [06/Jan/2026:02:07:05 +0000] "GET /api/app-lock/status HTTP/1.1" 200 74 "https://defitech-42v7.onrender.com/profile/profil-avance" "Mozilla/5.0 (iPhone; CPU iPhone OS 15_8_4 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/15.6.7 Mobile/15E148 Safari/604.1"
-2026-01-06T02:07:05.982249327Z 127.0.0.1 - - [06/Jan/2026:02:07:05 +0000] "GET /static/sounds/notification.mp3 HTTP/1.1" 206 40704 "https://defitech-42v7.onrender.com/profile/profil-avance" "Mozilla/5.0 (iPhone; CPU iPhone OS 15_8_4 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/15.6.7 Mobile/15E148 Safari/604.1"
-2026-01-06T02:07:25.391496155Z 127.0.0.1 - - [06/Jan/2026:02:07:25 +0000] "GET /career-craft HTTP/1.1" 200 33697 "https://defitech-42v7.onrender.com/profile/profil-avance" "Mozilla/5.0 (iPhone; CPU iPhone OS 15_8_4 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/15.6.7 Mobile/15E148 Safari/604.1"
-2026-01-06T02:07:27.014213468Z 127.0.0.1 - - [06/Jan/2026:02:07:27 +0000] "GET /static/js/app_lock.js HTTP/1.1" 304 0 "https://defitech-42v7.onrender.com/career-craft" "Mozilla/5.0 (iPhone; CPU iPhone OS 15_8_4 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/15.6.7 Mobile/15E148 Safari/604.1"
-2026-01-06T02:07:27.906904377Z 127.0.0.1 - - [06/Jan/2026:02:07:27 +0000] "GET /api/app-lock/status HTTP/1.1" 200 74 "https://defitech-42v7.onrender.com/career-craft" "Mozilla/5.0 (iPhone; CPU iPhone OS 15_8_4 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/15.6.7 Mobile/15E148 Safari/604.1"
-2026-01-06T02:07:27.90854779Z INFO:app.services.cv_generator:Utilisateur chargé: Ambroise AMETOESSO (ID: 2)
-2026-01-06T02:07:27.936494737Z INFO:app.services.cv_generator:Profil étudiant chargé: ID 1
-2026-01-06T02:07:27.936664258Z INFO:app.services.cv_generator:Récupération des données pour l'utilisateur 2
-2026-01-06T02:07:28.296760436Z 127.0.0.1 - - [06/Jan/2026:02:07:28 +0000] "POST /api/career-craft/preview HTTP/1.1" 200 2082 "https://defitech-42v7.onrender.com/career-craft" "Mozilla/5.0 (iPhone; CPU iPhone OS 15_8_4 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/15.6.7 Mobile/15E148 Safari/604.1"
-2026-01-06T02:07:31.845882612Z 127.0.0.1 - - [06/Jan/2026:02:07:31 +0000] "GET /defAI HTTP/1.1" 200 28293 "https://defitech-42v7.onrender.com/career-craft" "Mozilla/5.0 (iPhone; CPU iPhone OS 15_8_4 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/15.6.7 Mobile/15E148 Safari/604.1"
-2026-01-06T02:07:32.478858184Z 127.0.0.1 - - [06/Jan/2026:02:07:32 +0000] "GET /static/js/script.js?v=2 HTTP/1.1" 200 0 "https://defitech-42v7.onrender.com/defAI" "Mozilla/5.0 (iPhone; CPU iPhone OS 15_8_4 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/15.6.7 Mobile/15E148 Safari/604.1"
-2026-01-06T02:07:32.531881208Z 127.0.0.1 - - [06/Jan/2026:02:07:32 +0000] "GET /static/css/compiled.css HTTP/1.1" 304 0 "https://defitech-42v7.onrender.com/defAI" "Mozilla/5.0 (iPhone; CPU iPhone OS 15_8_4 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/15.6.7 Mobile/15E148 Safari/604.1"
-2026-01-06T02:07:32.534345192Z 127.0.0.1 - - [06/Jan/2026:02:07:32 +0000] "GET /static/js/app_lock.js HTTP/1.1" 304 0 "https://defitech-42v7.onrender.com/defAI" "Mozilla/5.0 (iPhone; CPU iPhone OS 15_8_4 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/15.6.7 Mobile/15E148 Safari/604.1"
-2026-01-06T02:07:32.535698968Z 127.0.0.1 - - [06/Jan/2026:02:07:32 +0000] "GET /static/css/style.css HTTP/1.1" 304 0 "https://defitech-42v7.onrender.com/defAI" "Mozilla/5.0 (iPhone; CPU iPhone OS 15_8_4 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/15.6.7 Mobile/15E148 Safari/604.1"
-2026-01-06T02:07:33.197820122Z 127.0.0.1 - - [06/Jan/2026:02:07:33 +0000] "GET /static/js/cloudinary_uploader.js HTTP/1.1" 304 0 "https://defitech-42v7.onrender.com/defAI" "Mozilla/5.0 (iPhone; CPU iPhone OS 15_8_4 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/15.6.7 Mobile/15E148 Safari/604.1"
-2026-01-06T02:07:34.014525995Z 127.0.0.1 - - [06/Jan/2026:02:07:34 +0000] "GET /api/app-lock/status HTTP/1.1" 200 74 "https://defitech-42v7.onrender.com/defAI" "Mozilla/5.0 (iPhone; CPU iPhone OS 15_8_4 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/15.6.7 Mobile/15E148 Safari/604.1"
-2026-01-06T02:07:34.320851442Z 127.0.0.1 - - [06/Jan/2026:02:07:34 +0000] "GET /api/ai/conversations HTTP/1.1" 200 1991 "https://defitech-42v7.onrender.com/defAI" "Mozilla/5.0 (iPhone; CPU iPhone OS 15_8_4 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/15.6.7 Mobile/15E148 Safari/604.1"
-2026-01-06T02:08:23.405296454Z INFO:app.services.cv_generator:Utilisateur chargé: Ambroise AMETOESSO (ID: 2)
-2026-01-06T02:08:23.436969546Z INFO:app.services.cv_generator:Profil étudiant chargé: ID 1
-2026-01-06T02:08:23.437176928Z INFO:app.services.cv_generator:Génération de l'aperçu pour l'utilisateur 2
-2026-01-06T02:08:23.437222311Z INFO:app.services.cv_generator:Récupération des données pour l'utilisateur 2
-2026-01-06T02:08:23.768791715Z INFO:app.services.cv_generator:Données récupérées: utilisateur, competences, competences_techniques, experiences, formations, langues, projets, certifications, references, centres_interet, completion, suggestions
-2026-01-06T02:08:23.769161079Z INFO:app.services.cv_generator:Appel à l'API Gemini pour l'aperçu...
-2026-01-06T02:08:23.769169519Z INFO:app.services.gemini_integration:Envoi de la requête à Gemini (timeout: 300s)
-2026-01-06T02:08:23.769442236Z INFO:app.services.gemini_integration:Envoi de la requête à https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent (timeout: 300s)
-2026-01-06T02:08:42.754509353Z INFO:app.sockets.videoconference:🧹 Nettoyage terminé. 0 mappings supprimés
-2026-01-06T02:08:58.810255978Z INFO:app.services.gemini_integration:API Gemini - Tentative 1, Status: 200
-2026-01-06T02:08:58.810372925Z ERROR:app.services.gemini_integration:Erreur génération réponse Gemini: GeminiIntegration._process_response() got an unexpected keyword argument 'user_message'
-2026-01-06T02:08:58.812123825Z ERROR:app.services.cv_generator:Erreur Gemini: Erreur interne: GeminiIntegration._process_response() got an unexpected keyword argument 'user_message'
-2026-01-06T02:08:58.842457792Z 127.0.0.1 - - [06/Jan/2026:02:08:58 +0000] "POST /api/career-craft/generate HTTP/1.1" 200 3863 "https://defitech-42v7.onrender.com/career-craft" "Mozilla/5.0 (iPhone; CPU iPhone OS 15_8_4 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/15.6.7 Mobile/15E148 Safari/604.1"
-2026-01-06T02:09:14.536206254Z ==> Detected service running on port 10000
-2026-01-06T02:09:14.624303526Z ==> Docs on specifying a port: https://render.com/docs/web-services#port-binding
-2026-01-06T02:09:56.597470321Z INFO:app.services.cv_generator:Utilisateur chargé: Ambroise AMETOESSO (ID: 2)
-2026-01-06T02:09:56.626207628Z INFO:app.services.cv_generator:Profil étudiant chargé: ID 1
-2026-01-06T02:09:56.626372338Z INFO:app.services.cv_generator:Récupération des données pour l'utilisateur 2
-2026-01-06T02:09:56.952001799Z INFO:app.services.cv_generator:PDF généré avec succès: static/exports/cv/CV_Ambroise_AMETOESSO_20260106_020956.pdf
-2026-01-06T02:09:56.952748886Z ERROR:app:Error in generate_cv: [Errno 2] No such file or directory: '/opt/render/project/src/app/static/exports/cv/CV_Ambroise_AMETOESSO_20260106_020956.pdf'
-2026-01-06T02:09:56.980873824Z 127.0.0.1 - - [06/Jan/2026:02:09:56 +0000] "POST /api/career-craft/generate HTTP/1.1" 500 157 "https://defitech-42v7.onrender.com/career-craft" "Mozilla/5.0 (iPhone; CPU iPhone OS 15_8_4 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/15.6.7 Mobile/15E148 Safari/604.1"
-2026-01-06T02:10:22.57500272Z INFO:app.services.cv_generator:Utilisateur chargé: Ambroise AMETOESSO (ID: 2)
-2026-01-06T02:10:22.601418951Z INFO:app.services.cv_generator:Profil étudiant chargé: ID 1
-2026-01-06T02:10:22.60156265Z INFO:app.services.cv_generator:Récupération des données pour l'utilisateur 2
-2026-01-06T02:10:23.065917952Z INFO:app.services.cv_generator:DOCX généré avec succès: static/exports/cv/CV_Ambroise_AMETOESSO_20260106_021022.docx
-2026-01-06T02:10:23.066061901Z ERROR:app:Error in generate_cv: [Errno 2] No such file or directory: '/opt/render/project/src/app/static/exports/cv/CV_Ambroise_AMETOESSO_20260106_021022.docx'
-2026-01-06T02:10:23.151024912Z 127.0.0.1 - - [06/Jan/2026:02:10:23 +0000] "POST /api/career-craft/generate HTTP/1.1" 500 158 "https://defitech-42v7.onrender.com/career-craft" "Mozilla/5.0 (iPhone; CPU iPhone OS 15_8_4 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/15.6.7 Mobile/15E148 Safari/604.1"
-2026-01-06T02:10:29.697245878Z INFO:app.services.cv_generator:Utilisateur chargé: Ambroise AMETOESSO (ID: 2)
-2026-01-06T02:10:29.724038682Z INFO:app.services.cv_generator:Profil étudiant chargé: ID 1
-2026-01-06T02:10:29.724220073Z INFO:app.services.cv_generator:Récupération des données pour l'utilisateur 2
-2026-01-06T02:10:30.046055285Z INFO:app.services.cv_generator:Données LinkedIn générées avec succès
-2026-01-06T02:10:30.073703703Z 127.0.0.1 - - [06/Jan/2026:02:10:30 +0000] "POST /api/career-craft/generate HTTP/1.1" 200 1392 "https://defitech-42v7.onrender.com/career-craft" "Mozilla/5.0 (iPhone; CPU iPhone OS 15_8_4 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/15.6.7 Mobile/15E148 Safari/604.1"
+2026-01-06T03:07:12.374867657Z </head>
+2026-01-06T03:07:12.374872207Z <body class="bg-gray-50 font-sans leading-normal tracking-normal">
+2026-01-06T03:07:12.374876477Z     <div class="max-w-4xl mx-auto p-6 bg-white shadow-lg rounded-lg my-8">
+2026-01-06T03:07:12.374880597Z         <header class="text-center mb-10 p-4 bg-blue-50 rounded-lg shadow-sm">
+2026-01-06T03:07:12.374884687Z             <div class="flex flex-col sm:flex-row items-center justify-center sm:justify-start mb-4">
+2026-01-06T03:07:12.374890808Z                 <img src="https://res.cloudinary.com/dmokvhpjt/image/upload/v1767479391/kitgz3hsyzgkytwplz1i.jpg" class="w-24 h-24 rounded-full border-4 border-blue-200 object-cover mb-4 sm:mb-0 sm:mr-6" alt="Photo de profil">
+2026-01-06T03:07:12.374904888Z                 <div class="text-center sm:text-left">
+2026-01-06T03:07:12.374908178Z                     <h1 class="text-4xl font-extrabold text-blue-800">Ambroise AMETOESSO<...
+2026-01-06T03:07:12.374915758Z INFO:app.services.gemini_integration:_clean_response_text appelé avec text: ```html
+2026-01-06T03:07:12.374918618Z <!DOCTYPE html>
+2026-01-06T03:07:12.374921188Z <html lang="fr">
+2026-01-06T03:07:12.374923838Z <head>
+2026-01-06T03:07:12.374926378Z     <meta charset="UTF-8">
+2026-01-06T03:07:12.374928658Z     <meta name="viewport"...
+2026-01-06T03:07:12.375411728Z INFO:app.services.gemini_integration:Réponse nettoyée: ```html
+2026-01-06T03:07:12.375420539Z <!DOCTYPE html>
+2026-01-06T03:07:12.375423179Z <html lang="fr">
+2026-01-06T03:07:12.375425799Z <head>
+2026-01-06T03:07:12.375429109Z     <meta charset="UTF-8">
+2026-01-06T03:07:12.375432749Z     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+2026-01-06T03:07:12.375435729Z     <title>CV - Ambroise AMETOESSO</title>
+2026-01-06T03:07:12.375439049Z     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+2026-01-06T03:07:12.375441729Z </head>
+2026-01-06T03:07:12.375444299Z <body class="bg-gray-50 font-sans leading-normal tracking-normal">
+2026-01-06T03:07:12.375446859Z     <div class="max-w-4xl mx-auto p-6 bg-white shadow-lg rounded-lg my-8">
+2026-01-06T03:07:12.375449579Z         <header class="text-center mb-10 p-4 bg-blue-50 rounded-lg shadow-sm">
+2026-01-06T03:07:12.375452289Z             <div class="flex flex-col sm:flex-row items-center justify-center sm:justify-start mb-4">
+2026-01-06T03:07:12.375455649Z                 <img src="https://res.cloudinary.com/dmokvhpjt/image/upload/v1767479391/kitgz3hsyzgkytwplz1i.jpg" class="w-24 h-24 rounded-full border-4 border-blue-200 object-cover mb-4 sm:mb-0 sm:mr-6" alt="Photo de profil">
+2026-01-06T03:07:12.375458389Z                 <div class="text-center sm:text-left">
+2026-01-06T03:07:12.375461329Z                     <h1 class="text-4xl font-extrabold text-blue-800">Ambroise AMETOESSO<...
+2026-01-06T03:07:12.378158877Z INFO:app.services.cv_generator:Aperçu généré avec succès
+2026-01-06T03:07:12.407235632Z 127.0.0.1 - - [06/Jan/2026:03:07:12 +0000] "POST /api/career-craft/generate HTTP/1.1" 200 6167 "https://defitech-42v7.onrender.com/career-craft" "Mozilla/5.0 (iPhone; CPU iPhone OS 15_8_4 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/15.6.7 Mobile/15E148 Safari/604.1"
+2026-01-06T02:59:54.793864467Z Using cached lxml-6.0.2-cp313-cp313-manylinux_2_26_x86_64.manylinux_2_28_x86_64.whl (5.2 MB)
+2026-01-06T02:59:54.799396412Z Using cached markupsafe-3.0.3-cp313-cp313-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (22 kB)
+2026-01-06T02:59:54.800572114Z Using cached msgspec-0.20.0-cp313-cp313-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (224 kB)
+2026-01-06T02:59:54.801922949Z Using cached packaging-25.0-py3-none-any.whl (66 kB)
+2026-01-06T02:59:54.803127562Z Using cached pyopenssl-25.3.0-py3-none-any.whl (57 kB)
+2026-01-06T02:59:54.804374756Z Using cached python_engineio-4.13.0-py3-none-any.whl (59 kB)
+2026-01-06T02:59:54.805565518Z Using cached pytz-2025.2-py2.py3-none-any.whl (509 kB)
+2026-01-06T02:59:54.807325101Z Using cached simple_websocket-1.1.0-py3-none-any.whl (13 kB)
+2026-01-06T02:59:54.808470043Z Using cached six-1.17.0-py2.py3-none-any.whl (11 kB)
+2026-01-06T02:59:54.809647525Z Using cached sqlalchemy-2.0.45-cp313-cp313-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (3.3 MB)
+2026-01-06T02:59:54.813598699Z Using cached tqdm-4.67.1-py3-none-any.whl (78 kB)
+2026-01-06T02:59:54.814841073Z Using cached typing_extensions-4.15.0-py3-none-any.whl (44 kB)
+2026-01-06T02:59:54.816020465Z Using cached tzdata-2025.3-py2.py3-none-any.whl (348 kB)
+2026-01-06T02:59:54.817438332Z Using cached cachelib-0.13.0-py3-none-any.whl (20 kB)
+2026-01-06T02:59:54.818688785Z Using cached filelock-3.20.2-py3-none-any.whl (16 kB)
+2026-01-06T02:59:54.819864417Z Using cached mako-1.3.10-py3-none-any.whl (78 kB)
+2026-01-06T02:59:54.821042919Z Using cached pycparser-2.23-py3-none-any.whl (118 kB)
+2026-01-06T02:59:54.822368264Z Using cached wsproto-1.3.2-py3-none-any.whl (24 kB)
+2026-01-06T02:59:54.823513226Z Using cached h11-0.16.0-py3-none-any.whl (37 kB)
+2026-01-06T02:59:54.824706719Z Using cached wtforms-3.2.1-py3-none-any.whl (152 kB)
+2026-01-06T02:59:55.090265464Z Installing collected packages: pytz, asn1crypto, waitress, urllib3, tzdata, typing-extensions, tqdm, six, PyYAML, python-dotenv, PyPDF2, pycparser, psycopg2-binary, Pillow, packaging, numpy, msgspec, MarkupSafe, lxml, itsdangerous, idna, h11, greenlet, fsspec, filelock, dnspython, click, charset-normalizer, chardet, certifi, cbor2, cachelib, blinker, bidict, wtforms, wsproto, Werkzeug, sqlalchemy, requests, reportlab, python-docx, python-dateutil, Mako, Jinja2, gunicorn, eventlet, email_validator, cloudinary, cffi, simple-websocket, pandas, huggingface-hub, Flask, cryptography, alembic, python-engineio, pyOpenSSL, flask-wtf, Flask-SQLAlchemy, flask-session, flask-mail, Flask-Login, flask-csrf, flask-ckeditor, webauthn, python-socketio, flask-migrate, flask-socketio
+2026-01-06T03:00:11.624132781Z 
+2026-01-06T03:00:11.630762706Z Successfully installed Flask-2.3.3 Flask-Login-0.6.3 Flask-SQLAlchemy-3.0.5 Jinja2-3.1.6 Mako-1.3.10 MarkupSafe-3.0.3 Pillow-12.0.0 PyPDF2-3.0.1 PyYAML-6.0.1 Werkzeug-2.3.7 alembic-1.17.2 asn1crypto-1.5.1 bidict-0.23.1 blinker-1.9.0 cachelib-0.13.0 cbor2-5.8.0 certifi-2026.1.4 cffi-2.0.0 chardet-5.2.0 charset-normalizer-3.4.4 click-8.3.1 cloudinary-1.44.1 cryptography-46.0.3 dnspython-2.8.0 email_validator-2.3.0 eventlet-0.40.4 filelock-3.20.2 flask-ckeditor-1.0.0 flask-csrf-0.9.2 flask-mail-0.10.0 flask-migrate-4.1.0 flask-session-0.8.0 flask-socketio-5.3.6 flask-wtf-1.2.2 fsspec-2025.12.0 greenlet-3.3.0 gunicorn-23.0.0 h11-0.16.0 huggingface-hub-0.19.4 idna-3.11 itsdangerous-2.2.0 lxml-6.0.2 msgspec-0.20.0 numpy-2.4.0 packaging-25.0 pandas-2.3.3 psycopg2-binary-2.9.11 pyOpenSSL-25.3.0 pycparser-2.23 python-dateutil-2.8.2 python-docx-0.8.11 python-dotenv-1.2.1 python-engineio-4.13.0 python-socketio-5.11.0 pytz-2025.2 reportlab-4.0.4 requests-2.31.0 simple-websocket-1.1.0 six-1.17.0 sqlalchemy-2.0.45 tqdm-4.67.1 typing-extensions-4.15.0 tzdata-2025.3 urllib3-2.6.2 waitress-3.0.2 webauthn-2.7.0 wsproto-1.3.2 wtforms-3.2.1
+2026-01-06T03:00:11.637491344Z 
+2026-01-06T03:00:11.637536865Z [notice] A new release of pip is available: 25.1.1 -> 25.3
+2026-01-06T03:00:11.637544215Z [notice] To update, run: pip install --upgrade pip
+2026-01-06T03:00:15.300221944Z ==> Uploading build...
+2026-01-06T03:00:43.043346774Z ==> Uploaded in 23.6s. Compression took 4.1s
+2026-01-06T03:00:43.128321146Z ==> Build successful 🎉
+2026-01-06T03:00:47.060823902Z ==> Setting WEB_CONCURRENCY=1 by default, based on available CPUs in the instance
+2026-01-06T03:00:47.078232364Z ==> Deploying...
+2026-01-06T03:01:43.28226904Z ==> Running 'gunicorn --worker-class eventlet -w 1 wsgi:app'
+2026-01-06T03:01:54.351220561Z ==> No open ports detected, continuing to scan...
+2026-01-06T03:01:54.448413138Z ==> Docs on specifying a port: https://render.com/docs/web-services#port-binding
+2026-01-06T03:02:19.98575739Z [2026-01-06 03:02:19 +0000] [57] [INFO] Starting gunicorn 23.0.0
+2026-01-06T03:02:19.989368367Z [2026-01-06 03:02:19 +0000] [57] [INFO] Listening at: http://0.0.0.0:10000 (57)
+2026-01-06T03:02:19.989380307Z [2026-01-06 03:02:19 +0000] [57] [INFO] Using worker: eventlet
+2026-01-06T03:02:20.080341253Z [2026-01-06 03:02:20 +0000] [66] [INFO] Booting worker with pid: 66
+2026-01-06T03:02:23.739423143Z 127.0.0.1 - - [06/Jan/2026:03:02:23 +0000] "HEAD / HTTP/1.1" 200 0 "-" "Go-http-client/1.1"
+2026-01-06T03:02:27.978569197Z ==> Your service is live 🎉
+2026-01-06T03:02:28.014829511Z ==> 
+2026-01-06T03:02:28.049422546Z ==> ///////////////////////////////////////////////////////////
+2026-01-06T03:02:28.088004961Z ==> 
+2026-01-06T03:02:28.124024835Z ==> Available at your primary URL https://defitech-42v7.onrender.com
+2026-01-06T03:02:28.534347645Z ==> 
+2026-01-06T03:02:28.575285639Z ==> ///////////////////////////////////////////////////////////
+2026-01-06T03:02:29.983010152Z 127.0.0.1 - - [06/Jan/2026:03:02:29 +0000] "GET / HTTP/1.1" 200 51015 "-" "Go-http-client/2.0"
+2026-01-06T03:03:53.646533596Z 127.0.0.1 - - [06/Jan/2026:03:03:53 +0000] "GET / HTTP/1.1" 200 51015 "-" "python-requests/2.32.5"
+2026-01-06T03:03:53.677946441Z 127.0.0.1 - - [06/Jan/2026:03:03:53 +0000] "GET / HTTP/1.1" 200 51015 "-" "python-requests/2.32.5"
+2026-01-06T03:03:53.756922313Z 127.0.0.1 - - [06/Jan/2026:03:03:53 +0000] "GET / HTTP/1.1" 200 51015 "-" "python-requests/2.32.5"
+2026-01-06T03:06:59.398765223Z INFO:app.services.cv_generator:Utilisateur chargé: Ambroise AMETOESSO (ID: 2)
+2026-01-06T03:06:59.434358347Z INFO:app.services.cv_generator:Profil étudiant chargé: ID 1
+2026-01-06T03:06:59.434798456Z INFO:app.services.cv_generator:Génération de l'aperçu pour l'utilisateur 2
+2026-01-06T03:06:59.434809646Z INFO:app.services.cv_generator:Récupération des données pour l'utilisateur 2
+2026-01-06T03:06:59.83755872Z INFO:app.services.cv_generator:Données récupérées: utilisateur, competences, competences_techniques, experiences, formations, langues, projets, certifications, references, centres_interet, completion, suggestions
+2026-01-06T03:06:59.837698743Z INFO:app.services.cv_generator:Appel à l'API Gemini pour l'aperçu...
+2026-01-06T03:06:59.837880627Z INFO:app.services.gemini_integration:Envoi de la requête à Gemini (timeout: 300s)
+2026-01-06T03:06:59.837930678Z INFO:app.services.gemini_integration:Envoi de la requête à https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent (timeout: 300s)
+2026-01-06T03:07:01.791073764Z INFO:app.sockets.videoconference:🧹 Nettoyage terminé. 0 mappings supprimés
+2026-01-06T03:07:12.374808866Z INFO:app.services.gemini_integration:API Gemini - Tentative 1, Status: 200
+2026-01-06T03:07:12.374829856Z INFO:app.services.gemini_integration:Réponse brute de Gemini: ```html
+2026-01-06T03:07:12.374835676Z <!DOCTYPE html>
+2026-01-06T03:07:12.374840026Z <html lang="fr">
+2026-01-06T03:07:12.374844007Z <head>
+2026-01-06T03:07:12.374848767Z     <meta charset="UTF-8">
+2026-01-06T03:07:12.374853377Z     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+2026-01-06T03:07:12.374858567Z     <title>CV - Ambroise AMETOESSO</title>
+2026-01-06T03:07:12.374863577Z     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+2026-01-06T03:07:12.374867657Z </head>
+2026-01-06T03:07:12.374872207Z <body class="bg-gray-50 font-sans leading-normal tracking-normal">
+2026-01-06T03:07:12.374876477Z     <div class="max-w-4xl mx-auto p-6 bg-white shadow-lg rounded-lg my-8">
+2026-01-06T03:07:12.374880597Z         <header class="text-center mb-10 p-4 bg-blue-50 rounded-lg shadow-sm">
+2026-01-06T03:07:12.374884687Z             <div class="flex flex-col sm:flex-row items-center justify-center sm:justify-start mb-4">
+2026-01-06T03:07:12.374890808Z                 <img src="https://res.cloudinary.com/dmokvhpjt/image/upload/v1767479391/kitgz3hsyzgkytwplz1i.jpg" class="w-24 h-24 rounded-full border-4 border-blue-200 object-cover mb-4 sm:mb-0 sm:mr-6" alt="Photo de profil">
+2026-01-06T03:07:12.374904888Z                 <div class="text-center sm:text-left">
+2026-01-06T03:07:12.374908178Z                     <h1 class="text-4xl font-extrabold text-blue-800">Ambroise AMETOESSO<...
+2026-01-06T03:07:12.374915758Z INFO:app.services.gemini_integration:_clean_response_text appelé avec text: ```html
+2026-01-06T03:07:12.374918618Z <!DOCTYPE html>
+2026-01-06T03:07:12.374921188Z <html lang="fr">
+2026-01-06T03:07:12.374923838Z <head>
+2026-01-06T03:07:12.374926378Z     <meta charset="UTF-8">
+2026-01-06T03:07:12.374928658Z     <meta name="viewport"...
+2026-01-06T03:07:12.375411728Z INFO:app.services.gemini_integration:Réponse nettoyée: ```html
+2026-01-06T03:07:12.375420539Z <!DOCTYPE html>
+2026-01-06T03:07:12.375423179Z <html lang="fr">
+2026-01-06T03:07:12.375425799Z <head>
+2026-01-06T03:07:12.375429109Z     <meta charset="UTF-8">
+2026-01-06T03:07:12.375432749Z     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+2026-01-06T03:07:12.375435729Z     <title>CV - Ambroise AMETOESSO</title>
+2026-01-06T03:07:12.375439049Z     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+2026-01-06T03:07:12.375441729Z </head>
+2026-01-06T03:07:12.375444299Z <body class="bg-gray-50 font-sans leading-normal tracking-normal">
+2026-01-06T03:07:12.375446859Z     <div class="max-w-4xl mx-auto p-6 bg-white shadow-lg rounded-lg my-8">
+2026-01-06T03:07:12.375449579Z         <header class="text-center mb-10 p-4 bg-blue-50 rounded-lg shadow-sm">
+2026-01-06T03:07:12.375452289Z             <div class="flex flex-col sm:flex-row items-center justify-center sm:justify-start mb-4">
+2026-01-06T03:07:12.375455649Z                 <img src="https://res.cloudinary.com/dmokvhpjt/image/upload/v1767479391/kitgz3hsyzgkytwplz1i.jpg" class="w-24 h-24 rounded-full border-4 border-blue-200 object-cover mb-4 sm:mb-0 sm:mr-6" alt="Photo de profil">
+2026-01-06T03:07:12.375458389Z                 <div class="text-center sm:text-left">
+2026-01-06T03:07:12.375461329Z                     <h1 class="text-4xl font-extrabold text-blue-800">Ambroise AMETOESSO<...
+2026-01-06T03:07:12.378158877Z INFO:app.services.cv_generator:Aperçu généré avec succès
+2026-01-06T03:07:12.407235632Z 127.0.0.1 - - [06/Jan/2026:03:07:12 +0000] "POST /api/career-craft/generate HTTP/1.1" 200 6167 "https://defitech-42v7.onrender.com/career-craft" "Mozilla/5.0 (iPhone; CPU iPhone OS 15_8_4 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/15.6.7 Mobile/15E148 Safari/604.1"
+2026-01-06T03:07:28.237626724Z ==> Detected service running on port 10000
+2026-01-06T03:07:28.347738335Z ==> Docs on specifying a port: https://render.com/docs/web-services#port-binding
+2026-01-06T03:07:46.127843306Z INFO:flask_wtf.csrf:The CSRF token has expired.
+2026-01-06T03:07:46.128696013Z 127.0.0.1 - - [06/Jan/2026:03:07:46 +0000] "POST /api/career-craft/generate HTTP/1.1" 400 118 "https://defitech-42v7.onrender.com/career-craft" "Mozilla/5.0 (iPhone; CPU iPhone OS 15_8_4 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/15.6.7 Mobile/15E148 Safari/604.1"
+2026-01-06T03:08:03.151751683Z INFO:app.services.cv_generator:Utilisateur chargé: Ambroise AMETOESSO (ID: 2)
+2026-01-06T03:08:03.180850949Z INFO:app.services.cv_generator:Profil étudiant chargé: ID 1
+2026-01-06T03:08:03.180870249Z INFO:app.services.cv_generator:Récupération des données pour l'utilisateur 2
+2026-01-06T03:08:03.781480649Z 127.0.0.1 - - [06/Jan/2026:03:08:03 +0000] "GET /profile/profil-avance HTTP/1.1" 200 81334 "https://defitech-42v7.onrender.com/profile/experiences/ajouter" "Mozilla/5.0 (iPhone; CPU iPhone OS 15_8_4 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/15.6.7 Mobile/15E148 Safari/604.1"
+2026-01-06T03:08:06.294309856Z 127.0.0.1 - - [06/Jan/2026:03:08:06 +0000] "GET /notifications/api HTTP/1.1" 200 53 "https://defitech-42v7.onrender.com/profile/profil-avance" "Mozilla/5.0 (iPhone; CPU iPhone OS 15_8_4 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/15.6.7 Mobile/15E148 Safari/604.1"
+2026-01-06T03:08:07.052982061Z 127.0.0.1 - - [06/Jan/2026:03:08:07 +0000] "GET /static/sounds/notification.mp3 HTTP/1.1" 206 2 "https://defitech-42v7.onrender.com/profile/profil-avance" "Mozilla/5.0 (iPhone; CPU iPhone OS 15_8_4 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/15.6.7 Mobile/15E148 Safari/604.1"
+2026-01-06T03:08:07.327509861Z 127.0.0.1 - - [06/Jan/2026:03:08:07 +0000] "GET /api/app-lock/status HTTP/1.1" 200 74 "https://defitech-42v7.onrender.com/profile/profil-avance" "Mozilla/5.0 (iPhone; CPU iPhone OS 15_8_4 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/15.6.7 Mobile/15E148 Safari/604.1"
+2026-01-06T03:08:07.738163851Z 127.0.0.1 - - [06/Jan/2026:03:08:07 +0000] "GET /static/sounds/notification.mp3 HTTP/1.1" 206 40704 "https://defitech-42v7.onrender.com/profile/profil-avance" "Mozilla/5.0 (iPhone; CPU iPhone OS 15_8_4 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/15.6.7 Mobile/15E148 Safari/604.1"
+2026-01-06T03:08:10.01722457Z 127.0.0.1 - - [06/Jan/2026:03:08:10 +0000] "GET /career-craft HTTP/1.1" 200 33761 "https://defitech-42v7.onrender.com/profile/profil-avance" "Mozilla/5.0 (iPhone; CPU iPhone OS 15_8_4 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/15.6.7 Mobile/15E148 Safari/604.1"
+2026-01-06T03:08:12.088752408Z 127.0.0.1 - - [06/Jan/2026:03:08:12 +0000] "GET /static/js/app_lock.js HTTP/1.1" 200 0 "https://defitech-42v7.onrender.com/career-craft" "Mozilla/5.0 (iPhone; CPU iPhone OS 15_8_4 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/15.6.7 Mobile/15E148 Safari/604.1"
+2026-01-06T03:08:13.373770161Z INFO:app.services.cv_generator:Utilisateur chargé: Ambroise AMETOESSO (ID: 2)
+2026-01-06T03:08:13.403062681Z 127.0.0.1 - - [06/Jan/2026:03:08:13 +0000] "GET /api/app-lock/status HTTP/1.1" 200 74 "https://defitech-42v7.onrender.com/career-craft" "Mozilla/5.0 (iPhone; CPU iPhone OS 15_8_4 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/15.6.7 Mobile/15E148 Safari/604.1"
+2026-01-06T03:08:13.403538811Z INFO:app.services.cv_generator:Profil étudiant chargé: ID 1
+2026-01-06T03:08:13.403726035Z INFO:app.services.cv_generator:Récupération des données pour l'utilisateur 2
+2026-01-06T03:08:13.759197958Z 127.0.0.1 - - [06/Jan/2026:03:08:13 +0000] "POST /api/career-craft/preview HTTP/1.1" 200 2082 "https://defitech-42v7.onrender.com/career-craft" "Mozilla/5.0 (iPhone; CPU iPhone OS 15_8_4 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/15.6.7 Mobile/15E148 Safari/604.1"
+2026-01-06T03:08:03.151751683Z INFO:app.services.cv_generator:Utilisateur chargé: Ambroise AMETOESSO (ID: 2)
+2026-01-06T03:08:03.180850949Z INFO:app.services.cv_generator:Profil étudiant chargé: ID 1
+2026-01-06T03:08:03.180870249Z INFO:app.services.cv_generator:Récupération des données pour l'utilisateur 2
+2026-01-06T03:08:03.781480649Z 127.0.0.1 - - [06/Jan/2026:03:08:03 +0000] "GET /profile/profil-avance HTTP/1.1" 200 81334 "https://defitech-42v7.onrender.com/profile/experiences/ajouter" "Mozilla/5.0 (iPhone; CPU iPhone OS 15_8_4 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/15.6.7 Mobile/15E148 Safari/604.1"
+2026-01-06T03:08:06.294309856Z 127.0.0.1 - - [06/Jan/2026:03:08:06 +0000] "GET /notifications/api HTTP/1.1" 200 53 "https://defitech-42v7.onrender.com/profile/profil-avance" "Mozilla/5.0 (iPhone; CPU iPhone OS 15_8_4 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/15.6.7 Mobile/15E148 Safari/604.1"
+2026-01-06T03:08:07.052982061Z 127.0.0.1 - - [06/Jan/2026:03:08:07 +0000] "GET /static/sounds/notification.mp3 HTTP/1.1" 206 2 "https://defitech-42v7.onrender.com/profile/profil-avance" "Mozilla/5.0 (iPhone; CPU iPhone OS 15_8_4 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/15.6.7 Mobile/15E148 Safari/604.1"
+2026-01-06T03:08:07.327509861Z 127.0.0.1 - - [06/Jan/2026:03:08:07 +0000] "GET /api/app-lock/status HTTP/1.1" 200 74 "https://defitech-42v7.onrender.com/profile/profil-avance" "Mozilla/5.0 (iPhone; CPU iPhone OS 15_8_4 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/15.6.7 Mobile/15E148 Safari/604.1"
+2026-01-06T03:08:07.738163851Z 127.0.0.1 - - [06/Jan/2026:03:08:07 +0000] "GET /static/sounds/notification.mp3 HTTP/1.1" 206 40704 "https://defitech-42v7.onrender.com/profile/profil-avance" "Mozilla/5.0 (iPhone; CPU iPhone OS 15_8_4 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/15.6.7 Mobile/15E148 Safari/604.1"
+2026-01-06T03:08:10.01722457Z 127.0.0.1 - - [06/Jan/2026:03:08:10 +0000] "GET /career-craft HTTP/1.1" 200 33761 "https://defitech-42v7.onrender.com/profile/profil-avance" "Mozilla/5.0 (iPhone; CPU iPhone OS 15_8_4 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/15.6.7 Mobile/15E148 Safari/604.1"
+2026-01-06T03:08:12.088752408Z 127.0.0.1 - - [06/Jan/2026:03:08:12 +0000] "GET /static/js/app_lock.js HTTP/1.1" 200 0 "https://defitech-42v7.onrender.com/career-craft" "Mozilla/5.0 (iPhone; CPU iPhone OS 15_8_4 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/15.6.7 Mobile/15E148 Safari/604.1"
+2026-01-06T03:08:13.373770161Z INFO:app.services.cv_generator:Utilisateur chargé: Ambroise AMETOESSO (ID: 2)
+2026-01-06T03:08:13.403062681Z 127.0.0.1 - - [06/Jan/2026:03:08:13 +0000] "GET /api/app-lock/status HTTP/1.1" 200 74 "https://defitech-42v7.onrender.com/career-craft" "Mozilla/5.0 (iPhone; CPU iPhone OS 15_8_4 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/15.6.7 Mobile/15E148 Safari/604.1"
+2026-01-06T03:08:13.403538811Z INFO:app.services.cv_generator:Profil étudiant chargé: ID 1
+2026-01-06T03:08:13.403726035Z INFO:app.services.cv_generator:Récupération des données pour l'utilisateur 2
+2026-01-06T03:08:13.759197958Z 127.0.0.1 - - [06/Jan/2026:03:08:13 +0000] "POST /api/career-craft/preview HTTP/1.1" 200 2082 "https://defitech-42v7.onrender.com/career-craft" "Mozilla/5.0 (iPhone; CPU iPhone OS 15_8_4 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/15.6.7 Mobile/15E148 Safari/604.1"
+2026-01-06T03:08:17.731932458Z INFO:app.services.cv_generator:Utilisateur chargé: Ambroise AMETOESSO (ID: 2)
+2026-01-06T03:08:17.758392268Z INFO:app.services.cv_generator:Profil étudiant chargé: ID 1
+2026-01-06T03:08:17.759019361Z INFO:app.services.cv_generator:Génération de l'aperçu pour l'utilisateur 2
+2026-01-06T03:08:17.759032182Z INFO:app.services.cv_generator:Récupération des données pour l'utilisateur 2
+2026-01-06T03:08:18.113117895Z INFO:app.services.cv_generator:Données récupérées: utilisateur, competences, competences_techniques, experiences, formations, langues, projets, certifications, references, centres_interet, completion, suggestions
+2026-01-06T03:08:18.113205337Z INFO:app.services.cv_generator:Appel à l'API Gemini pour l'aperçu...
+2026-01-06T03:08:18.113406751Z INFO:app.services.gemini_integration:Envoi de la requête à Gemini (timeout: 300s)
+2026-01-06T03:08:18.113479422Z INFO:app.services.gemini_integration:Envoi de la requête à https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent (timeout: 300s)
+2026-01-06T03:08:30.786746608Z INFO:app.services.gemini_integration:API Gemini - Tentative 1, Status: 200
+2026-01-06T03:08:30.786878821Z INFO:app.services.gemini_integration:Réponse brute de Gemini: ```html
+2026-01-06T03:08:30.786902591Z <!DOCTYPE html>
+2026-01-06T03:08:30.786907022Z <html lang="fr">
+2026-01-06T03:08:30.786910412Z <head>
+2026-01-06T03:08:30.786914242Z     <meta charset="UTF-8">
+2026-01-06T03:08:30.786918022Z     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+2026-01-06T03:08:30.786921932Z     <title>CV de Ambroise AMETOESSO</title>
+2026-01-06T03:08:30.786925012Z     <script src="https://cdn.tailwindcss.com"></script>
+2026-01-06T03:08:30.786927232Z     <style>
+2026-01-06T03:08:30.786929362Z         body {
+2026-01-06T03:08:30.786931442Z             font-family: 'Inter', sans-serif;
+2026-01-06T03:08:30.786933562Z             background-color: #f3f4f6; /* bg-gray-100 */
+2026-01-06T03:08:30.786936342Z         }
+2026-01-06T03:08:30.786940082Z     </style>
+2026-01-06T03:08:30.786943432Z </head>
+2026-01-06T03:08:30.786946712Z <body class="bg-gray-100 p-4">
+2026-01-06T03:08:30.786951103Z     <div class="max-w-4xl mx-auto bg-white shadow-lg rounded-lg overflow-hidden my-8">
+2026-01-06T03:08:30.786954723Z         <header class="bg-blue-700 text-white p-8 text-center">
+2026-01-06T03:08:30.786957813Z             <div class="flex flex-col md:flex-row items-center justify-center mb-4">
+2026-01-06T03:08:30.786962163Z                 <img src="https://res.cloudinary.com/dmokvhpjt/image/upload/v1767479391/kitgz3hsyzgkytwplz1i.jpg" class="w-24 h-24 rounded-full border-4 border-white shadow-md mb-4 md:mb-0 md:mr-6" alt="Photo de Ambroise AMETOESSO">
+2026-01-06T03:08:30.786965503Z                 <div>
+2026-01-06T03:08:30.786970543Z                     <h1 class="text-4xl font-extrabold">Ambroise AM...
+2026-01-06T03:08:30.786985633Z INFO:app.services.gemini_integration:_clean_response_text appelé avec text: ```html
+2026-01-06T03:08:30.786989193Z <!DOCTYPE html>
+2026-01-06T03:08:30.786992684Z <html lang="fr">
+2026-01-06T03:08:30.786995893Z <head>
+2026-01-06T03:08:30.786999653Z     <meta charset="UTF-8">
+2026-01-06T03:08:30.787002764Z     <meta name="viewport"...
+2026-01-06T03:08:30.787007634Z INFO:app.services.gemini_integration:Réponse nettoyée: ```html
+2026-01-06T03:08:30.787009934Z <!DOCTYPE html>
+2026-01-06T03:08:30.787012024Z <html lang="fr">
+2026-01-06T03:08:30.787014104Z <head>
+2026-01-06T03:08:30.787016234Z     <meta charset="UTF-8">
+2026-01-06T03:08:30.787018354Z     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+2026-01-06T03:08:30.787020544Z     <title>CV de Ambroise AMETOESSO</title>
+2026-01-06T03:08:30.787023624Z     <script src="https://cdn.tailwindcss.com"></script>
+2026-01-06T03:08:30.787027194Z     <style>
+2026-01-06T03:08:30.787030634Z         body {
+2026-01-06T03:08:30.787033914Z             font-family: 'Inter', sans-serif;
+2026-01-06T03:08:30.787037564Z             background-color: #f3f4f6; /* bg-gray-100 */
+2026-01-06T03:08:30.787040925Z         }
+2026-01-06T03:08:30.787044325Z     </style>
+2026-01-06T03:08:30.787047534Z </head>
+2026-01-06T03:08:30.787051165Z <body class="bg-gray-100 p-4">
+2026-01-06T03:08:30.787054225Z     <div class="max-w-4xl mx-auto bg-white shadow-lg rounded-lg overflow-hidden my-8">
+2026-01-06T03:08:30.787056395Z         <header class="bg-blue-700 text-white p-8 text-center">
+2026-01-06T03:08:30.787058535Z             <div class="flex flex-col md:flex-row items-center justify-center mb-4">
+2026-01-06T03:08:30.787060765Z                 <img src="https://res.cloudinary.com/dmokvhpjt/image/upload/v1767479391/kitgz3hsyzgkytwplz1i.jpg" class="w-24 h-24 rounded-full border-4 border-white shadow-md mb-4 md:mb-0 md:mr-6" alt="Photo de Ambroise AMETOESSO">
+2026-01-06T03:08:30.787062845Z                 <div>
+2026-01-06T03:08:30.787070525Z                     <h1 class="text-4xl font-extrabold">Ambroise AM...
+2026-01-06T03:08:30.788913394Z INFO:app.services.cv_generator:Aperçu généré avec succès
+2026-01-06T03:08:30.817342916Z 127.0.0.1 - - [06/Jan/2026:03:08:30 +0000] "POST /api/career-craft/generate HTTP/1.1" 200 6890 "https://defitech-42v7.onrender.com/career-craft" "Mozilla/5.0 (iPhone; CPU iPhone OS 15_8_4 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/15.6.7 Mobile/15E148 Safari/604.1"
+2026-01-06T03:09:14.372758904Z INFO:app.services.cv_generator:Utilisateur chargé: Ambroise AMETOESSO (ID: 2)
+2026-01-06T03:09:14.399180183Z INFO:app.services.cv_generator:Profil étudiant chargé: ID 1
+2026-01-06T03:09:14.399384338Z INFO:app.services.cv_generator:Récupération des données pour l'utilisateur 2
+2026-01-06T03:09:14.708285544Z INFO:app.services.cv_generator:PDF généré avec succès en mémoire: CV_Ambroise_AMETOESSO_20260106_030914.pdf
+2026-01-06T03:09:15.458203253Z 127.0.0.1 - - [06/Jan/2026:03:09:15 +0000] "POST /api/career-craft/generate HTTP/1.1" 200 198 "https://defitech-42v7.onrender.com/career-craft" "Mozilla/5.0 (iPhone; CPU iPhone OS 15_8_4 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/15.6.7 Mobile/15E148 Safari/604.1"
+2026-01-06T03:10:04.119835131Z INFO:app.services.cv_generator:Utilisateur chargé: Ambroise AMETOESSO (ID: 2)
+2026-01-06T03:10:04.157966537Z INFO:app.services.cv_generator:Profil étudiant chargé: ID 1
+2026-01-06T03:10:04.158144061Z INFO:app.services.cv_generator:Récupération des données pour l'utilisateur 2
+2026-01-06T03:10:04.523224866Z INFO:app.services.cv_generator:Données LinkedIn générées avec succès
+2026-01-06T03:10:04.560581776Z 127.0.0.1 - - [06/Jan/2026:03:10:04 +0000] "POST /api/career-craft/generate HTTP/1.1" 200 1392 "https://defitech-42v7.onrender.com/career-craft" "Mozilla/5.0 (iPhone; CPU iPhone OS 15_8_4 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/15.6.7 Mobile/15E148 Safari/604.1"
+2026-01-06T03:10:19.489974813Z INFO:app.services.cv_generator:Utilisateur chargé: Ambroise AMETOESSO (ID: 2)
+2026-01-06T03:10:19.518113128Z INFO:app.services.cv_generator:Profil étudiant chargé: ID 1
+2026-01-06T03:10:19.518355523Z INFO:app.services.cv_generator:Récupération des données pour l'utilisateur 2
+2026-01-06T03:10:19.984421994Z ERROR:app.services.cv_generator:Erreur lors de la génération du DOCX: 'CVGenerator' object has no attribute '_get_profile_pic_buffer'
+2026-01-06T03:10:19.984465575Z Traceback (most recent call last):
+2026-01-06T03:10:19.984473765Z   File "/opt/render/project/src/app/services/cv_generator.py", line 912, in generate_docx
+2026-01-06T03:10:19.984479556Z     self._build_docx_content(doc, user_data)
+2026-01-06T03:10:19.984484856Z     ~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^
+2026-01-06T03:10:19.984490476Z   File "/opt/render/project/src/app/services/cv_generator.py", line 936, in _build_docx_content
+2026-01-06T03:10:19.984495926Z     pic_buffer = self._get_profile_pic_buffer()
+2026-01-06T03:10:19.984501366Z                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+2026-01-06T03:10:19.984506956Z AttributeError: 'CVGenerator' object has no attribute '_get_profile_pic_buffer'
+2026-01-06T03:10:20.016469053Z 127.0.0.1 - - [06/Jan/2026:03:10:20 +0000] "POST /api/career-craft/generate HTTP/1.1" 500 77 "https://defitech-42v7.onrender.com/career-craft" "Mozilla/5.0 (iPhone; CPU iPhone OS 15_8_4 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/15.6.7 Mobile/15E148 Safari/604.1"

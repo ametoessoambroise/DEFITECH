@@ -121,6 +121,7 @@ def dashboard():
         pending_teacher_requests=pending_teacher_requests,
     )
 
+
 @admin_bp.route("/requests/notes")
 @login_required
 def note_requests():
@@ -2788,6 +2789,8 @@ def admin_import_emploi_temps():
         db.session.rollback()
         current_app.logger.error(f"Erreur import emploi temps: {str(e)}")
         return jsonify({"error": str(e)}), 500
+
+
 """
 Routes administrateur pour la gestion des incidents de sécurité
 """
@@ -2795,7 +2798,9 @@ Routes administrateur pour la gestion des incidents de sécurité
 
 
 # Route 1: Liste des incidents de sécurité
-def admin_security_incidents():
+@admin_bp.route("/security-incidents")
+@login_required
+def security_incidents():
     """Liste tous les incidents de sécurité détectés par l'IA"""
     if current_user.role != "admin":
         flash("Accès non autorisé.", "error")
@@ -2828,7 +2833,9 @@ def admin_security_incidents():
 
 
 # Route 2: Marquer un incident comme résolu
-def admin_resolve_incident(incident_id):
+@admin_bp.route("/security-incidents/resolve/<int:incident_id>", methods=["POST"])
+@login_required
+def resolve_incident(incident_id):
     """Marque un incident comme résolu"""
     if current_user.role != "admin":
         return jsonify({"success": False, "error": "Non autorisé"}), 403
@@ -2845,7 +2852,9 @@ def admin_resolve_incident(incident_id):
 
 
 # Route 3: Ajouter des notes admin
-def admin_add_incident_note(incident_id):
+@admin_bp.route("/security-incidents/note/<int:incident_id>", methods=["POST"])
+@login_required
+def add_incident_note(incident_id):
     """Ajoute des notes administratives à un incident"""
     if current_user.role != "admin":
         return jsonify({"success": False, "error": "Non autorisé"}), 403
@@ -2862,6 +2871,8 @@ def admin_add_incident_note(incident_id):
 
 
 # Route 4: API pour obtenir le nombre d'incidents non résolus
+@admin_bp.route("/api/security-incidents/count")
+@login_required
 def api_unresolved_incidents_count():
     """Retourne le nombre d'incidents non résolus pour le badge"""
     if current_user.role != "admin":

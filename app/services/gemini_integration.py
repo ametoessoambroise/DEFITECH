@@ -156,7 +156,7 @@ class GeminiIntegration:
         )
 
     def _process_response(
-        self, response: requests.Response, prompt: str = ""
+        self, response: requests.Response, user_message: str = ""
     ) -> Dict[str, Any]:
         """Traite la réponse de l'API Gemini"""
 
@@ -250,7 +250,7 @@ class GeminiIntegration:
             # Nettoyer la réponse (passer le prompt pour les alertes de sécurité)
             logger.info(f"Réponse brute de Gemini: {text_response[:1000]}...")
             cleaned_response = self._clean_response_text(
-                text_response, user_message=prompt
+                text_response, user_message=user_message
             )
             logger.info(f"Réponse nettoyée: {cleaned_response[:1000]}...")
 

@@ -314,13 +314,13 @@ def room():
 
         if not course_id:
             flash("ID de cours manquant", "error")
-            return redirect(url_for("enseignants.dashboard"))
+            return redirect(url_for("teachers.dashboard"))
 
         # Vérifier si l'utilisateur est bien un enseignant
         enseignant = Enseignant.query.filter_by(user_id=current_user.id).first()
         if not enseignant:
             flash("Profil enseignant non trouvé", "error")
-            return redirect(url_for("enseignants.dashboard"))
+            return redirect(url_for("teachers.dashboard"))
 
         # Vérifier si le cours appartient bien à l'enseignant
         course = Matiere.query.filter_by(
@@ -396,25 +396,25 @@ def room():
 
         if not room_obj:
             flash("Salle de cours introuvable ou expirée", "error")
-            return redirect(url_for("students.etudiant_dashboard"))
+            return redirect(url_for("students.dashboard"))
 
         # Récupérer les informations du cours
         course = Matiere.query.get(room_obj.course_id)
         if not course:
             flash("Cours introuvable", "error")
-            return redirect(url_for("students.etudiant_dashboard"))
+            return redirect(url_for("students.dashboard"))
 
         # Récupérer l'étudiant
         etudiant = Etudiant.query.filter_by(user_id=current_user.id).first()
         if not etudiant:
             flash("Profil étudiant introuvable", "error")
-            return redirect(url_for("students.etudiant_dashboard"))
+            return redirect(url_for("students.dashboard"))
 
         # Vérifier si la matière est dans l'emploi du temps de la filière de l'étudiant
         filiere = Filiere.query.filter_by(nom=etudiant.filiere).first()
         if not filiere:
             flash("Filière introuvable", "error")
-            return redirect(url_for("students.etudiant_dashboard"))
+            return redirect(url_for("students.dashboard"))
 
         # Vérifier si le cours est dans l'emploi du temps de cette filière
         emploi = EmploiTemps.query.filter_by(

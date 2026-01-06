@@ -41,7 +41,7 @@ class RouteDiscovery:
                     "keywords": ["devoirs", "travaux", "à faire", "deadline"],
                 },
                 "dashboard": {
-                    "endpoint": "etudiant_dashboard",
+                    "endpoint": "dashboard",
                     "url": "/etudiant/dashboard",
                     "method": "GET",
                     "description": "Vue d'ensemble académique",
@@ -80,7 +80,7 @@ class RouteDiscovery:
                     "keywords": ["emploi du temps", "cours", "horaires", "planning"],
                 },
                 "dashboard": {
-                    "endpoint": "enseignant_dashboard",
+                    "endpoint": "dashboard",
                     "url": "/enseignant/dashboard",
                     "method": "GET",
                     "description": "Vue d'ensemble enseignant",
@@ -226,7 +226,7 @@ class RouteAccessor:
             endpoint_mapping = {
                 # Endpoints étudiant
                 "etudiant_voir_notes": "get_student_grades",
-                "etudiant_dashboard": "get_student_grades_summary",
+                "dashboard": "get_student_grades_summary",
                 "etudiant_emploi_du_temps": "get_student_schedule",
                 "etudiant_notifications": "get_student_notifications",
                 "etudiant_devoirs": "get_student_assignments",

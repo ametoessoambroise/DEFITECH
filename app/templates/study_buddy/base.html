@@ -109,7 +109,7 @@
               <i class="fas fa-user-circle mr-1"></i> {{ current_user.prenom }}
             </span>
             <a
-              href="{% if current_user.role == 'admin' %}{{ url_for('admin.dashboard') }}{% elif current_user.role == 'enseignant' %}{{ url_for('teachers.dashboard') }}{% elif current_user.role == 'etudiant' %}{{ url_for('students.etudiant_dashboard') }}{% else %}{{ url_for('main.index') }}{% endif %}"
+              href="{% if current_user.role == 'admin' %}{{ url_for('admin.dashboard') }}{% elif current_user.role == 'enseignant' %}{{ url_for('teachers.dashboard') }}{% elif current_user.role == 'etudiant' %}{{ url_for('students.dashboard') }}{% else %}{{ url_for('main.index') }}{% endif %}"
               class="inline-flex items-center px-3 py-1 border border-transparent text-sm font-medium rounded-md text-primary-700 bg-white hover:bg-primary-50"
             >
               <img
@@ -164,8 +164,8 @@
             <i class="fas fa-chart-line mr-2"></i> Progression
           </a>
           <a
-            href="{% if current_user.role == 'admin' %}{{ url_for('admin.dashboard') }}{% elif current_user.role == 'teacher' %}{{ url_for('teachers.dashboard') }}{% elif current_user.role == 'student' %}{{ url_for('students.etudiant_dashboard') }}{% else %}{{ url_for('main.index') }}{% endif %}"
-            class="{% if request.endpoint in ['admin.dashboard', 'teachers.dashboard', 'students.etudiant_dashboard'] %}bg-primary-800 text-white{% else %}text-primary-100 hover:bg-primary-600 hover:text-white{% endif %} block pl-3 pr-4 py-2 border-l-4 border-primary-500 text-base font-medium"
+            href="{% if current_user.role == 'admin' %}{{ url_for('admin.dashboard') }}{% elif current_user.role == 'enseignant' %}{{ url_for('teachers.dashboard') }}{% elif current_user.role == 'etudiant' %}{{ url_for('students.dashboard') }}{% else %}{{ url_for('main.index') }}{% endif %}"
+            class="{% if request.endpoint in ['admin.dashboard', 'teachers.dashboard', 'students.dashboard'] %}bg-primary-800 text-white{% else %}text-primary-100 hover:bg-primary-600 hover:text-white{% endif %} block pl-3 pr-4 py-2 border-l-4 border-primary-500 text-base font-medium"
           >
             <i class="fas fa-th-large mr-2"></i> Dashboard
           </a>

@@ -234,7 +234,7 @@ def marquer_notification_lue(notif_id):
         return redirect(notif.link)
 
     if current_user.role == "etudiant":
-        return redirect(url_for("students.etudiant_dashboard"))
+        return redirect(url_for("students.dashboard"))
     elif current_user.role == "enseignant":
         return redirect(url_for("teachers.dashboard"))
     else:

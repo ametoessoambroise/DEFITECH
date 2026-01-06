@@ -135,7 +135,9 @@
     {% block extra_css %}{% endblock %}
   </head>
 
-  <body class="bg-gray-50 min-h-screen flex flex-col w-full font-['Inter'] text-black">
+  <body
+    class="bg-gray-50 min-h-screen flex flex-col w-full font-['Inter'] text-black"
+  >
     <!-- Global Loading Component -->
     {% include 'components/loading.html' %}
 
@@ -238,10 +240,12 @@
                 class="hidden absolute right-0 mt-2 w-48 rounded-lg bg-white backdrop-blur-md shadow-lg ring-1 ring-gray-200 overflow-hidden"
               >
                 <a
-                  href="{{ url_for('main.index') }}"
+                  href="{% if current_user.role == 'admin' %}{{ url_for('admin.dashboard') }}{% elif current_user.role == 'enseignant' %}{{ url_for('teachers.dashboard') }}{% elif current_user.role == 'etudiant' %}{{ url_for('students.dashboard') }}{% else %}{{ url_for('main.index') }}{% endif %}"
                   class="block px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 transition"
+                  data-tooltip="Accéder au tableau de bord"
                 >
-                  <i class="fas fa-home mr-2 text-blue-600"></i>Accueil
+                  <i class="fas fa-home mr-2 text-blue-500"></i>
+                  Dashboard
                 </a>
                 <a
                   href="{{ url_for('profile.mon_profil') }}"
@@ -309,8 +313,7 @@
                   <i class="fas fa-clipboard-check mr-2 text-red-600"></i>Mes
                   Rattrapages
                 </a>
-                {% endif %}
-                {% if current_user.role == 'enseignant' %}
+                {% endif %} {% if current_user.role == 'enseignant' %}
                 <a
                   href="{{ url_for('teachers.manage_rattrapage') }}"
                   class="block px-4 py-2 text-sm text-gray-700 hover:bg-orange-50 transition"
@@ -318,8 +321,7 @@
                   <i class="fas fa-user-clock mr-2 text-orange-600"></i
                   >Rattrapages
                 </a>
-                {% endif %} 
-                {% if matiere is defined and matiere %}
+                {% endif %} {% if matiere is defined and matiere %}
                 <a
                   href="{{ url_for('videoconference.room', course_id=matiere.id) }}"
                   class="block px-4 py-2 text-sm text-gray-700 hover:bg-green-50 transition"

@@ -36,7 +36,10 @@ const State = {
     recognition: null,
     isRecording: false,
     isSystemTheme: !localStorage.getItem('theme'),
-    lastUserMessage: ''
+    lastUserMessage: '',
+    pendingAttachments: [],
+    pagination: { page: 1, hasMore: true, isLoading: false }, // For messages
+    convPagination: { page: 1, hasMore: true, isLoading: false } // For conversations
 };
 
 const UI = {
@@ -69,11 +72,23 @@ const UI = {
 
         this.loadConversations();
 
-        // Scroll listener for pagination
+        // Scroll listener for message pagination (load more history)
         if (this.elements.messages) {
             this.elements.messages.addEventListener('scroll', () => {
                 if (this.elements.messages.scrollTop === 0) {
                     this.loadMoreMessages();
+                }
+            });
+        }
+
+        // Scroll listener for conversation list pagination (infinite scroll)
+        if (this.elements.conversationList) {
+            this.elements.conversationList.addEventListener('scroll', () => {
+                const { scrollTop, scrollHeight, clientHeight } = this.elements.conversationList;
+                if (scrollHeight - scrollTop <= clientHeight + 50) {
+                    if (State.convPagination.hasMore && !State.convPagination.isLoading) {
+                        this.loadConversations(State.convPagination.page + 1);
+                    }
                 }
             });
         }
@@ -98,19 +113,28 @@ const UI = {
         });
     },
 
-    async loadConversations() {
+    async loadConversations(page = 1) {
+        if (State.convPagination.isLoading) return;
+        const listEl = this.elements.conversationList;
+        if (!listEl) return;
+
+        State.convPagination.isLoading = true;
+
         try {
-            const response = await fetch(CONFIG.endpoints.history);
+            const response = await fetch(`${CONFIG.endpoints.history}?page=${page}`);
             if (!response.ok) throw new Error('Failed to load conversations');
 
-            const conversations = await response.json();
-            const listEl = this.elements.conversationList;
+            const data = await response.json();
+            const conversations = data.conversations || [];
 
-            if (!listEl) return;
+            State.convPagination.page = data.page;
+            State.convPagination.hasMore = data.has_next;
 
-            listEl.innerHTML = '';
+            if (page === 1) {
+                listEl.innerHTML = '';
+            }
 
-            if (conversations.length === 0) {
+            if (conversations.length === 0 && page === 1) {
                 listEl.innerHTML = '<div class="text-center py-8 text-gray-400 text-sm italic">Aucune conversation récente</div>';
                 return;
             }
@@ -139,11 +163,13 @@ const UI = {
                             <i class="fas fa-comments text-xs"></i>
                         </div>
                         <div class="flex-1 min-w-0">
-                            <h4 class="text-sm font-medium text-gray-900 dark:text-gray-100 truncate group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors">
-                                ${conv.title || 'Nouvelle conversation'}
-                            </h4>
-                            <p class="text-xs text-gray-500 dark:text-gray-400 truncate">
-                                ${conv.last_message || '...'}
+                            <div class="flex items-center justify-between mb-0.5">
+                                <h4 class="text-sm font-semibold truncate text-gray-900 dark:text-gray-100 group-hover:text-primary-600 transition-colors">
+                                    ${conv.title || 'Nouvelle conversation'}
+                                </h4>
+                            </div>
+                            <p class="text-xs text-gray-500 dark:text-gray-400 truncate leading-relaxed">
+                                ${conv.last_message || 'Pas de message'}
                             </p>
                         </div>
                         <div class="text-[10px] text-gray-400 flex-shrink-0">
@@ -167,6 +193,8 @@ const UI = {
         } catch (error) {
             console.error('Error loading conversations:', error);
             this.showToast('Impossible de charger les conversations', 'error');
+        } finally {
+            State.convPagination.isLoading = false;
         }
     },
 
@@ -237,7 +265,6 @@ const UI = {
             });
 
             this.scrollToBottom();
-            // hljs.highlightAll(); // Removed to prevent double highlighting
         } catch (error) {
             console.error('Error loading history:', error);
             this.showToast('Erreur lors du chargement de la conversation', 'error');
@@ -290,9 +317,6 @@ const UI = {
                 fragment.appendChild(this.createMessageElement(msg.content, isUser, msg.attachments || []));
             });
             this.elements.messages.insertBefore(fragment, this.elements.messages.firstChild);
-
-            // hljs.highlightAll(); // Removed
-
 
             // Maintain scroll position
             const newHeight = this.elements.messages.scrollHeight;
@@ -865,12 +889,6 @@ const UI = {
                 // Enhance Code Blocks
                 this.enhanceCodeBlocks(contentWrapper);
 
-                // Highlight code blocks
-                // Marked is configured to highlight, so we don't need manual highlighting here
-                // contentWrapper.querySelectorAll('pre code').forEach((block) => {
-                //    hljs.highlightElement(block);
-                // });
-
                 // Render Math
                 this.renderMath(contentWrapper);
 
@@ -1399,7 +1417,8 @@ const UI = {
             const payload = {
                 message: message,
                 conversation_id: State.currentConversationId,
-                attachments: attachments
+                attachments: attachments,
+                stream: true // Activation du streaming
             };
 
             const response = await fetch(CONFIG.endpoints.chat, {
@@ -1411,62 +1430,96 @@ const UI = {
                 body: JSON.stringify(payload)
             });
 
-            // Remove Typing Indicator
+            // Retirer l'indicateur de saisie dès que la réponse commence
             typingObj.remove();
 
             if (!response.ok) {
                 const errData = await response.json();
-                this.showToast(errData.error || 'Network response was not ok', 'error');
-                throw new Error(errData.error || 'Network response was not ok');
+                this.showToast(errData.error || 'Erreur réseau', 'error');
+                throw new Error(errData.error || 'Erreur réseau');
             }
 
-            const data = await response.json();
+            // Gestion du flux (Streaming)
+            const reader = response.body.getReader();
+            const decoder = new TextDecoder();
+            let fullAIContent = "";
+            let messageEl = null;
+            let contentDiv = null;
 
-            // Update conversation ID if returned
-            if (data.conversation_id) {
-                State.currentConversationId = data.conversation_id;
+            while (true) {
+                const { done, value } = await reader.read();
+                if (done) break;
+
+                const chunk = decoder.decode(value, { stream: true });
+                const lines = chunk.split('\n');
+
+                for (const line of lines) {
+                    if (!line.trim() || !line.startsWith('data: ')) continue;
+
+                    try {
+                        const data = JSON.parse(line.slice(6));
+
+                        if (data.status === 'starting' && data.conversation_id) {
+                            State.currentConversationId = data.conversation_id;
+                            // Créer l'élément de message AI
+                            messageEl = this.createMessageElement('', false);
+                            this.elements.messages.appendChild(messageEl);
+                            contentDiv = messageEl.querySelector('.markdown-body');
+                        }
+                        else if (data.chunk) {
+                            fullAIContent += data.chunk;
+                            if (contentDiv) {
+                                contentDiv.innerHTML = marked.parse(this.formatAIContent(fullAIContent));
+                                this.scrollToBottom();
+                            }
+                        }
+                        else if (data.status === 'enriched' && data.response) {
+                            fullAIContent = data.response;
+                            if (contentDiv) {
+                                contentDiv.innerHTML = marked.parse(this.formatAIContent(fullAIContent));
+                                this.scrollToBottom();
+                            }
+                        }
+                        else if (data.status === 'thinking') {
+                            if (data.type === 'web_search') {
+                                this.showWebSearchLoader();
+                                setTimeout(() => this.hideWebSearchLoader(), 3000);
+                            } else if (data.type === 'image_generation') {
+                                this.showImageGenLoader();
+                                setTimeout(() => this.hideImageGenLoader(), 5000);
+                            }
+                        }
+                        else if (data.status === 'title_updated') {
+                            this.loadConversations(1);
+                        }
+                        else if (data.status === 'completed') {
+                            if (contentDiv) {
+                                if (!fullAIContent.trim()) {
+                                    fullAIContent = "Je ne sais pas quoi répondre. veuillez réessayer";
+                                }
+                                contentDiv.innerHTML = marked.parse(this.formatAIContent(fullAIContent));
+                                // Ajout des barres d'actions si la fonction existe
+                                if (typeof this.renderActionsBar === 'function') {
+                                    contentDiv.innerHTML += this.renderActionsBar(fullAIContent, data.metadata || {});
+                                }
+                                this.enhanceCodeBlocks(contentDiv);
+                                if (typeof this.renderMath === 'function') this.renderMath(contentDiv);
+                            }
+                        }
+                    } catch (e) {
+                        console.error("Erreur parsing chunk:", e);
+                    }
+                }
             }
-
-            // Gérer les loaders dynamiques basés sur la réponse
-            if (data.has_web_search) {
-                this.showWebSearchLoader();
-                await new Promise(resolve => setTimeout(resolve, 1500)); // Petit délai pour l'effet visuel
-                this.hideWebSearchLoader();
-            }
-
-            if (data.has_image_generation) {
-                this.showImageGenLoader();
-            }
-
-            // Note: The API returns { success: true, response: "AI Message...", ... }
-            const aiContent = data.response || data.message || "Je ne sais pas quoi répondre. veuillez réessayer";
-
-            // Add AI Message with Streaming Effect
-            await this.typeAIStream(aiContent, this.elements.messages, data.attachments || [], data);
-
-            if (data.has_image_generation) {
-                // Si une image est en cours, on pourrait attendre ou laisser le polling (existant peut-être) faire le job
-                // Ici on cache juste le loader après le texte
-                setTimeout(() => this.hideImageGenLoader(), 2000);
-            }
-
-            this.scrollToBottom();
-
-            // Highlight Code Blocks
-            // hljs.highlightAll(); // Removed
-
         } catch (error) {
-            console.error('Error:', error);
-            typingObj.remove();
-            this.elements.messages.appendChild(this.createMessageElement(`Désolé, une erreur est survenue: ${error.message}`, false));
-            this.scrollToBottom();
+            console.error('Chat error:', error);
+            typingObj?.remove();
+            this.showToast('Erreur lors de la communication avec defAI', 'error');
         } finally {
             State.isTyping = false;
         }
     }
 };
-
-// Global Helper for Welcome Buttons
 window.setInput = (text) => {
     const input = document.querySelector('#userInput');
     if (input) {

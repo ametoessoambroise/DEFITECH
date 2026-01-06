@@ -489,6 +489,95 @@ class GeminiIntegration:
                 "error_type": "internal_error",
             }
 
+    def stream_generate_response(
+        self,
+        prompt: str,
+        context: Optional[Dict] = None,
+        conversation_history: Optional[List[Dict]] = None,
+        attachments: Optional[List[Dict]] = None,
+        temperature: float = 0.7,
+    ):
+        """
+        Génère une réponse en streaming via l'API Gemini
+
+        Yields:
+            Chiffres de texte au fur et à mesure qu'ils sont générés
+        """
+        try:
+            # Construire le prompt complet
+            full_prompt = self._build_prompt(prompt, context, conversation_history)
+            parts = [{"text": full_prompt}]
+
+            # Ajouter les pièces jointes
+            if attachments:
+                import base64
+
+                for att in attachments:
+                    try:
+                        url = att.get("url")
+                        mime_type = att.get("mime_type")
+                        if url and mime_type:
+                            att_response = requests.get(url, timeout=10)
+                            if att_response.status_code == 200:
+                                encoded_data = base64.b64encode(
+                                    att_response.content
+                                ).decode("utf-8")
+                                parts.append(
+                                    {
+                                        "inline_data": {
+                                            "mime_type": mime_type,
+                                            "data": encoded_data,
+                                        }
+                                    }
+                                )
+                    except Exception as att_err:
+                        logger.error(f"Erreur attachement streaming: {att_err}")
+
+            request_data = self._prepare_request(parts, temperature)
+            url = self.base_url.replace(":generateContent", ":streamGenerateContent")
+
+            response = requests.post(
+                f"{url}?key={self.api_key}",
+                json=request_data,
+                stream=True,
+                timeout=self.timeout,
+            )
+            response.raise_for_status()
+
+            # Lecture du flux
+            for line in response.iter_lines():
+                if not line:
+                    continue
+
+                try:
+                    # L'API Gemini renvoie des objets JSON successifs
+                    line_text = line.decode("utf-8").strip()
+                    # Parfois le flux commence par "[" et finit par "]" pour tout le bloc
+                    if line_text.startswith("[") or line_text.startswith(","):
+                        line_text = line_text[1:].strip()
+                    if line_text.endswith("]"):
+                        line_text = line_text[:-1].strip()
+
+                    if not line_text:
+                        continue
+
+                    chunk = json.loads(line_text)
+                    if "candidates" in chunk and len(chunk["candidates"]) > 0:
+                        candidate = chunk["candidates"][0]
+                        if "content" in candidate and "parts" in candidate["content"]:
+                            text_chunk = candidate["content"]["parts"][0].get(
+                                "text", ""
+                            )
+                            if text_chunk:
+                                yield text_chunk
+                except Exception as parse_err:
+                    logger.debug(f"Erreur parsing chunk streaming: {parse_err}")
+                    continue
+
+        except Exception as e:
+            logger.error(f"Erreur globale streaming Gemini: {e}")
+            yield f"\n[Erreur de connexion au service AI: {str(e)}]"
+
     def build_complete_prompt(
         self,
         user_prompt: str,

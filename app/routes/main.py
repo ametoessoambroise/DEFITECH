@@ -15,6 +15,7 @@ from app.models.user import User
 from app.email_utils import send_email
 import secrets
 import logging
+import datetime
 
 main_bp = Blueprint("main", __name__)
 logger = logging.getLogger(__name__)
@@ -26,7 +27,8 @@ def index():
     Page d'accueil (Landing Page).
     Si l'utilisateur est déjà connecté, on pourrait lui proposer un bouton vers son dashboard dans le template.
     """
-    return render_template("index.html")
+    current_year = datetime.datetime.now()
+    return render_template("index.html", current_year=current_year)
 
 
 @main_bp.route("/confidentialite")

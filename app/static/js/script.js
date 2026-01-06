@@ -1026,9 +1026,9 @@ const UI = {
         el.className += ' ' + colorClass;
 
         el.innerHTML = `
-    < i class="fas ${icons[type] || icons.info} text-lg" ></i >
-        <span class="text-sm font-medium">${message}</span>
-`;
+            <i class="fas ${icons[type] || icons.info} text-lg"></i>
+            <span class="text-sm font-medium">${message}</span>
+        `;
 
         container.appendChild(el);
 
@@ -1124,6 +1124,59 @@ const UI = {
         if (container) container.scrollTop = container.scrollHeight;
     },
 
+    renderPreviews() {
+        const previewContainer = document.getElementById('attachmentPreview');
+        if (!previewContainer) return;
+
+        const attachments = State.pendingAttachments || [];
+        if (attachments.length === 0) {
+            previewContainer.innerHTML = '';
+            previewContainer.classList.add('hidden');
+            return;
+        }
+
+        previewContainer.classList.remove('hidden');
+        previewContainer.innerHTML = attachments.map((att, index) => `
+            <div class="preview-item">
+                <div class="preview-remove" onclick="UI.removeAttachment(${index})">
+                    <i class="fas fa-times"></i>
+                </div>
+                ${att.type === 'image'
+                ? `<img src="${att.url}" alt="${att.name}">`
+                : `<div class="file-icon"><i class="fas ${this.getFileIcon(att.name)}"></i></div>`
+            }
+            </div>
+        `).join('');
+    },
+
+    removeAttachment(index) {
+        if (State.pendingAttachments) {
+            State.pendingAttachments.splice(index, 1);
+            this.renderPreviews();
+
+            if (State.pendingAttachments.length === 0 && this.elements.attachBtn) {
+                this.elements.attachBtn.classList.remove('text-green-500', 'text-blue-500');
+                this.elements.attachBtn.classList.add('text-gray-400');
+            }
+        }
+    },
+
+    getFileIcon(filename) {
+        const ext = filename.split('.').pop().toLowerCase();
+        const icons = {
+            pdf: 'fa-file-pdf',
+            doc: 'fa-file-word',
+            docx: 'fa-file-word',
+            txt: 'fa-file-alt',
+            csv: 'fa-file-csv',
+            xls: 'fa-file-excel',
+            xlsx: 'fa-file-excel',
+            zip: 'fa-file-archive',
+            rar: 'fa-file-archive'
+        };
+        return icons[ext] || 'fa-file';
+    },
+
     adjustTextareaHeight() {
         const textarea = this.elements.input;
         if (!textarea) return;
@@ -1208,6 +1261,7 @@ const UI = {
                         });
                     }
 
+                    this.renderPreviews();
                     this.showToast(`${files.length} fichier(s) prêt(s) à l'envoi`, 'success');
                     this.elements.attachBtn.classList.remove('animate-pulse');
                     this.elements.attachBtn.classList.add('text-green-500'); // Indicate success
@@ -1239,7 +1293,9 @@ const UI = {
         const message = input.value.trim();
         const attachments = State.pendingAttachments || [];
 
-        if (!message && attachments.length === 0) return;
+        if (!message && attachments.length === 0) {
+            return;
+        }
 
         // Store the user message for regeneration
         if (message) {
@@ -1271,6 +1327,7 @@ const UI = {
         // Clear pending attachments
         State.pendingAttachments = [];
         if (this.elements.fileInput) this.elements.fileInput.value = '';
+        this.renderPreviews();
 
         State.isTyping = true;
 

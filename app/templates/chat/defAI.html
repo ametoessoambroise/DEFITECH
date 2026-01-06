@@ -291,6 +291,65 @@
       }
 
       /* Image Placeholder & Transitions */
+      /* Attachment Previews */
+      #attachmentPreview {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        padding: 0.5rem;
+        margin-bottom: 0.5rem;
+        max-height: 150px;
+        overflow-y: auto;
+      }
+
+      .preview-item {
+        position: relative;
+        width: 64px;
+        height: 64px;
+        border-radius: 0.5rem;
+        overflow: hidden;
+        border: 1px solid rgba(148, 163, 184, 0.2);
+        background: rgba(148, 163, 184, 0.1);
+      }
+
+      .preview-item img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+
+      .preview-item .file-icon {
+        width: 100%;
+        height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        color: #94a3b8;
+      }
+
+      .preview-remove {
+        position: absolute;
+        top: 2px;
+        right: 2px;
+        width: 18px;
+        height: 18px;
+        background: rgba(0, 0, 0, 0.5);
+        color: white;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 10px;
+        cursor: pointer;
+        transition: background 0.2s;
+        z-index: 10;
+      }
+
+      .preview-remove:hover {
+        background: rgba(239, 68, 68, 0.8);
+      }
+
       .ai-image-container {
         position: relative;
         width: 100%;
@@ -854,6 +913,7 @@
               role="form"
               aria-label="Formulaire d'envoi de message"
             >
+              <div id="attachmentPreview" class="hidden"></div>
               <label for="userInput" class="sr-only">Votre message</label>
               <textarea
                 id="userInput"

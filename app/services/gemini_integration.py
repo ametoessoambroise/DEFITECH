@@ -47,11 +47,13 @@ class GeminiIntegration:
             conversation_history=conversation_history or [],
         )
 
-    def _prepare_request(self, prompt: str, temperature: float) -> Dict[str, Any]:
+    def _prepare_request(
+        self, parts: List[Dict[str, Any]], temperature: float
+    ) -> Dict[str, Any]:
         """Prépare les données de la requête API avec les outils activés"""
 
         return {
-            "contents": [{"parts": [{"text": prompt}]}],
+            "contents": [{"parts": parts}],
             "tools": [{"google_search": {}}],
             "generationConfig": {
                 "temperature": temperature,
@@ -383,6 +385,7 @@ class GeminiIntegration:
                 prompt=test_prompt,
                 context=None,
                 conversation_history=None,
+                attachments=None,
                 temperature=0.1,
             )
 
@@ -411,6 +414,7 @@ class GeminiIntegration:
         prompt: str,
         context: Optional[Dict] = None,
         conversation_history: Optional[List[Dict]] = None,
+        attachments: Optional[List[Dict]] = None,
         temperature: float = 0.7,
     ) -> Dict[str, Any]:
         """
@@ -430,8 +434,43 @@ class GeminiIntegration:
             # Construire le prompt complet
             full_prompt = self._build_prompt(prompt, context, conversation_history)
 
+            # Préparer les parties (parts) pour le multimodal
+            parts = [{"text": full_prompt}]
+
+            # Ajouter les pièces jointes
+            if attachments:
+                import base64
+
+                for att in attachments:
+                    try:
+                        url = att.get("url")
+                        mime_type = att.get("mime_type")
+
+                        if url and mime_type:
+                            # Télécharger le contenu de l'attachement
+                            att_response = requests.get(url, timeout=10)
+                            if att_response.status_code == 200:
+                                encoded_data = base64.b64encode(
+                                    att_response.content
+                                ).decode("utf-8")
+                                parts.append(
+                                    {
+                                        "inline_data": {
+                                            "mime_type": mime_type,
+                                            "data": encoded_data,
+                                        }
+                                    }
+                                )
+                                logger.info(
+                                    f"Attachement ajouté: {att.get('name')} ({mime_type})"
+                                )
+                    except Exception as att_err:
+                        logger.error(
+                            f"Erreur lors de l'ajout de l'attachement: {att_err}"
+                        )
+
             # Préparer la requête
-            request_data = self._prepare_request(full_prompt, temperature)
+            request_data = self._prepare_request(parts, temperature)
 
             # Ajouter un log pour le débogage
             logger.info(f"Envoi de la requête à Gemini (timeout: {self.timeout}s)")

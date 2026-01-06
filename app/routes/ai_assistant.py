@@ -497,7 +497,7 @@ Réponds uniquement avec le titre, sans autre texte."""
         return "Nouvelle conversation"
 
 
-def call_gemini_api(prompt, context_data, conversation_history):
+def call_gemini_api(prompt, context_data, conversation_history, attachments=None):
     """Appelle l'API Gemini avec le contexte et l'historique"""
     try:
         # Utiliser la nouvelle classe GeminiIntegration
@@ -505,6 +505,7 @@ def call_gemini_api(prompt, context_data, conversation_history):
             prompt=prompt,
             context=context_data,
             conversation_history=conversation_history,
+            attachments=attachments,
             temperature=0.7,
         )
 
@@ -1167,7 +1168,10 @@ def chat():
 
                 # Appeler Gemini
                 gemini_response = call_gemini_api(
-                    gemini_message, context_data, messages
+                    gemini_message,
+                    context_data,
+                    messages,
+                    attachments=processed_attachments,
                 )
 
                 if not gemini_response["success"]:
@@ -1218,7 +1222,10 @@ Format ta réponse finale en Markdown complet. REPRODUIS INTEGRALEMENT LES SCRIP
 
                         # Relancer Gemini avec les données enrichies
                         enhanced_response = call_gemini_api(
-                            enhanced_prompt, context_data, messages
+                            enhanced_prompt,
+                            context_data,
+                            messages,
+                            attachments=processed_attachments,
                         )
 
                         if enhanced_response["success"]:
@@ -1258,7 +1265,10 @@ Garde les éléments déjà générés et intègre ces données chiffrées/factu
 Format ta réponse finale en Markdown complet. REPRODUIS-LES SCRIPTS si présents."""
 
                         enhanced_response_sql = call_gemini_api(
-                            enhanced_prompt_sql, context_data, messages
+                            enhanced_prompt_sql,
+                            context_data,
+                            messages,
+                            attachments=processed_attachments,
                         )
                         if enhanced_response_sql["success"]:
                             ai_response = enhanced_response_sql["response"]
@@ -1341,7 +1351,10 @@ IMPORTANT : Ne résume pas les parties techniques (codes, scripts). REPRODUIS-LE
 
                         # Relancer Gemini
                         enhanced_response = call_gemini_api(
-                            enhanced_prompt, context_data, messages
+                            enhanced_prompt,
+                            context_data,
+                            messages,
+                            attachments=processed_attachments,
                         )
 
                         if enhanced_response["success"]:

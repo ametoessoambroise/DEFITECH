@@ -1242,7 +1242,7 @@ def send_security_alert_email(
         user_message=user_message,
         threat_description=threat_description,
         admin_dashboard_url=url_for("admin.dashboard", _external=True),
-        security_logs_url=url_for("security_logs", _external=True),
+        security_logs_url=url_for("admin.security_incidents", _external=True),
     )
 
 

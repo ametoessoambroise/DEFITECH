@@ -247,9 +247,11 @@ class GeminiIntegration:
             # Détecter la génération d'images
             has_image_generation = "[IMAGE_EDUCATIVE:" in text_response
 
-            # Nettoyer la réponse
+            # Nettoyer la réponse (passer le prompt pour les alertes de sécurité)
             logger.info(f"Réponse brute de Gemini: {text_response[:1000]}...")
-            cleaned_response = self._clean_response_text(text_response, prompt)
+            cleaned_response = self._clean_response_text(
+                text_response, user_message=prompt
+            )
             logger.info(f"Réponse nettoyée: {cleaned_response[:1000]}...")
 
             return {
@@ -322,7 +324,7 @@ class GeminiIntegration:
             for alert_type, description, severity, timestamp in matches:
                 try:
                     # Importer et utiliser la fonction d'alerte
-                    from system_prompt import SecurityConfig
+                    from app.services.system_prompt import SecurityConfig
 
                     # Nettoyer les valeurs
                     alert_type = alert_type.strip()
@@ -437,8 +439,8 @@ class GeminiIntegration:
             # Effectuer l'appel API avec retry
             response = self._call_api_with_retry(request_data)
 
-            # Traiter la réponse
-            return self._process_response(response, prompt)
+            # Traiter la réponse (passer le prompt utilisateur pour les alertes)
+            return self._process_response(response, user_message=prompt)
 
         except Exception as e:
             logger.error(f"Erreur génération réponse Gemini: {e}")

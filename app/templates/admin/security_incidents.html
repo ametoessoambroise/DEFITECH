@@ -1,0 +1,257 @@
+{% extends "base.html" %} {% block title %}Incidents de Sécurité | DEFITECH{%
+endblock %} {% block content %}
+
+<div class="min-h-screen bg-gray-50 py-6 sm:py-8">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <!-- Header -->
+    <div class="mb-6">
+      <h1
+        class="text-2xl sm:text-3xl font-bold text-gray-900 flex items-center"
+      >
+        <i class="fas fa-shield-alt text-red-600 mr-3"></i>
+        Incidents de Sécurité
+      </h1>
+      <p class="mt-2 text-sm text-gray-600">
+        Utilisateurs signalés par l'IA pour comportements suspects
+      </p>
+    </div>
+
+    <!-- Filtres -->
+    <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mb-6">
+      <div class="flex flex-wrap gap-3">
+        <a
+          href="{{ url_for('admin.security_incidents', status='all') }}"
+          class="px-4 py-2 rounded-lg transition {% if status_filter == 'all' %}bg-blue-600 text-white{% else %}bg-gray-100 text-gray-700 hover:bg-gray-200{% endif %}"
+        >
+          <i class="fas fa-list mr-2"></i>Tous ({{ incidents|length }})
+        </a>
+        <a
+          href="{{ url_for('admin.security_incidents', status='unresolved') }}"
+          class="px-4 py-2 rounded-lg transition {% if status_filter == 'unresolved' %}bg-red-600 text-white{% else %}bg-gray-100 text-gray-700 hover:bg-gray-200{% endif %}"
+        >
+          <i class="fas fa-exclamation-triangle mr-2"></i>Non résolus ({{
+          unresolved_count }})
+        </a>
+        <a
+          href="{{ url_for('admin.security_incidents', status='resolved') }}"
+          class="px-4 py-2 rounded-lg transition {% if status_filter == 'resolved' %}bg-green-600 text-white{% else %}bg-gray-100 text-gray-700 hover:bg-gray-200{% endif %}"
+        >
+          <i class="fas fa-check-circle mr-2"></i>Résolus
+        </a>
+      </div>
+    </div>
+
+    <!-- Liste des incidents -->
+    {% if incidents %}
+    <div class="space-y-4">
+      {% for incident in incidents %}
+      <div
+        class="bg-white rounded-lg shadow-sm border {% if incident.is_resolved %}border-green-200{% else %}border-red-300{% endif %} overflow-hidden"
+      >
+        <div class="p-6">
+          <!-- Header de l'incident -->
+          <div class="flex items-start justify-between mb-4">
+            <div class="flex items-start space-x-4">
+              <!-- Photo de profil -->
+              <div class="flex-shrink-0">
+                {% if incident.user and incident.user.photo_profil %}
+                <img
+                  src="{{ incident.user.photo_profil }}"
+                  alt="{{ incident.user.prenom }}"
+                  class="w-16 h-16 rounded-full object-cover border-2 {% if incident.is_resolved %}border-green-400{% else %}border-red-400{% endif %}"
+                />
+                {% else %}
+                <div
+                  class="w-16 h-16 rounded-full bg-gradient-to-br from-red-400 to-red-600 flex items-center justify-center text-white text-2xl font-bold"
+                >
+                  {{ incident.user.prenom[0] if incident.user else '?' }}
+                </div>
+                {% endif %}
+              </div>
+
+              <!-- Info utilisateur -->
+              <div class="flex-1">
+                <h3 class="text-lg font-bold text-gray-900">
+                  {{ incident.user.prenom }} {{ incident.user.nom }}
+                </h3>
+                <div class="mt-1 space-y-1 text-sm text-gray-600">
+                  <p>
+                    <i class="fas fa-envelope mr-2 text-gray-400"></i>{{
+                    incident.user.email }}
+                  </p>
+                  <p>
+                    <i class="fas fa-user-tag mr-2 text-gray-400"></i>{{
+                    incident.user.role|capitalize }}
+                  </p>
+                  {% if incident.user.role == 'etudiant' and
+                  incident.user.etudiant_profile %}
+                  <p>
+                    <i class="fas fa-graduation-cap mr-2 text-gray-400"></i>{{
+                    incident.user.etudiant_profile.filiere }} - Année {{
+                    incident.user.etudiant_profile.annee }}
+                  </p>
+                  {% endif %}
+                </div>
+              </div>
+            </div>
+
+            <!-- Badge statut -->
+            <div>
+              {% if incident.is_resolved %}
+              <span
+                class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800"
+              >
+                <i class="fas fa-check-circle mr-1"></i>Résolu
+              </span>
+              {% else %}
+              <span
+                class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-red-100 text-red-800 animate-pulse"
+              >
+                <i class="fas fa-exclamation-triangle mr-1"></i>En attente
+              </span>
+              {% endif %}
+            </div>
+          </div>
+
+          <!-- Type de menace -->
+          <div class="mb-4">
+            <span
+              class="inline-flex items-center px-3 py-1 rounded-lg text-sm font-semibold bg-red-50 text-red-700 border border-red-200"
+            >
+              <i class="fas fa-bug mr-2"></i>{{ incident.alert_type|replace('_',
+              ' ')|title }}
+            </span>
+          </div>
+
+          <!-- Message suspect -->
+          <div class="bg-red-50 border-l-4 border-red-500 p-4 mb-4 rounded-r">
+            <p class="text-sm font-semibold text-red-800 mb-1">
+              Message suspect :
+            </p>
+            <p class="text-sm text-red-700 font-mono">
+              {{ incident.user_message }}
+            </p>
+          </div>
+
+          <!-- Description de la menace -->
+          <div
+            class="bg-yellow-50 border-l-4 border-yellow-500 p-4 mb-4 rounded-r"
+          >
+            <p class="text-sm font-semibold text-yellow-800 mb-1">
+              Description de la menace :
+            </p>
+            <p class="text-sm text-yellow-700">
+              {{ incident.threat_description }}
+            </p>
+          </div>
+
+          <!-- Date -->
+          <div class="text-sm text-gray-500 mb-4">
+            <i class="fas fa-clock mr-1"></i>
+            {{ incident.timestamp.strftime('%d/%m/%Y à %H:%M:%S') }}
+          </div>
+
+          <!-- Notes admin -->
+          {% if incident.admin_notes %}
+          <div class="bg-blue-50 border-l-4 border-blue-500 p-4 mb-4 rounded-r">
+            <p class="text-sm font-semibold text-blue-800 mb-1">
+              Notes administratives :
+            </p>
+            <p class="text-sm text-blue-700">{{ incident.admin_notes }}</p>
+          </div>
+          {% endif %}
+
+          <!-- Actions -->
+          <div class="flex flex-wrap gap-3 mt-4">
+            {% if not incident.is_resolved %}
+            <form
+              method="POST"
+              action="{{ url_for('admin.resolve_incident', incident_id=incident.id) }}"
+              class="inline"
+            >
+              <input
+                type="hidden"
+                name="csrf_token"
+                value="{{ csrf_token() }}"
+              />
+              <button
+                type="submit"
+                class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition"
+              >
+                <i class="fas fa-check mr-2"></i>Marquer comme résolu
+              </button>
+            </form>
+            {% endif %}
+
+            <!-- Formulaire d'ajout de notes -->
+            <button
+              onclick="toggleNoteForm({{ incident.id }})"
+              class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+            >
+              <i class="fas fa-comment mr-2"></i>Ajouter des notes
+            </button>
+
+            <a
+              href="mailto:{{ incident.user.email }}"
+              class="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition"
+            >
+              <i class="fas fa-envelope mr-2"></i>Contacter
+            </a>
+          </div>
+
+          <!-- Formulaire de notes (caché par défaut) -->
+          <div id="note-form-{{ incident.id }}" class="hidden mt-4">
+            <form
+              method="POST"
+              action="{{ url_for('admin.add_incident_note', incident_id=incident.id) }}"
+              class="space-y-3"
+            >
+              <input
+                type="hidden"
+                name="csrf_token"
+                value="{{ csrf_token() }}"
+              />
+              <textarea
+                name="notes"
+                rows="3"
+                placeholder="Ajoutez vos notes..."
+                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              >
+{{ incident.admin_notes or '' }}</textarea
+              >
+              <button
+                type="submit"
+                class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+              >
+                <i class="fas fa-save mr-2"></i>Enregistrer
+              </button>
+            </form>
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    {% else %}
+    <div
+      class="bg-white rounded-lg shadow-sm border border-gray-200 p-12 text-center"
+    >
+      <i class="fas fa-shield-alt text-6xl text-gray-300 mb-4"></i>
+      <h3 class="text-lg font-medium text-gray-900 mb-2">Aucun incident</h3>
+      <p class="text-gray-500">
+        {% if status_filter == 'unresolved' %}Aucun incident non résolu{% elif
+        status_filter == 'resolved' %}Aucun incident résolu{% else %}Aucun
+        incident de sécurité enregistré{% endif %}
+      </p>
+    </div>
+    {% endif %}
+  </div>
+</div>
+
+<script>
+  function toggleNoteForm(incidentId) {
+    const form = document.getElementById(`note-form-${incidentId}`);
+    form.classList.toggle("hidden");
+  }
+</script>
+
+{% endblock %}

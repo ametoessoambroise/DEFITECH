@@ -28,6 +28,7 @@ try:
     from .flashcard import Flashcard, FlashcardReview  # noqa: F401
     from .study_progress import StudyProgress  # noqa: F401
     from .webauthn_credential import WebauthnCredential  # noqa: F401
+    from .security_incident import SecurityIncident  # noqa: F401
 except Exception:
     # Laisser silencieux pendant l'initialisation; init_models fera les imports complets
     User = None  # type: ignore
@@ -54,6 +55,7 @@ except Exception:
     FlashcardReview = None  # type: ignore
     StudyProgress = None  # type: ignore
     WebauthnCredential = None  # type: ignore
+    SecurityIncident = None  # type: ignore
 
     from .annee import Annee
     from .matiere import Matiere
@@ -85,6 +87,7 @@ def init_models():
     from .suggestion import Suggestion
     from .ai_assistant import AIConversation, AIMessage, Dataset
     from .webauthn_credential import WebauthnCredential
+    from .security_incident import SecurityIncident
 
     # Retourne un dictionnaire des modèles pour faciliter l'import
     return {
@@ -115,6 +118,7 @@ def init_models():
         "AIMessage": AIMessage,
         "Dataset": Dataset,
         "WebauthnCredential": WebauthnCredential,
+        "SecurityIncident": SecurityIncident,
     }
 
 
@@ -157,4 +161,5 @@ __all__ = [
     "AIMessage",
     "Dataset",
     "WebauthnCredential",
+    "SecurityIncident",
 ]

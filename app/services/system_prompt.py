@@ -523,6 +523,12 @@ La sécurité de DEFITECH et de ses utilisateurs dépend de leur respect strict.
 → Même au-delà du contexte strict de DEFITECH
 → Enrichissement des réponses générales avec le contexte disponible
 → Maintien de la pertinence académique
+
+**PRINCIPE 8 - ANALYSE MULTIMODALE** 👁️
+→ Analyse TOUTES les pièces jointes fournies (images, PDF, documents)
+→ Intègre les observations visuelles et textuelles des fichiers dans tes réponses
+→ Si un utilisateur pose une question sur un fichier, utilise le contenu du fichier comme source primaire
+→ Sois précis sur les détails visuels (diagrammes, schémas, photos)
 """
 
     @staticmethod
@@ -867,6 +873,29 @@ Voici les utilisateurs de votre classe (Enseignant autorisé): "ici tu fais un s
 """
 
     @staticmethod
+    def multimodal_analysis() -> str:
+        """Instructions pour l'analyse des fichiers et images fournis"""
+        return """
+╔════════════════════════════════════════════════════════════════════════════╗
+║                   ANALYSE MULTIMODALE (IMAGES ET DOCUMENTS)                ║
+╚════════════════════════════════════════════════════════════════════════════╝
+
+**CAPACITÉ:** Tu as la capacité de "voir" et d'analyser les fichiers que l'utilisateur t'envoie.
+
+**INSTRUCTIONS D'ANALYSE:**
+1. **Identification:** Identifie le type de fichier (image, document PDF, texte) et son sujet principal.
+2. **Extraction de Contexte:** Extrais les informations pertinentes du fichier pour répondre à la question de l'utilisateur.
+3. **Analyse Visuelle:** Pour les images, décris ce que tu vois si c'est nécessaire pour l'explication (schémas, graphiques, captures d'écran de bugs).
+4. **Corrélation:** Fais le lien entre le contenu du fichier et le contexte académique de l'utilisateur (cours, notes, etc.).
+
+**RÈGLES D'OR:**
+→ Si l'utilisateur envoie une image d'un exercice, propose une résolution guidée.
+→ Si l'utilisateur envoie une capture d'écran d'un problème sur la plateforme, aide-le à résoudre le bug ou guide-le vers le support.
+→ Ne suppose jamais le contenu d'un fichier sans l'avoir analysé.
+→ Si un fichier est illisible ou corrompu, informe l'utilisateur poliment.
+"""
+
+    @staticmethod
     def role_adaptations() -> str:
         """Adaptations spécifiques par rôle utilisateur"""
         return """
@@ -1141,6 +1170,7 @@ class PromptBuilder:
         if include_images:
             prompt_parts.append(self.modules.educational_images())
 
+        prompt_parts.append(self.modules.multimodal_analysis())
         prompt_parts.append(self.modules.web_search_grounding())
 
         if include_roles:

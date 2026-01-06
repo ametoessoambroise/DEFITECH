@@ -1079,7 +1079,7 @@ def chat():
 
                 internal_requests = []  # Initialiser la liste des requêtes internes
 
-                if not message and not files:
+                if not message and not files and not attachments:
                     return (
                         jsonify(
                             {

@@ -423,6 +423,11 @@ const UI = {
     },
 
     setupSpeechRecognition() {
+        // Détection iOS/Safari
+        const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) ||
+            (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+        const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
+
         if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
             const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
             State.recognition = new SpeechRecognition();
@@ -441,15 +446,25 @@ const UI = {
             State.recognition.onerror = (event) => {
                 console.error('Speech recognition error:', event.error);
                 this.stopRecording();
-                showToast('Erreur lors de la reconnaissance vocale: ' + event.error);
+
+                // Message d'erreur spécifique iOS
+                if (isIOS && event.error === 'not-allowed') {
+                    showToast('Veuillez autoriser l\'accès au microphone dans les réglages Safari.', 'error');
+                } else {
+                    showToast('Erreur lors de la reconnaissance vocale: ' + event.error, 'error');
+                }
             };
 
             State.recognition.onend = () => {
                 this.stopRecording();
             };
+
+            // Stocker l'état iOS pour utilisation dans startRecording
+            State.isIOS = isIOS;
+            State.isSafari = isSafari;
         } else {
             console.warn('Votre navigateur ne supporte pas la reconnaissance vocale');
-            this.showToast('Votre navigateur ne supporte pas la reconnaissance vocale', 'error');
+            showToast('Votre navigateur ne supporte pas la reconnaissance vocale', 'error');
             if (this.elements.voiceBtn) this.elements.voiceBtn.style.display = 'none';
         }
     },
@@ -464,8 +479,21 @@ const UI = {
         }
     },
 
-    startRecording() {
+    async startRecording() {
         try {
+            // Pour iOS/Safari : vérifier et demander la permission micro avant
+            if (State.isIOS || State.isSafari) {
+                try {
+                    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                    // Arrêter le stream immédiatement car on va utiliser Speech Recognition
+                    stream.getTracks().forEach(track => track.stop());
+                } catch (permErr) {
+                    console.error('Microphone permission denied:', permErr);
+                    showToast('Accès au microphone requis. Veuillez autoriser dans les réglages Safari.', 'error');
+                    return;
+                }
+            }
+
             State.recognition.start();
             State.isRecording = true;
             if (this.elements.voiceBtn) {
@@ -473,7 +501,7 @@ const UI = {
             }
         } catch (e) {
             console.error(e);
-            this.showToast('Erreur lors du démarrage de la reconnaissance vocale', 'error');
+            showToast('Erreur lors du démarrage de la reconnaissance vocale', 'error');
         }
     },
 

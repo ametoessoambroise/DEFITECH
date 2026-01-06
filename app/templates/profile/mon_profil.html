@@ -822,8 +822,18 @@
     },
 
     async registerBiometrics() {
+      // Vérifier si WebAuthn est supporté
+      if (!window.PublicKeyCredential) {
+        alert('Votre navigateur ou appareil ne supporte pas la biométrie (WebAuthn). Essayez avec Chrome, Safari 14+, ou Edge.');
+        return;
+      }
+      
       try {
         const resp = await fetch('/api/app-lock/webauthn/register-options');
+        if (!resp.ok) {
+          throw new Error(`HTTP ${resp.status}`);
+        }
+        
         const options = await resp.json();
         
         // Convert Base64 strings to ArrayBuffers
@@ -834,6 +844,10 @@
         }
 
         const credential = await navigator.credentials.create({ publicKey: options });
+        
+        if (!credential) {
+          throw new Error('Création d\'identifiant échouée');
+        }
         
         // Convert result to JSON-serializable object
         const credentialJSON = {
@@ -855,16 +869,34 @@
           body: JSON.stringify(credentialJSON)
         });
 
+        if (!verifyResp.ok) {
+          throw new Error(`Vérification échouée: ${verifyResp.status}`);
+        }
+
         const result = await verifyResp.json();
         if (result.success) {
           alert('Biométrie activée avec succès !');
           location.reload();
         } else {
-          alert('Erreur: ' + result.message);
+          alert('Erreur: ' + (result.message || 'Echec de vérification'));
         }
       } catch (err) {
         console.error('WebAuthn Error:', err);
-        alert('Erreur lors de l\'activation de la biométrie. Assurez-vous que votre appareil supporte WebAuthn.');
+        
+        // Messages d'erreur plus spécifiques
+        let errorMsg = 'Erreur lors de l\'activation de la biométrie.';
+        
+        if (err.name === 'NotAllowedError') {
+          errorMsg = 'Vous avez annulé la configuration biométrique.';
+        } else if (err.name === 'NotSupportedError') {
+          errorMsg = 'Votre appareil ne supporte pas ce type d\'authentification.';
+        } else if (err.name === 'SecurityError') {
+          errorMsg = 'Erreur de sécurité. Utilisez HTTPS ou localhost.';
+        } else if (err.message) {
+          errorMsg += ' ' + err.message;
+        }
+        
+        alert(errorMsg);
       }
     }
   };

@@ -55,7 +55,7 @@ DefAI/
 fineTuning_defAI/
 ImageSearch/
 database/
-docs/
+# docs/
 migrations/
 diag_db.py
 node_modules/

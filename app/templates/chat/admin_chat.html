@@ -81,8 +81,6 @@
   </head>
 
   <body class="bg-slate-900 h-screen flex text-slate-100 overflow-hidden">
-    <!-- Global Loading Component -->
-    {% include 'components/loading.html' %}
 
     <!-- App Lock Overlay -->
     {% if current_user.is_authenticated and current_user.is_app_lock_enabled %}

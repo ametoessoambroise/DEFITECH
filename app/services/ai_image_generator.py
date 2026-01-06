@@ -7,10 +7,13 @@ from datetime import datetime
 from typing import Dict, Any, Optional
 from queue import Queue
 import time
+import io
 import base64
+from app.utils.cloudinary_utils import upload_to_cloudinary
 
 # Configuration du logging
 logger = logging.getLogger(__name__)
+
 
 # Récupération de la clé d'API (doit être configurée dans l'environnement)
 GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
@@ -44,11 +47,15 @@ class GeminiImageGenerator:
         if self.worker_thread:
             self.worker_thread.join(timeout=1.0)
 
-    def add_task(self, prompt: str, filepath: str) -> str:
+    def add_task(self, prompt: str, conversation_id: int) -> str:
         """Ajoute une tâche de génération à la file d'attente"""
         task_id = str(uuid.uuid4())
-        self.results[task_id] = {"status": "pending", "progress": 0}
-        self.queue.put((task_id, prompt, filepath))
+        self.results[task_id] = {
+            "status": "pending",
+            "progress": 0,
+            "conversation_id": conversation_id,
+        }
+        self.queue.put((task_id, prompt, conversation_id))
 
         # S'assurer que le worker tourne
         self.start_worker()
@@ -68,22 +75,22 @@ class GeminiImageGenerator:
                     time.sleep(1)
                     continue
 
-                task_id, prompt, filepath = self.queue.get()
+                task_id, prompt, conversation_id = self.queue.get()
                 self.results[task_id]["status"] = "processing"
                 logger.info(f"Traitement tâche {task_id}: {prompt[:50]}...")
 
-                success = self._generate_with_gemini(prompt, filepath)
+                image_url = self._generate_with_gemini(prompt, conversation_id)
 
-                if success:
+                if image_url:
                     self.results[task_id].update(
                         {
                             "status": "completed",
                             "progress": 100,
-                            "url": filepath,
+                            "url": image_url,
                             "completed_at": datetime.utcnow().isoformat(),
                         }
                     )
-                    logger.info(f"Tâche {task_id} terminée avec succès")
+                    logger.info(f"Tâche {task_id} terminée avec succès: {image_url}")
                 else:
                     self.results[task_id].update(
                         {"status": "failed", "error": "La génération a échoué"}
@@ -95,11 +102,11 @@ class GeminiImageGenerator:
                 logger.error(f"Erreur dans le worker d'images: {e}")
                 time.sleep(2)
 
-    def _generate_with_gemini(self, prompt: str, filepath: str) -> bool:
-        """Appel effectif à l'API Imagen 3 via Gemini"""
+    def _generate_with_gemini(self, prompt: str, conversation_id: int) -> Optional[str]:
+        """Appel effectif à l'API Imagen 3 et upload sur Cloudinary"""
         if not self.api_key:
             logger.error("Clé API Gemini manquante pour la génération d'images")
-            return False
+            return None
 
         headers = {"Content-Type": "application/json"}
 
@@ -122,9 +129,16 @@ class GeminiImageGenerator:
                 predictions = result.get("predictions", [])
                 if predictions and "bytesBase64Encoded" in predictions[0]:
                     img_data = base64.b64decode(predictions[0]["bytesBase64Encoded"])
-                    with open(filepath, "wb") as f:
-                        f.write(img_data)
-                    return True
+
+                    # Upload direct sur Cloudinary
+                    filename = f"gen_{uuid.uuid4().hex[:8]}.png"
+                    upload_result = upload_to_cloudinary(
+                        io.BytesIO(img_data),
+                        filename,
+                        folder=f"ai_gen/{conversation_id}",
+                        resource_type="image",
+                    )
+                    return upload_result.get("secure_url")
                 else:
                     logger.error(f"Format de réponse inattendu: {result}")
             else:
@@ -135,7 +149,7 @@ class GeminiImageGenerator:
         except Exception as e:
             logger.error(f"Exception lors de l'appel Gemini Image: {e}")
 
-        return False
+        return None
 
 
 # Singleton pour le générateur
@@ -150,24 +164,14 @@ def get_generator():
     return _generator
 
 
-def generate_image_async(
-    prompt: str, conversation_id: int, upload_folder: str
-) -> Dict[str, Any]:
+def generate_image_async(prompt: str, conversation_id: int) -> Dict[str, Any]:
     """Point d'entrée pour la génération asynchrone"""
     try:
-        # Création du dossier si nécessaire
-        upload_dir = os.path.join(upload_folder, "ai_attachments", str(conversation_id))
-        os.makedirs(upload_dir, exist_ok=True)
-
-        filename = f"gemini_{datetime.now().strftime('%Y%m%d_%H%M%S')}_{uuid.uuid4().hex[:8]}.png"
-        filepath = os.path.abspath(os.path.join(upload_dir, filename))
-
         generator = get_generator()
-        task_id = generator.add_task(prompt, filepath)
+        task_id = generator.add_task(prompt, conversation_id)
 
         return {
             "type": "generated_image",
-            "name": filename,
             "prompt": prompt,
             "status": "generating",
             "task_id": task_id,

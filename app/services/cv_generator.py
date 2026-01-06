@@ -7,19 +7,29 @@ import os
 import json
 import logging
 import re
+import io
+import requests
+import uuid
 from datetime import datetime
-from typing import Dict, Optional, Any, List
+from typing import Dict, Optional, Any, List, Tuple
 from pathlib import Path
 
 from flask import Blueprint, request, jsonify, send_file, current_app
 from flask_login import current_user, login_required
 from reportlab.lib.pagesizes import letter
-from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer
+from reportlab.platypus import (
+    SimpleDocTemplate,
+    Paragraph,
+    Spacer,
+    Image,
+    Table,
+    TableStyle,
+)
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib import colors
 from reportlab.lib.units import inch
 from docx import Document
-from docx.shared import Pt, RGBColor
+from docx.shared import Pt, RGBColor, Inches
 from docx.enum.text import WD_ALIGN_PARAGRAPH
 from app.services.gemini_integration import GeminiIntegration
 
@@ -254,7 +264,8 @@ class CVGenerator:
             "titre_professionnel": getattr(self.user, "titre_professionnel", "") or "",
             "disponibilite": getattr(self.user, "disponibilite", "") or "",
             "permis_conduire": getattr(self.user, "permis_conduire", "") or "",
-            "pretentions_salariales": getattr(self.user, "pretentions_salariales", "") or "",
+            "pretentions_salariales": getattr(self.user, "pretentions_salariales", "")
+            or "",
         }
 
     def calculate_profile_completion(self) -> Dict[str, Any]:
@@ -464,14 +475,25 @@ class CVGenerator:
             # Vérifier si le modèle Certification existe
             try:
                 from app.models.certification import Certification
-                certifications = Certification.query.filter_by(user_id=self.etudiant.user_id).all()
+
+                certifications = Certification.query.filter_by(
+                    user_id=self.etudiant.user_id
+                ).all()
                 return [
                     {
                         "id": c.id,
                         "nom": c.nom,
                         "organisme": c.organisme,
-                        "date_obtention": c.date_obtention.strftime("%m/%Y") if c.date_obtention else "",
-                        "date_expiration": c.date_expiration.strftime("%m/%Y") if c.date_expiration else "",
+                        "date_obtention": (
+                            c.date_obtention.strftime("%m/%Y")
+                            if c.date_obtention
+                            else ""
+                        ),
+                        "date_expiration": (
+                            c.date_expiration.strftime("%m/%Y")
+                            if c.date_expiration
+                            else ""
+                        ),
                         "description": c.description or "",
                     }
                     for c in certifications
@@ -489,7 +511,10 @@ class CVGenerator:
             # Vérifier si le modèle Reference existe
             try:
                 from app.models.reference import Reference
-                references = Reference.query.filter_by(user_id=self.etudiant.user_id).all()
+
+                references = Reference.query.filter_by(
+                    user_id=self.etudiant.user_id
+                ).all()
                 return [
                     {
                         "id": r.id,
@@ -515,7 +540,10 @@ class CVGenerator:
             # Vérifier si le modele CentreInteret existe
             try:
                 from app.models.centre_interet import CentreInteret
-                centres = CentreInteret.query.filter_by(user_id=self.etudiant.user_id).all()
+
+                centres = CentreInteret.query.filter_by(
+                    user_id=self.etudiant.user_id
+                ).all()
                 return [
                     {
                         "id": c.id,
@@ -583,20 +611,20 @@ class CVGenerator:
     def _build_gemini_prompt(self, section: str, data: Dict) -> str:
         """Construit le prompt pour Gemini"""
         return f"""
-Tu es un expert en rédaction de CV professionnel.
+Tu es un expert en rédaction de CV professionnel avec plus de 10 ans . Ta mission est de transformer les données brutes fournies en un contenu percutant, élégant et professionnel.
 
 Section: {section}
 Données: {json.dumps(data, indent=2, ensure_ascii=False)}
 
 Instructions:
-1. Rédaction concise et impactante
-2. Phrases courtes avec verbes d'action
-3. Résultats mesurables quand possible
-4. Structure claire avec puces
-5. Ton professionnel et positif
-6. Temps verbal cohérent
+1. Rédaction concise et impactante : utilise des verbes d'action forts.
+2. Consolidation du ton : assure un ton professionnel, dynamique et cohérent sur toute la section.
+3. Élargissement du contenu : développe les idées présentes dans les données pour les rendre plus riches et significatives. Explique l'impact des actions.
+4. IMPORTANT : Ne pas inventer de données factuelles (dates, noms d'entreprises, titres de postes) qui ne sont pas dans la source. Contente-toi de magnifier et d'expliciter ce qui est fourni.
+5. Structure claire : utilise des listes à puces (bullet points) élégantes.
+6. Optimisation pour les ATS : utilise des mots-clés pertinents pour le domaine concerné.
 
-Génère uniquement le texte formaté, sans explications additionnelles.
+Génère uniquement le texte formaté, prêt à être inséré dans le CV, sans explications additionnelles.
 """
 
     def _format_fallback(self, data: Dict) -> str:
@@ -605,8 +633,10 @@ Génère uniquement le texte formaté, sans explications additionnelles.
             return "\n".join([f"• {k}: {v}" for k, v in data.items() if v])
         return str(data)
 
-    def generate_pdf(self, template_id: str = "modern") -> Optional[str]:
-        """Génère un CV au format PDF"""
+    def generate_pdf(
+        self, template_id: str = "modern"
+    ) -> Optional[Tuple[io.BytesIO, str]]:
+        """Génère un CV au format PDF et retourne le flux binaire et le nom du fichier"""
         user_data = self.get_user_data()
         if "error" in user_data:
             logger.error(f"Impossible de générer le PDF: {user_data['error']}")
@@ -618,11 +648,13 @@ Génère uniquement le texte formaté, sans explications additionnelles.
                 f"CV_{user_data['utilisateur']['prenom']}_"
                 f"{user_data['utilisateur']['nom']}_{timestamp}.pdf"
             )
-            output_path = OUTPUT_FOLDER / filename
+
+            # Utilisation d'un buffer en mémoire au lieu d'un fichier local
+            buffer = io.BytesIO()
 
             # Création du document
             doc = SimpleDocTemplate(
-                str(output_path),
+                buffer,
                 pagesize=letter,
                 rightMargin=0.75 * inch,
                 leftMargin=0.75 * inch,
@@ -633,8 +665,10 @@ Génère uniquement le texte formaté, sans explications additionnelles.
             story = self._build_pdf_content(user_data)
             doc.build(story)
 
-            logger.info(f"PDF généré avec succès: {output_path}")
-            return str(output_path)
+            # Revenir au début du buffer pour la lecture
+            buffer.seek(0)
+            logger.info(f"PDF généré avec succès en mémoire: {filename}")
+            return buffer, filename
 
         except Exception as e:
             logger.error(f"Erreur lors de la génération du PDF: {e}", exc_info=True)
@@ -854,8 +888,10 @@ Génère uniquement le texte formaté, sans explications additionnelles.
 
         return story
 
-    def generate_docx(self, template_id: str = "modern") -> Optional[str]:
-        """Génère un CV au format Word (DOCX)"""
+    def generate_docx(
+        self, template_id: str = "modern"
+    ) -> Optional[Tuple[io.BytesIO, str]]:
+        """Génère un CV au format Word (DOCX) et retourne le flux binaire et le nom du fichier"""
         user_data = self.get_user_data()
         if "error" in user_data:
             logger.error(f"Impossible de générer le DOCX: {user_data['error']}")
@@ -867,15 +903,19 @@ Génère uniquement le texte formaté, sans explications additionnelles.
                 f"CV_{user_data['utilisateur']['prenom']}_"
                 f"{user_data['utilisateur']['nom']}_{timestamp}.docx"
             )
-            output_path = OUTPUT_FOLDER / filename
+
+            # Utilisation d'un buffer en mémoire
+            buffer = io.BytesIO()
 
             doc = Document()
             self._configure_docx_styles(doc)
             self._build_docx_content(doc, user_data)
 
-            doc.save(str(output_path))
-            logger.info(f"DOCX généré avec succès: {output_path}")
-            return str(output_path)
+            doc.save(buffer)
+            buffer.seek(0)
+
+            logger.info(f"DOCX généré avec succès en mémoire: {filename}")
+            return buffer, filename
 
         except Exception as e:
             logger.error(f"Erreur lors de la génération du DOCX: {e}", exc_info=True)
@@ -889,10 +929,102 @@ Génère uniquement le texte formaté, sans explications additionnelles.
         font.size = Pt(11)
 
     def _build_docx_content(self, doc: Document, user_data: Dict):
-        """Construit le contenu du document Word"""
+        """Construit le contenu du document Word avec photo de profil"""
         user = user_data["utilisateur"]
 
-        # En-tête
+        # 1. En-tête (Photo + Infos ou classique)
+        pic_buffer = self._get_profile_pic_buffer()
+
+        if pic_buffer:
+            try:
+                # Utilisation d'un tableau pour l'en-tête (texte à gauche, photo à droite)
+                table = doc.add_table(rows=1, cols=2)
+                table.autofit = False
+
+                # Réglage des largeurs de colonnes (environ 5 pouces et 1 pouce)
+                left_cell = table.cell(0, 0)
+                right_cell = table.cell(0, 1)
+
+                # Texte dans la cellule de gauche
+                title_para = left_cell.paragraphs[0]
+                title_run = title_para.add_run(f"{user['prenom']} {user['nom']}")
+                title_run.bold = True
+                title_run.font.size = Pt(18)
+                title_run.font.color.rgb = RGBColor(44, 62, 80)
+
+                contact_info = [
+                    user.get("email"),
+                    user.get("telephone"),
+                    f"{user.get('adresse', '')}, {user.get('code_postal', '')} {user.get('ville', '')}".strip(
+                        ", "
+                    ),
+                ]
+                contact_info = [info for info in contact_info if info]
+
+                if contact_info:
+                    coord_para = left_cell.add_paragraph(" | ".join(contact_info))
+                    coord_para.alignment = WD_ALIGN_PARAGRAPH.LEFT
+
+                # Liens RS optionnels
+                social_info = []
+                if user.get("linkedin"):
+                    social_info.append(f"LinkedIn: {user['linkedin']}")
+                if user.get("github"):
+                    social_info.append(f"GitHub: {user['github']}")
+                if social_info:
+                    left_cell.add_paragraph(" | ".join(social_info))
+
+                # Photo dans la cellule de droite
+                img_para = right_cell.paragraphs[0]
+                img_run = img_para.add_run()
+                img_run.add_picture(pic_buffer, width=Inches(1.0))
+                img_para.alignment = WD_ALIGN_PARAGRAPH.RIGHT
+            except Exception as e:
+                logger.error(f"Erreur lors de l'ajout de la photo au DOCX: {e}")
+                self._add_classic_docx_header(doc, user)
+        else:
+            self._add_classic_docx_header(doc, user)
+
+        doc.add_paragraph()
+
+        # 2. Profil
+        if user.get("bio"):
+            doc.add_heading("PROFIL", level=2)
+            doc.add_paragraph(user["bio"])
+            doc.add_paragraph()
+
+        # 3. Expériences
+        if user_data.get("experiences"):
+            doc.add_heading("EXPÉRIENCES PROFESSIONNELLES", level=2)
+            for exp in user_data["experiences"]:
+                self._add_docx_experience(doc, exp)
+
+        # 4. Formations
+        if user_data.get("formations"):
+            doc.add_heading("FORMATIONS", level=2)
+            for form in user_data["formations"]:
+                self._add_docx_formation(doc, form)
+
+        # 5. Compétences techniques
+        if user_data.get("competences_techniques"):
+            self._add_docx_technical_skills(doc, user_data["competences_techniques"])
+
+        # 6. Compétences générales
+        if user_data.get("competences"):
+            self._add_docx_skills(doc, user_data["competences"])
+
+        # 7. Langues
+        if user_data.get("langues"):
+            self._add_docx_languages(doc, user_data["langues"])
+
+        # 8. Projets
+        if user_data.get("projets"):
+            doc.add_heading("PROJETS", level=2)
+            for proj in user_data["projets"]:
+                self._add_docx_project(doc, proj)
+
+    def _add_classic_docx_header(self, doc: Document, user: Dict):
+        """En-tête Word classique sans photo"""
         title = doc.add_heading(level=1)
         title_run = title.add_run(f"{user['prenom']} {user['nom']}")
         title_run.bold = True
@@ -901,55 +1033,19 @@ Génère uniquement le texte formaté, sans explications additionnelles.
 
         # Contact
         contact_info = [
-            user["email"],
-            user["telephone"],
-            f"{user['adresse']}, {user['code_postal']} {user['ville']}".strip(", "),
-            user["linkedin"],
-            user["github"],
+            user.get("email"),
+            user.get("telephone"),
+            f"{user.get('adresse', '')}, {user.get('code_postal', '')} {user.get('ville', '')}".strip(
+                ", "
+            ),
+            user.get("linkedin"),
+            user.get("github"),
         ]
         contact_info = [info for info in contact_info if info]
 
         if contact_info:
             coord_para = doc.add_paragraph(" | ".join(contact_info))
             coord_para.alignment = WD_ALIGN_PARAGRAPH.LEFT
-
-        doc.add_paragraph()
-
-        # Profil
-        if user["bio"]:
-            doc.add_heading("PROFIL", level=2)
-            doc.add_paragraph(user["bio"])
-            doc.add_paragraph()
-
-        # Expériences
-        if user_data["experiences"]:
-            doc.add_heading("EXPÉRIENCES PROFESSIONNELLES", level=2)
-            for exp in user_data["experiences"]:
-                self._add_docx_experience(doc, exp)
-
-        # Formations
-        if user_data["formations"]:
-            doc.add_heading("FORMATIONS", level=2)
-            for form in user_data["formations"]:
-                self._add_docx_formation(doc, form)
-
-        # Compétences techniques
-        if user_data["competences_techniques"]:
-            self._add_docx_technical_skills(doc, user_data["competences_techniques"])
-
-        # Compétences générales
-        if user_data["competences"]:
-            self._add_docx_skills(doc, user_data["competences"])
-
-        # Langues
-        if user_data["langues"]:
-            self._add_docx_languages(doc, user_data["langues"])
-
-        # Projets
-        if user_data["projets"]:
-            doc.add_heading("PROJETS", level=2)
-            for proj in user_data["projets"]:
-                self._add_docx_project(doc, proj)
 
     def _add_docx_experience(self, doc: Document, exp: Dict):
         """Ajoute une expérience au document Word"""
@@ -2617,4 +2713,4 @@ if __name__ == "__main__":
     print(f"Dossier templates: {TEMPLATES_FOLDER}")
     print(f"Dossier exports: {OUTPUT_FOLDER}")
     print(f"Gemini API configurée: {bool(os.getenv('GEMINI_API_KEY'))}")
-    print("=" * 50)
+    print("=" * 5)

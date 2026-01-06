@@ -1,3 +1,4 @@
+import logging
 from flask import (
     Blueprint,
     render_template,
@@ -8,12 +9,12 @@ from flask import (
     current_app,
 )
 from flask_login import login_required, current_user
-from werkzeug.utils import secure_filename
 import os
 from app.models.bug_report import BugReport
 from app.forms import BugReportForm, BugReportAdminForm
 from app.extensions import db
 from datetime import datetime
+from app.utils.cloudinary_utils import upload_to_cloudinary
 
 # Configuration du répertoire de stockage des captures d'écran
 UPLOAD_FOLDER = os.path.join("uploads", "bug_reports")
@@ -21,6 +22,7 @@ ALLOWED_EXTENSIONS = {"png", "jpg", "jpeg", "gif"}
 
 # Création du Blueprint
 bug_reports = Blueprint("bug_reports", __name__)
+logger = logging.getLogger(__name__)
 
 
 def allowed_file(filename):
@@ -106,19 +108,21 @@ def new_bug_report():
         if "screenshot" in request.files:
             file = request.files["screenshot"]
             if file and file.filename != "" and allowed_file(file.filename):
-                # Créer le répertoire s'il n'existe pas
-                upload_dir = os.path.join(current_app.static_folder, UPLOAD_FOLDER)
-                os.makedirs(upload_dir, exist_ok=True)
-
-                # Générer un nom de fichier sécurisé
-                filename = f"bug_{datetime.now().strftime('%Y%m%d_%H%M%S')}_{secure_filename(file.filename)}"
-                file_path = os.path.join(upload_dir, filename)
-                file.save(file_path)
-
-                # Stocker uniquement le chemin relatif
-                bug_report.image_path = os.path.join(UPLOAD_FOLDER, filename).replace(
-                    "\\", "/"
-                )
+                try:
+                    # Upload direct sur Cloudinary
+                    upload_result = upload_to_cloudinary(
+                        file,
+                        f"bug_{datetime.now().strftime('%Y%m%d_%H%M%S')}",
+                        folder="bug_reports",
+                        resource_type="image",
+                    )
+                    bug_report.image_path = upload_result.get("secure_url")
+                except Exception as e:
+                    logger.error(f"Erreur upload screenshot bug report: {e}")
+                    flash(
+                        "Une erreur est survenue lors de l'upload de la capture d'écran.",
+                        "warning",
+                    )
         db.session.add(bug_report)
         db.session.commit()
 
@@ -274,28 +278,17 @@ def edit_bug_report(report_id):
         if "screenshot" in request.files:
             file = request.files["screenshot"]
             if file and file.filename != "" and allowed_file(file.filename):
-                # Supprimer l'ancienne image si elle existe
-                if bug_report.image_path:
-                    try:
-                        old_file = os.path.join(
-                            current_app.static_folder, bug_report.image_path
-                        )
-                        if os.path.exists(old_file):
-                            os.remove(old_file)
-                    except Exception:
-                        pass
-
-                # Créer le répertoire s'il n'existe pas
-                upload_dir = os.path.join(current_app.static_folder, UPLOAD_FOLDER)
-                os.makedirs(upload_dir, exist_ok=True)
-
-                # Générer un nom de fichier sécurisé
-                filename = f"bug_{datetime.now().strftime('%Y%m%d_%H%M%S')}_{secure_filename(file.filename)}"
-                file_path = os.path.join(upload_dir, filename)
-                file.save(file_path)
-                bug_report.image_path = os.path.join(UPLOAD_FOLDER, filename).replace(
-                    "\\", "/"
-                )
+                try:
+                    # Upload de la nouvelle capture
+                    upload_result = upload_to_cloudinary(
+                        file,
+                        f"bug_{datetime.now().strftime('%Y%m%d_%H%M%S')}",
+                        folder="bug_reports",
+                        resource_type="image",
+                    )
+                    bug_report.image_path = upload_result.get("secure_url")
+                except Exception as e:
+                    logger.error(f"Erreur update screenshot bug report: {e}")
 
         db.session.commit()
         flash("Le rapport a été mis à jour avec succès.", "success")
@@ -342,9 +335,12 @@ def delete_bug_report(report_id):
     # Remplacer la suppression de l'image par :
     if bug_report.image_path:
         try:
-            file_path = os.path.join(current_app.static_folder, bug_report.image_path)
-            if os.path.exists(file_path):
-                os.remove(file_path)
+            if not bug_report.image_path.startswith(("http://", "https://")):
+                file_path = os.path.join(
+                    current_app.static_folder, bug_report.image_path
+                )
+                if os.path.exists(file_path):
+                    os.remove(file_path)
         except Exception:
             pass
     # Supprimer le rapport de la base de données

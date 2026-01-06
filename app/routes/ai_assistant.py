@@ -542,15 +542,12 @@ _image_pipe = None
 
 # 1. CORRECTION de la fonction generate_educational_image (ligne ~660)
 def generate_educational_image(description, conversation_id):
-    """Génère une image éducative de manière asynchrone"""
+    """Génère une image éducative de manière asynchrone via Cloudinary"""
     try:
-        upload_folder = current_app.config.get("UPLOAD_FOLDER", "uploads")
-
         # Lancer la génération asynchrone
         result = generate_image_async(
             prompt=f"Educational illustration: {description}. Clear, professional, pedagogical style.",
             conversation_id=conversation_id,
-            upload_folder=upload_folder,
         )
 
         # CORRECTION: S'assurer que le task_id est TOUJOURS présent
@@ -591,16 +588,14 @@ def get_image_generation_status(conversation_id):
         status = check_image_status(task_id)
 
         if status.get("status") == "completed":
-            # CORRECTION: Construire l'URL correctement
-            filename = status.get("filename")
-            # URL relative depuis static
-            image_url = f"/static/uploads/ai_attachments/{conversation_id}/{filename}"
+            # CORRECTION: Utiliser l'URL directe de Cloudinary
+            image_url = status.get("url")
 
             return jsonify(
                 {
                     "status": "completed",
                     "image_url": image_url,
-                    "filename": filename,
+                    "url": image_url,
                     "completed_at": status.get("completed_at"),
                 }
             )

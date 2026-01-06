@@ -746,23 +746,22 @@
 
             if (!response.ok) throw new Error(`Erreur lors de la génération`);
 
-            if (format === "linkedin") {
-              const data = await response.json();
-              if (data.success && data.url) {
-                window.open(data.url, "_blank");
-                showToast("CV LinkedIn généré");
+            const data = await response.json();
+            if (data.success && data.url) {
+              // Ouvrir l'URL Cloudinary dans un nouvel onglet
+              const win = window.open(data.url, "_blank");
+              if (!win) {
+                // Si le popup est bloqué, essayer de déclencher un lien de téléchargement
+                const a = document.createElement("a");
+                a.href = data.url;
+                a.download = data.filename || `mon_cv.${format}`;
+                document.body.appendChild(a);
+                a.click();
+                a.remove();
               }
+              showToast(`CV ${format.toUpperCase()} généré avec succès`);
             } else {
-              const blob = await response.blob();
-              const url = window.URL.createObjectURL(blob);
-              const a = document.createElement("a");
-              a.href = url;
-              a.download = `mon_cv.${format}`;
-              document.body.appendChild(a);
-              a.click();
-              window.URL.revokeObjectURL(url);
-              a.remove();
-              showToast(`CV ${format.toUpperCase()} téléchargé`);
+              throw new Error(data.message || "Erreur lors de la génération");
             }
           } catch (error) {
             console.error("Erreur:", error);

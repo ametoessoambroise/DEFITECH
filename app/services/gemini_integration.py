@@ -440,7 +440,7 @@ class GeminiIntegration:
             response = self._call_api_with_retry(request_data)
 
             # Traiter la réponse (passer le prompt utilisateur pour les alertes)
-            return self._process_response(response, user_message=prompt)
+            return self._process_response(response, prompt)
 
         except Exception as e:
             logger.error(f"Erreur génération réponse Gemini: {e}")

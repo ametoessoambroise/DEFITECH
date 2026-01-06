@@ -22,10 +22,8 @@ from flask import (
     jsonify,
 )
 from flask_login import login_required, current_user
-from werkzeug.utils import secure_filename
 from sqlalchemy import or_
 import os
-from datetime import datetime
 import json
 import mimetypes
 from app.extensions import db
@@ -527,16 +525,28 @@ def download(resource_id):
         )
         abort(403, "Vous n'avez pas l'autorisation d'accéder à cette ressource.")
 
-    # Construire le chemin complet
+    # Gestion Cloudinary : Rediriger si c'est une URL
+    if resource.chemin_fichier.startswith(("http://", "https://")):
+        try:
+            # Incrémenter le compteur de téléchargements
+            if hasattr(resource, "nombre_telechargements"):
+                resource.nombre_telechargements += 1
+                db.session.commit()
+            return redirect(resource.chemin_fichier)
+        except Exception as e:
+            current_app.logger.error(f"Erreur redirection Cloudinary: {e}")
+            flash("Erreur lors de l'accès à la ressource distante.", "error")
+            return redirect(url_for("resources.index"))
+
+    # Construire le chemin complet local (fallback)
     chemin_fichier = resource.chemin_fichier
-    # Si le chemin commence par "uploads/", on le supprime pour éviter la duplication
     if chemin_fichier.startswith("uploads/"):
-        chemin_fichier = chemin_fichier[8:]  # Enlève "uploads/"
+        chemin_fichier = chemin_fichier[8:]
 
     full_path = os.path.join(current_app.config["UPLOAD_FOLDER"], chemin_fichier)
     # Vérifier l'existence du fichier
     if not os.path.exists(full_path):
-        current_app.logger.error(f"Fichier introuvable: {full_path}")
+        current_app.logger.error(f"Fichier local introuvable: {full_path}")
         flash("Le fichier demandé n'existe plus.", "error")
         return redirect(url_for("resources.index"))
 

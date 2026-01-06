@@ -1,10 +1,10 @@
-from flask import Blueprint, render_template, jsonify, request, send_file, current_app
+from flask import Blueprint, render_template, jsonify, request, current_app
 from flask_login import login_required, current_user
 import traceback
 
-
 # Import existing CV generator
 from app.services.cv_generator import CVGenerator
+from app.utils.cloudinary_utils import upload_cv_to_cloudinary
 
 # Create blueprint
 career_craft_bp = Blueprint("career_craft", __name__, template_folder="templates")
@@ -24,6 +24,7 @@ def career_craft():
         Un template "career_craft.html" qui affiche l'interface CareerCraft.
     """
     return render_template("chat/career_craft.html")
+
 
 @career_craft_bp.route("/api/career-craft/preview", methods=["POST"])
 @login_required
@@ -49,6 +50,7 @@ def preview_cv():
     try:
         # Check CSRF token from headers using Flask-WTF
         from flask_wtf.csrf import validate_csrf
+
         csrf_token = request.headers.get("X-CSRFToken")
         try:
             validate_csrf(csrf_token)
@@ -120,6 +122,7 @@ def generate_cv():
     try:
         # Check CSRF token from headers using Flask-WTF
         from flask_wtf.csrf import validate_csrf
+
         csrf_token = request.headers.get("X-CSRFToken")
         try:
             validate_csrf(csrf_token)
@@ -140,23 +143,84 @@ def generate_cv():
             html_content = cv_generator.generate_preview(template_id)
             return jsonify({"success": True, "preview": html_content})
         elif format_type == "pdf":
-            # Generate PDF
-            output_path = cv_generator.generate_pdf(template_id=template_id)
-            return send_file(
-                output_path,
-                as_attachment=True,
-                download_name=f"CV_{current_user.nom}_{current_user.prenom}.pdf",
-                mimetype="application/pdf",
-            )
+            # Generate PDF in memory
+            result = cv_generator.generate_pdf(template_id=template_id)
+            if not result:
+                return (
+                    jsonify(
+                        {
+                            "success": False,
+                            "message": "Erreur lors de la génération du PDF",
+                        }
+                    ),
+                    500,
+                )
+
+            buffer, filename = result
+
+            # Upload to Cloudinary
+            try:
+                upload_result = upload_cv_to_cloudinary(buffer, filename)
+                return jsonify(
+                    {
+                        "success": True,
+                        "url": upload_result.get("secure_url"),
+                        "filename": filename,
+                    }
+                )
+            except Exception as e:
+                current_app.logger.error(
+                    f"Cloudinary upload error in generate_cv (PDF): {str(e)}"
+                )
+                return (
+                    jsonify(
+                        {
+                            "success": False,
+                            "message": "Erreur lors de l'upload sur le cloud",
+                        }
+                    ),
+                    500,
+                )
+
         elif format_type.lower() == "docx":
-            # Generate DOCX
-            output_path = cv_generator.generate_docx(template_id=template_id)
-            return send_file(
-                output_path,
-                as_attachment=True,
-                download_name=f"CV_{current_user.nom}_{current_user.prenom}.docx",
-                mimetype="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-            )
+            # Generate DOCX in memory
+            result = cv_generator.generate_docx(template_id=template_id)
+            if not result:
+                return (
+                    jsonify(
+                        {
+                            "success": False,
+                            "message": "Erreur lors de la génération du DOCX",
+                        }
+                    ),
+                    500,
+                )
+
+            buffer, filename = result
+
+            # Upload to Cloudinary
+            try:
+                upload_result = upload_cv_to_cloudinary(buffer, filename)
+                return jsonify(
+                    {
+                        "success": True,
+                        "url": upload_result.get("secure_url"),
+                        "filename": filename,
+                    }
+                )
+            except Exception as e:
+                current_app.logger.error(
+                    f"Cloudinary upload error in generate_cv (DOCX): {str(e)}"
+                )
+                return (
+                    jsonify(
+                        {
+                            "success": False,
+                            "message": "Erreur lors de l'upload sur le cloud",
+                        }
+                    ),
+                    500,
+                )
         elif format_type == "linkedin":
             # Generate LinkedIn data
             linkedin_data = cv_generator.generate_linkedin_data()

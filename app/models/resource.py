@@ -168,13 +168,15 @@ class Resource(db.Model):
         return search_query.order_by(cls.date_upload.desc()).all()
 
     def delete_file(self):
-        """Supprime le fichier physique du disque"""
+        """Supprime le fichier physique s'il est local"""
+        if self.chemin_fichier.startswith(("http://", "https://")):
+            # On pourrait supprimer de Cloudinary ici, mais on se contente de ne pas lever d'erreur locale
+            return True
+
         try:
             if os.path.exists(self.chemin_fichier):
                 os.remove(self.chemin_fichier)
                 return True
         except Exception as e:
-            print(
-                f"Erreur lors de la suppression du fichier {self.chemin_fichier}: {e}"
-            )
+            print(f"Erreur suppression fichier local {self.chemin_fichier}: {e}")
         return False

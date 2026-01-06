@@ -4,6 +4,7 @@ import logging
 import os
 import chardet
 from datetime import datetime, timedelta
+from typing import Optional
 from PyPDF2 import PdfReader
 
 # Third-party imports
@@ -18,8 +19,9 @@ from flask import (
     url_for,
     send_from_directory,
 )
+import io
+import requests
 from flask_login import current_user, login_required
-from werkzeug.utils import secure_filename
 
 # Local application imports
 from app.extensions import db
@@ -49,63 +51,71 @@ def allowed_file(filename):
     return "." in filename and filename.rsplit(".", 1)[1].lower() in ALLOWED_EXTENSIONS
 
 
-def detect_file_encoding(file_path, default_encoding="utf-8"):
-    """
-    Détecte l'encodage d'un fichier en essayant plusieurs méthodes.
-
-    Args:
-        file_path: Chemin vers le fichier à analyser
-        default_encoding: Encodage par défaut à utiliser si la détection échoue
-
-    Returns:
-        str: L'encodage détecté ou l'encodage par défaut
-    """
-    # Liste des encodages à essayer (par ordre de préférence)
+def detect_buffer_encoding(data, default_encoding="utf-8"):
+    """Détecte l'encodage de données binaires."""
     encodings_to_try = [
         "utf-8",
-        "latin-1",  # ISO-8859-1, gère tous les octets
-        "windows-1252",  # Commun sous Windows
-        "iso-8859-15",  # Variante de ISO-8859-1
-        "cp1252",  # Windows Western European
+        "latin-1",
+        "windows-1252",
+        "iso-8859-15",
+        "cp1252",
         "utf-16",
-        "utf-16le",
-        "utf-16be",
     ]
 
-    # D'abord, essayer de détecter avec chardet
     try:
-        with open(file_path, "rb") as f:
-            raw_data = f.read(10000)  # Lire les 10 premiers Ko pour la détection
-
-        # Détecter l'encodage avec chardet
-        result = chardet.detect(raw_data)
+        result = chardet.detect(data[:10000])
         if result and result["confidence"] > 0.7:
-            detected_encoding = result["encoding"].lower()
-            # Vérifier si l'encodage détecté est dans notre liste
-            if detected_encoding in encodings_to_try:
-                return detected_encoding
+            return result["encoding"].lower()
     except Exception as e:
-        logger.warning(f"Échec de la détection d'encodage avec chardet: {str(e)}")
+        logger.error("Erreur ", e)
 
-    # Essayer de lire le fichier avec différents encodages
     for encoding in encodings_to_try:
         try:
-            with open(file_path, "r", encoding=encoding) as f:
-                # Essayer de lire le début du fichier
-                f.read(1024)
-                logger.info(f"Encodage détecté avec succès: {encoding}")
-                return encoding
-        except (UnicodeDecodeError, LookupError):
-            continue
+            data[:1024].decode(encoding)
+            return encoding
         except Exception as e:
-            logger.warning(f"Erreur avec l'encodage {encoding}: {str(e)}")
-            continue
+            logger.error("Erreur ", e)
 
-    # Si on arrive ici, aucun encodage n'a fonctionné
-    logger.warning(
-        f"Aucun encodage valide trouvé pour {file_path}, utilisation de {default_encoding}"
-    )
     return default_encoding
+
+
+def extract_text_from_buffer(buffer: io.BytesIO, file_type: str) -> Optional[str]:
+    """Extrait le texte d'un buffer selon le type de fichier."""
+    content = ""
+    try:
+        if file_type.lower() == "pdf":
+            pdf_reader = PdfReader(buffer)
+            for page in pdf_reader.pages:
+                page_text = page.extract_text()
+                if page_text:
+                    content += page_text + "\n\n"
+        else:
+            data = buffer.getvalue()
+            encoding = detect_buffer_encoding(data)
+            content = data.decode(encoding, errors="replace")
+        return content.strip()
+    except Exception as e:
+        logger.error(f"Erreur d'extraction de texte ({file_type}): {e}")
+        return None
+
+
+def get_document_buffer(document: StudyDocument) -> Optional[io.BytesIO]:
+    """Récupère le contenu d'un document (local ou distant) et retourne un buffer."""
+    if document.file_path.startswith(("http://", "https://")):
+        try:
+            response = requests.get(document.file_path, timeout=10)
+            if response.status_code == 200:
+                return io.BytesIO(response.content)
+        except Exception as e:
+            logger.error(
+                f"Erreur lors du téléchargement du document {document.id}: {e}"
+            )
+            return None
+    else:
+        if os.path.exists(document.file_path):
+            with open(document.file_path, "rb") as f:
+                return io.BytesIO(f.read())
+    return None
 
 
 @study_buddy_bp.route("/")
@@ -336,7 +346,11 @@ def download_document(document_id):
     if document.user_id != current_user.id:
         flash("Accès non autorisé", "error")
         return redirect(url_for("study_buddy.index"))
-    # Vérifier que le fichier existe
+
+    if document.file_path.startswith(("http://", "https://")):
+        # Rediriger vers l'URL Cloudinary (avec flags de téléchargement si possible, sinon direct)
+        return redirect(document.file_path)
+
     if not os.path.exists(document.file_path):
         flash("Le fichier demandé n'existe plus sur le serveur.", "error")
         return redirect(url_for("study_buddy.document_detail", document_id=document.id))
@@ -374,144 +388,18 @@ def generate_summary(document_id):
         return jsonify({"error": "Accès non autorisé"}), 403
 
     # Récupérer le niveau de détail demandé
-    level = request.json.get(
-        "level", "intermediate"
-    )  # 'beginner', 'intermediate', 'advanced'
+    level = request.json.get("level", "intermediate")
 
-    # Vérifier que le fichier existe
-    if not os.path.exists(document.file_path):
-        return jsonify({"error": "Le fichier du document est introuvable"}), 404
+    # Récupérer le contenu du document
+    buffer = get_document_buffer(document)
+    if not buffer:
+        return jsonify({"error": "Impossible de récupérer le contenu du document"}), 404
+
+    content = extract_text_from_buffer(buffer, document.file_type)
+    if not content:
+        return jsonify({"error": "Impossible d'extraire le texte du document"}), 400
 
     try:
-        # Vérifier que le fichier n'est pas vide
-        if os.path.getsize(document.file_path) == 0:
-            return jsonify({"error": "Le document est vide"}), 400
-
-        # Gérer différemment selon le type de fichier
-        if document.file_type.lower() == "pdf":
-            try:
-                # Lire le contenu du PDF
-                with open(document.file_path, "rb") as f:
-                    try:
-                        pdf_reader = PdfReader(f)
-                    except Exception as pdf_error:
-                        # Gérer les erreurs spécifiques de PyPDF2 comme startxref pointer
-                        if (
-                            "startxref" in str(pdf_error).lower()
-                            or "damaged" in str(pdf_error).lower()
-                        ):
-                            flash("Le fichier PDF est corrompu ou endommagé", "error")
-                            logger.error(
-                                f"PDF corrompu ou endommagé: {document.file_path} - {str(pdf_error)}"
-                            )
-                            return (
-                                jsonify(
-                                    {
-                                        "error": "Le fichier PDF est corrompu ou endommagé",
-                                        "details": "Le fichier ne peut pas être lu car il est probablement endommagé. Veuillez réessayer avec un autre fichier.",
-                                    }
-                                ),
-                                400,
-                            )
-                        else:
-                            flash("Erreur lors de l'ouverture du PDF", "error")
-                            logger.error(
-                                f"Erreur lors de l'ouverture du PDF: {str(pdf_error)}"
-                            )
-                            return (
-                                jsonify(
-                                    {
-                                        "error": "Erreur lors de l'ouverture du PDF",
-                                        "details": str(pdf_error),
-                                    }
-                                ),
-                                400,
-                            )
-
-                    content = ""
-                    try:
-                        for page in pdf_reader.pages:
-                            page_text = page.extract_text()
-                            if page_text:
-                                content += page_text + "\n\n"
-                    except Exception as extract_error:
-                        logger.error(
-                            f"Erreur lors de l'extraction du texte du PDF: {str(extract_error)}"
-                        )
-                        return (
-                            jsonify(
-                                {
-                                    "error": "Erreur lors de l'extraction du texte du PDF",
-                                    "details": "Le contenu du PDF ne peut pas être extrait. Le fichier est peut-être protégé ou corrompu.",
-                                }
-                            ),
-                            400,
-                        )
-
-                # Vérifier si le contenu n'est pas vide
-                if not content.strip():
-                    return (
-                        jsonify({"error": "Le PDF ne contient pas de texte lisible"}),
-                        400,
-                    )
-
-            except Exception as e:
-                logger.error(f"Erreur lors de la lecture du PDF: {str(e)}")
-                return (
-                    jsonify(
-                        {"error": "Erreur lors de la lecture du PDF", "details": str(e)}
-                    ),
-                    400,
-                )
-        else:
-            # Pour les fichiers texte, essayer de détecter l'encodage
-            file_encoding = detect_file_encoding(document.file_path)
-            logger.info(
-                f"Tentative de lecture du fichier {document.file_path} avec l'encodage: {file_encoding}"
-            )
-
-            try:
-                with open(
-                    document.file_path, "r", encoding=file_encoding, errors="replace"
-                ) as f:
-                    content = f.read()
-
-                # Vérifier si le contenu n'est pas vide
-                if not content.strip():
-                    return (
-                        jsonify(
-                            {
-                                "error": "Le document est vide ou ne contient que des espaces"
-                            }
-                        ),
-                        400,
-                    )
-
-                # Vérifier si le contenu contient beaucoup de caractères de remplacement
-                if (
-                    content.count("") > len(content) * 0.1
-                ):  # Plus de 10% de caractères invalides
-                    logger.warning(
-                        "Trop de caractères invalides détectés, tentative avec un autre encodage"
-                    )
-                    raise UnicodeDecodeError(
-                        "utf-8", b"", 0, 1, "Trop de caractères invalides"
-                    )
-
-            except (UnicodeDecodeError, LookupError) as e:
-                # En cas d'échec, essayer avec un encodage de secours
-                fallback_encoding = "latin-1" if file_encoding != "latin-1" else "utf-8"
-                logger.warning(
-                    f"Échec de la lecture avec {file_encoding}, tentative avec {fallback_encoding}: {str(e)}"
-                )
-
-                with open(
-                    document.file_path,
-                    "r",
-                    encoding=fallback_encoding,
-                    errors="replace",
-                ) as f:
-                    content = f.read()
 
         # Enregistrer une nouvelle session d'étude
         session = StudySession(
@@ -658,9 +546,14 @@ def generate_quiz(document_id):
     if document.user_id != current_user.id:
         return jsonify({"error": "Accès non autorisé"}), 403
 
-    # Vérifier que le fichier existe
-    if not os.path.exists(document.file_path):
-        return jsonify({"error": "Le fichier du document est introuvable"}), 404
+    # Récupérer le contenu du document
+    buffer = get_document_buffer(document)
+    if not buffer:
+        return jsonify({"error": "Impossible de récupérer le contenu du document"}), 404
+
+    content = extract_text_from_buffer(buffer, document.file_type)
+    if not content:
+        return jsonify({"error": "Impossible d'extraire le texte du document"}), 400
 
     try:
         # Récupérer les données JSON
@@ -671,7 +564,7 @@ def generate_quiz(document_id):
         # Récupérer les paramètres du quiz
         question_types = data.get("question_types", ["qcm", "vrai_faux"])
         difficulty = data.get("difficulty", "medium")
-        num_questions = min(int(data.get("num_questions", 10)), 20)  # Max 20 questions
+        num_questions = min(int(data.get("num_questions", 10)), 20)
         themes = data.get("themes", [])
 
         # Lire le contenu du fichier avec gestion des erreurs d'encodage et support PDF

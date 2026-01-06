@@ -641,17 +641,31 @@ def download_attachment(attachment_id):
             403,
         )
 
-    # Vérifier que le fichier existe
+    # Gestion Cloudinary
+    if piece.chemin_fichier.startswith(("http://", "https://")):
+        try:
+            # Incrémenter le compteur de téléchargements si l'attribut existe
+            if hasattr(piece, "downloads"):
+                piece.downloads += 1
+                db.session.commit()
+            return redirect(piece.chemin_fichier)
+        except Exception as e:
+            current_app.logger.error(f"Erreur redirection Cloudinary Community: {e}")
+            flash("Erreur lors de l'accès au fichier distant.", "error")
+            return redirect(url_for("community.view_post", post_id=post.id))
+
+    # Vérifier que le fichier local existe (fallback)
     filepath = os.path.join(current_app.config["UPLOAD_FOLDER"], piece.chemin_fichier)
     if not os.path.exists(filepath):
         flash("Le fichier demandé n'existe plus.", "error")
         return redirect(url_for("community.view_post", post_id=post.id))
 
-    # Incrémenter le compteur de téléchargements si nécessaire
-    piece.downloads += 1
-    db.session.commit()
+    # Incrémenter le compteur de téléchargements
+    if hasattr(piece, "downloads"):
+        piece.downloads += 1
+        db.session.commit()
 
-    # Envoyer le fichier
+    # Envoyer le fichier local
     return send_from_directory(
         os.path.dirname(filepath),
         os.path.basename(filepath),

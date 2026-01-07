@@ -2591,13 +2591,60 @@ def admin_emploi_temps():
     if selected_annee:
         target_annee = Annee.query.get(selected_annee)
 
+    # Normalisation des noms d'années pour éviter les incohérences
+    # Mapping des différentes variantes vers un format standard
+    annee_mapping = {
+        "1 ere annee": "1ère année",
+        "1ere annee": "1ère année",
+        "1 ère année": "1ère année",
+        "1ere année": "1ère année",
+        "1ère annee": "1ère année",
+        "2 eme annee": "2ème année",
+        "2eme annee": "2ème année",
+        "2 ème année": "2ème année",
+        "2eme année": "2ème année",
+        "2ème annee": "2ème année",
+        "3 eme annee": "3ème année",
+        "3eme annee": "3ème année",
+        "3 ème année": "3ème année",
+        "3eme année": "3ème année",
+        "3ème annee": "3ème année",
+        "4 eme annee": "4ème année",
+        "4eme annee": "4ème année",
+        "4 ème année": "4ème année",
+        "4eme année": "4ème année",
+        "4ème annee": "4ème année",
+        "5 eme annee": "5ème année",
+        "5eme annee": "5ème année",
+        "5 ème année": "5ème année",
+        "5eme année": "5ème année",
+        "5ème annee": "5ème année",
+    }
+
+    # Normaliser le nom de l'année cible
+    normalized_annee = None
+    if target_annee:
+        annee_lower = target_annee.nom.lower().strip()
+        normalized_annee = annee_mapping.get(annee_lower, target_annee.nom)
+
     # Filtrer les matières spécifiquement pour la filière et l'année sélectionnée
-    if selected_filiere and target_annee:
-        matieres = Matiere.query.filter_by(
-            filiere_id=selected_filiere, annee=target_annee.nom
+    # Cela évite les doublons de matières entre différentes filières
+    # On compare avec le nom normalisé ET le nom original pour maximiser les chances de trouver
+    if selected_filiere and normalized_annee:
+        # Recherche avec le nom normalisé OU le nom original
+        matieres = Matiere.query.filter(
+            Matiere.filiere_id == selected_filiere,
+            db.or_(
+                Matiere.annee == normalized_annee,
+                Matiere.annee == target_annee.nom
+            )
         ).all()
+    elif selected_filiere:
+        # Si seulement la filière est sélectionnée, afficher toutes les matières de cette filière
+        matieres = Matiere.query.filter_by(filiere_id=selected_filiere).all()
     else:
-        matieres = []  # Liste vide si rien n'est sélectionné
+        # Aucune sélection : liste vide pour éviter la confusion
+        matieres = []
 
     # Structure de données pour l'emploi du temps (Créneaux Fixes)
     jours = ["Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi"]

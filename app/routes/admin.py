@@ -1111,8 +1111,15 @@ def notes():
         User, Etudiant.user_id == User.id
     )
 
+    # Normaliser l'année si fournie pour gérer les différentes variantes
+    from app.utils.utils import normalize_annee
+
     if annee:
-        notes_query = notes_query.filter(Etudiant.annee == annee)
+        normalized_annee = normalize_annee(annee)
+        # Filtrer avec l'année normalisée OU l'année originale
+        notes_query = notes_query.filter(
+            db.or_(Etudiant.annee == normalized_annee, Etudiant.annee == annee)
+        )
     if filiere:
         notes_query = notes_query.filter(Etudiant.filiere == filiere)
     if search:
@@ -2591,41 +2598,12 @@ def admin_emploi_temps():
     if selected_annee:
         target_annee = Annee.query.get(selected_annee)
 
-    # Normalisation des noms d'années pour éviter les incohérences
-    # Mapping des différentes variantes vers un format standard
-    annee_mapping = {
-        "1 ere annee": "1ère année",
-        "1ere annee": "1ère année",
-        "1 ère année": "1ère année",
-        "1ere année": "1ère année",
-        "1ère annee": "1ère année",
-        "2 eme annee": "2ème année",
-        "2eme annee": "2ème année",
-        "2 ème année": "2ème année",
-        "2eme année": "2ème année",
-        "2ème annee": "2ème année",
-        "3 eme annee": "3ème année",
-        "3eme annee": "3ème année",
-        "3 ème année": "3ème année",
-        "3eme année": "3ème année",
-        "3ème annee": "3ème année",
-        "4 eme annee": "4ème année",
-        "4eme annee": "4ème année",
-        "4 ème année": "4ème année",
-        "4eme année": "4ème année",
-        "4ème annee": "4ème année",
-        "5 eme annee": "5ème année",
-        "5eme annee": "5ème année",
-        "5 ème année": "5ème année",
-        "5eme année": "5ème année",
-        "5ème annee": "5ème année",
-    }
+    # Normaliser le nom de l'année cible avec la fonction utilitaire globale
+    from app.utils.utils import normalize_annee
 
-    # Normaliser le nom de l'année cible
     normalized_annee = None
     if target_annee:
-        annee_lower = target_annee.nom.lower().strip()
-        normalized_annee = annee_mapping.get(annee_lower, target_annee.nom)
+        normalized_annee = normalize_annee(target_annee.nom)
 
     # Filtrer les matières spécifiquement pour la filière et l'année sélectionnée
     # Cela évite les doublons de matières entre différentes filières
@@ -2635,9 +2613,8 @@ def admin_emploi_temps():
         matieres = Matiere.query.filter(
             Matiere.filiere_id == selected_filiere,
             db.or_(
-                Matiere.annee == normalized_annee,
-                Matiere.annee == target_annee.nom
-            )
+                Matiere.annee == normalized_annee, Matiere.annee == target_annee.nom
+            ),
         ).all()
     elif selected_filiere:
         # Si seulement la filière est sélectionnée, afficher toutes les matières de cette filière
@@ -2658,10 +2635,28 @@ def admin_emploi_temps():
     # Traitement du formulaire POST (Enregistrement)
     if request.method == "POST" and selected_filiere:
         try:
+            # Fonction de validation locale (ou pourrait être dans utils/services)
+            def enseignant_est_disponible(session, enseignant_id, jour, heure_debut, heure_fin, exclude_id=None):
+                """Vérifie si un enseignant est disponible sur un créneau donné."""
+                q = session.query(EmploiTemps).filter(
+                    EmploiTemps.enseignant_id == enseignant_id,
+                    EmploiTemps.jour == jour,
+                    EmploiTemps.heure_debut < heure_fin,
+                    EmploiTemps.heure_fin > heure_debut
+                )
+                if exclude_id:
+                    q = q.filter(EmploiTemps.id != exclude_id)
+                return not session.query(q.exists()).scalar()
+
+            conflict_detected = False
+            
             for jour in jours:
                 for horaire in horaires:
                     matiere_id = request.form.get(f"matiere_{jour}_{horaire}")
-                    salle = request.form.get(f"salle_{jour}_{horaire}", "À définir")
+                    salle_input = request.form.get(f"salle_{jour}_{horaire}", "").strip()
+                    
+                    # Gestion de la salle : NULL si vide ou "À définir"
+                    salle = None if not salle_input or salle_input == "À définir" else salle_input
 
                     heure_debut_str, heure_fin_str = horaire.split(" - ")
                     heure_debut = datetime.strptime(heure_debut_str, "%H:%M").time()
@@ -2674,16 +2669,26 @@ def admin_emploi_temps():
 
                     if matiere_id:
                         matiere = Matiere.query.get(matiere_id)
-                        if not emploi:
-                            emploi = EmploiTemps(
-                                filiere_id=selected_filiere,
-                                matiere_id=matiere_id,
-                                enseignant_id=matiere.enseignant_id,
-                                jour=jour,
-                                heure_debut=heure_debut,
-                                heure_fin=heure_fin,
-                                salle=salle,
-                            )
+                        if matiere:
+                            # Validation de disponibilité de l'enseignant
+                            # On passe l'ID de l'emploi actuel pour l'exclure de la vérification (cas de modification)
+                            emploi_id = emploi.id if emploi else None
+                            if not enseignant_est_disponible(db.session, matiere.enseignant_id, jour, heure_debut, heure_fin, emploi_id):
+                                flash(f"❌ Conflit : L'enseignant {matiere.enseignant.nom} de {matiere.nom} est déjà occupé le {jour} de {horaire}.", "error")
+                                conflict_detected = True
+                                continue # On ne sauvegarde pas ce créneau spécifique
+
+                            if not emploi:
+                                emploi = EmploiTemps(
+                                    filiere_id=selected_filiere,
+                                    matiere_id=matiere_id,
+                                    enseignant_id=matiere.enseignant_id,
+                                    jour=jour,
+                                    heure_debut=heure_debut,
+                                    heure_fin=heure_fin,
+                                    salle=salle,
+                                )
+                                
                             db.session.add(emploi)
                         else:
                             emploi.matiere_id = matiere_id

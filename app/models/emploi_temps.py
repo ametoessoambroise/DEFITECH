@@ -23,24 +23,35 @@ class EmploiTemps(db.Model):
     __table_args__ = (
         # Un enseignant ne peut pas avoir deux cours en même temps
         db.UniqueConstraint(
-            'enseignant_id', 'jour', 'heure_debut', 'heure_fin',
-            name='_enseignant_jour_creneau_uc'
+            "enseignant_id",
+            "jour",
+            "heure_debut",
+            "heure_fin",
+            name="_enseignant_jour_creneau_uc",
         ),
-        # Une salle ne peut pas être occupée deux fois en même temps
-        db.UniqueConstraint(
-            'salle', 'jour', 'heure_debut', 'heure_fin',
-            name='_salle_jour_creneau_uc'
+        # Une salle ne peut pas être occupée deux fois en même temps (seulement si salle définie)
+        # On utilise un Index partiel au lieu d'une UniqueConstraint standard
+        db.Index(
+            "idx_salle_jour_creneau_unique",
+            "salle",
+            "jour",
+            "heure_debut",
+            "heure_fin",
+            unique=True,
+            postgresql_where=db.text("salle IS NOT NULL"),
         ),
     )
 
     id = db.Column(db.Integer, primary_key=True)
-    enseignant_id = db.Column(db.Integer, db.ForeignKey("enseignant.id"), nullable=False)
+    enseignant_id = db.Column(
+        db.Integer, db.ForeignKey("enseignant.id"), nullable=False
+    )
     filiere_id = db.Column(db.Integer, db.ForeignKey("filiere.id"), nullable=False)
     matiere_id = db.Column(db.Integer, db.ForeignKey("matiere.id"), nullable=False)
     jour = db.Column(db.String(50), nullable=False)
     heure_debut = db.Column(db.Time, nullable=False)
     heure_fin = db.Column(db.Time, nullable=False)
-    salle = db.Column(db.String(100), nullable=False)
+    salle = db.Column(db.String(100), nullable=True)
 
     # Relationships
     enseignant = db.relationship("Enseignant", backref="emplois_temps")
@@ -52,16 +63,18 @@ class EmploiTemps(db.Model):
             f"<EmploiTemps id={self.id} enseignant_id={self.enseignant_id} "
             f"matiere_id={self.matiere_id} {self.jour} {self.heure_debut}-{self.heure_fin}>"
         )
-    
+
     def to_dict(self):
         """Convertit l'objet en dictionnaire pour la sérialisation JSON"""
         return {
-            'id': self.id,
-            'enseignant_id': self.enseignant_id,
-            'filiere_id': self.filiere_id,
-            'matiere_id': self.matiere_id,
-            'jour': self.jour,
-            'heure_debut': self.heure_debut.strftime('%H:%M') if self.heure_debut else None,
-            'heure_fin': self.heure_fin.strftime('%H:%M') if self.heure_fin else None,
-            'salle': self.salle
+            "id": self.id,
+            "enseignant_id": self.enseignant_id,
+            "filiere_id": self.filiere_id,
+            "matiere_id": self.matiere_id,
+            "jour": self.jour,
+            "heure_debut": (
+                self.heure_debut.strftime("%H:%M") if self.heure_debut else None
+            ),
+            "heure_fin": self.heure_fin.strftime("%H:%M") if self.heure_fin else None,
+            "salle": self.salle,
         }

@@ -109,7 +109,7 @@
               <i class="fas fa-user-circle mr-1"></i> {{ current_user.prenom }}
             </span>
             <a
-              href="{% if current_user.role == 'admin' %}{{ url_for('admin.dashboard') }}{% elif current_user.role == 'enseignant' %}{{ url_for('teachers.dashboard') }}{% elif current_user.role == 'etudiant' %}{{ url_for('students.etudiant_dashboard') }}{% else %}{{ url_for('main.index') }}{% endif %}"
+              href="{% if current_user.role == 'admin' %}{{ url_for('admin.dashboard') }}{% elif current_user.role == 'enseignant' %}{{ url_for('teachers.dashboard') }}{% elif current_user.role == 'etudiant' %}{{ url_for('students.dashboard') }}{% else %}{{ url_for('main.index') }}{% endif %}"
               class="inline-flex items-center px-3 py-1 border border-transparent text-sm font-medium rounded-md text-primary-700 bg-white hover:bg-primary-50"
             >
               <img
@@ -163,9 +163,62 @@
           >
             <i class="fas fa-chart-line mr-2"></i> Progression
           </a>
-          <a
-            href="{% if current_user.role == 'admin' %}{{ url_for('admin.dashboard') }}{% elif current_user.role == 'teacher' %}{{ url_for('teachers.dashboard') }}{% elif current_user.role == 'student' %}{{ url_for('students.etudiant_dashboard') }}{% else %}{{ url_for('main.index') }}{% endif %}"
-            class="{% if request.endpoint in ['admin.dashboard', 'teachers.dashboard', 'students.etudiant_dashboard'] %}bg-primary-800 text-white{% else %}text-primary-100 hover:bg-primary-600 hover:text-white{% endif %} block pl-3 pr-4 py-2 border-l-4 border-primary-500 text-base font-medium"
+          <a2026-01-07T11:23:30.082336604Z   File "/opt/render/project/src/.venv/lib/python3.13/site-packages/flask_login/utils.py", line 290, in decorated_view
+2026-01-07T11:23:30.082341375Z     return current_app.ensure_sync(func)(*args, **kwargs)
+2026-01-07T11:23:30.082344835Z            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+2026-01-07T11:23:30.082348065Z   File "/opt/render/project/src/app/routes/study_buddy.py", line 167, in index
+2026-01-07T11:23:30.082351635Z     return render_template(
+2026-01-07T11:23:30.082355095Z         "study_buddy/index.html",
+2026-01-07T11:23:30.082358605Z     ...<3 lines>...
+2026-01-07T11:23:30.082362245Z         due_flashcards=due_flashcards,
+2026-01-07T11:23:30.082366005Z     )
+2026-01-07T11:23:30.082368665Z   File "/opt/render/project/src/.venv/lib/python3.13/site-packages/flask/templating.py", line 151, in render_template
+2026-01-07T11:23:30.082370875Z     return _render(app, template, context)
+2026-01-07T11:23:30.082373075Z   File "/opt/render/project/src/.venv/lib/python3.13/site-packages/flask/templating.py", line 132, in _render
+2026-01-07T11:23:30.082375205Z     rv = template.render(context)
+2026-01-07T11:23:30.082377325Z   File "/opt/render/project/src/.venv/lib/python3.13/site-packages/jinja2/environment.py", line 1295, in render
+2026-01-07T11:23:30.082379355Z     self.environment.handle_exception()
+2026-01-07T11:23:30.082381656Z     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+2026-01-07T11:23:30.082383785Z   File "/opt/render/project/src/.venv/lib/python3.13/site-packages/jinja2/environment.py", line 942, in handle_exception
+2026-01-07T11:23:30.082385925Z     raise rewrite_traceback_stack(source=source)
+2026-01-07T11:23:30.082388036Z   File "/opt/render/project/src/app/templates/study_buddy/index.html", line 1, in top-level template code
+2026-01-07T11:23:30.082390066Z     {% extends "study_buddy/base.html" %}
+2026-01-07T11:23:30.082392156Z     ^^^^^^^^^^^^^^^^^^^^^^^^^
+2026-01-07T11:23:30.082394246Z   File "/opt/render/project/src/app/templates/study_buddy/base.html", line 112, in top-level template code
+2026-01-07T11:23:30.082409466Z     href="{% if current_user.role == 'admin' %}{{ url_for('admin.dashboard') }}{% elif current_user.role == 'enseignant' %}{{ url_for('teachers.dashboard') }}{% elif current_user.role == 'etudiant' %}{{ url_for('students.etudiant_dashboard') }}{% else %}{{ url_for('main.index') }}{% endif %}"
+2026-01-07T11:23:30.082412086Z     ^^^^^^^^^^^
+2026-01-07T11:23:30.082414476Z   File "/opt/render/project/src/.venv/lib/python3.13/site-packages/flask/app.py", line 1697, in url_for
+2026-01-07T11:23:30.082416676Z     return self.handle_url_build_error(error, endpoint, values)
+2026-01-07T11:23:30.082418856Z            ~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^
+2026-01-07T11:23:30.082421016Z   File "/opt/render/project/src/.venv/lib/python3.13/site-packages/flask/app.py", line 1686, in url_for
+2026-01-07T11:23:30.082423126Z     rv = url_adapter.build(  # type: ignore[union-attr]
+2026-01-07T11:23:30.082428706Z         endpoint,
+2026-01-07T11:23:30.082471807Z     ...<3 lines>...
+2026-01-07T11:23:30.082479478Z         force_external=_external,
+2026-01-07T11:23:30.082481688Z     )
+2026-01-07T11:23:30.082493478Z   File "/opt/render/project/src/.venv/lib/python3.13/site-packages/werkzeug/routing/map.py", line 950, in build
+2026-01-07T11:23:30.082495998Z     raise BuildError(endpoint, values, method, self)
+2026-01-07T11:23:30.082499618Z werkzeug.routing.exceptions.BuildError: Could not build url for endpoint 'students.etudiant_dashboard'. Did you mean 'students.dashboard' instead?
+2026-01-07T11:23:30.337374258Z 127.0.0.1 - - [07/Jan/2026:11:23:30 +0000] "GET /study-buddy/ HTTP/1.1" 500 62672 "https://defitech-42v7.onrender.com/etudiant/dashboard" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36"
+2026-01-07T11:23:30.49334002Z 10.228.24.96 - - [07/Jan/2026:11:23:30 +0000] "GET /health HTTP/1.1" 200 44 "-" "Render/1.0"
+2026-01-07T11:23:30.551286286Z 10.228.24.96 - - [07/Jan/2026:11:23:30 +0000] "GET /health HTTP/1.1" 200 44 "-" "Render/1.0"
+2026-01-07T11:23:30.771285945Z 127.0.0.1 - - [07/Jan/2026:11:23:30 +0000] "GET /static/css/style.css HTTP/1.1" 304 0 "https://defitech-42v7.onrender.com/study-buddy/" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36"
+2026-01-07T11:23:30.773180309Z 127.0.0.1 - - [07/Jan/2026:11:23:30 +0000] "GET /static/css/compiled.css HTTP/1.1" 304 0 "https://defitech-42v7.onrender.com/study-buddy/" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36"
+2026-01-07T11:23:30.909394872Z 127.0.0.1 - - [07/Jan/2026:11:23:30 +0000] "GET /static/js/notifications.js HTTP/1.1" 304 0 "https://defitech-42v7.onrender.com/study-buddy/" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36"
+2026-01-07T11:23:31.172580365Z 127.0.0.1 - - [07/Jan/2026:11:23:31 +0000] "GET /static/js/cloudinary_uploader.js HTTP/1.1" 304 0 "https://defitech-42v7.onrender.com/study-buddy/" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36"
+2026-01-07T11:23:31.271662016Z 127.0.0.1 - - [07/Jan/2026:11:23:31 +0000] "GET /static/js/app_lock.js HTTP/1.1" 304 0 "https://defitech-42v7.onrender.com/study-buddy/" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36"
+2026-01-07T11:23:31.439799801Z 127.0.0.1 - - [07/Jan/2026:11:23:31 +0000] "GET /static/sounds/notification.mp3 HTTP/1.1" 206 40704 "https://defitech-42v7.onrender.com/study-buddy/" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36"
+2026-01-07T11:23:31.924526848Z 127.0.0.1 - - [07/Jan/2026:11:23:31 +0000] "GET /notifications/api HTTP/1.1" 200 440 "https://defitech-42v7.onrender.com/study-buddy/" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36"
+2026-01-07T11:23:31.958820415Z 127.0.0.1 - - [07/Jan/2026:11:23:31 +0000] "GET /api/app-lock/status HTTP/1.1" 200 73 "https://defitech-42v7.onrender.com/study-buddy/" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36"
+2026-01-07T11:23:34.851945755Z 127.0.0.1 - - [07/Jan/2026:11:23:34 +0000] "GET /static/manifest.json HTTP/1.1" 304 0 "https://defitech-42v7.onrender.com/study-buddy/" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36"
+2026-01-07T11:23:35.197492391Z 127.0.0.1 - - [07/Jan/2026:11:23:35 +0000] "GET /static/images/icons/icon-144x144.png HTTP/1.1" 304 0 "https://defitech-42v7.onrender.com/study-buddy/" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36"
+2026-01-07T11:23:35.356734119Z 10.228.24.96 - - [07/Jan/2026:11:23:35 +0000] "GET /health HTTP/1.1" 200 44 "-" "Render/1.0"
+2026-01-07T11:23:40.339521331Z 10.228.24.96 - - [07/Jan/2026:11:23:40 +0000] "GET /health HTTP/1.1" 200 44 "-" "Render/1.0"
+2026-01-07T11:23:44.183179458Z INFO:app.sockets.videoconference:🧹 Nettoyage terminé. 0 mappings supprimés
+2026-01-07T11:23:45.395937813Z 10.228.24.96 - - [07/Jan/2026:11:23:45 +0000] "GET /health HTTP/1.1" 200 44 "-" "Render/1.0"
+2026-01-07T11:23:50.395139987Z 10.228.24.96 - - [07/Jan/2026:11:23:50 +0000] "GET /health HTTP/1.1" 200 44 "-" "Render/1.0"
+            href="{% if current_user.role == 'admin' %}{{ url_for('admin.dashboard') }}{% elif current_user.role == 'enseignant' %}{{ url_for('teachers.dashboard') }}{% elif current_user.role == 'etudiant' %}{{ url_for('students.dashboard') }}{% else %}{{ url_for('main.index') }}{% endif %}"
+            class="{% if request.endpoint in ['admin.dashboard', 'teachers.dashboard', 'students.dashboard'] %}bg-primary-800 text-white{% else %}text-primary-100 hover:bg-primary-600 hover:text-white{% endif %} block pl-3 pr-4 py-2 border-l-4 border-primary-500 text-base font-medium"
           >
             <i class="fas fa-th-large mr-2"></i> Dashboard
           </a>

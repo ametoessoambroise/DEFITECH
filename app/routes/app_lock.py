@@ -199,6 +199,7 @@ def registration_options():
 
 
 @app_lock_bp.route("/api/app-lock/webauthn/register-verify", methods=["POST"])
+@csrf.exempt
 @login_required
 def registration_verify():
     """Vérifie la réponse d'enregistrement et enregistre la clé."""

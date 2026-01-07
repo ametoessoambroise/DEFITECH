@@ -37,9 +37,7 @@ const State = {
     isRecording: false,
     isSystemTheme: !localStorage.getItem('theme'),
     lastUserMessage: '',
-    pendingAttachments: [],
-    pagination: { page: 1, hasMore: true, isLoading: false }, // For messages
-    convPagination: { page: 1, hasMore: true, isLoading: false } // For conversations
+    convPagination: { page: 1, hasMore: true, isLoading: false }
 };
 
 const UI = {
@@ -72,7 +70,7 @@ const UI = {
 
         this.loadConversations();
 
-        // Scroll listener for message pagination (load more history)
+        // Scroll listener for messages (existing)
         if (this.elements.messages) {
             this.elements.messages.addEventListener('scroll', () => {
                 if (this.elements.messages.scrollTop === 0) {
@@ -81,14 +79,12 @@ const UI = {
             });
         }
 
-        // Scroll listener for conversation list pagination (infinite scroll)
+        // Scroll listener for conversations (infinite scroll)
         if (this.elements.conversationList) {
             this.elements.conversationList.addEventListener('scroll', () => {
                 const { scrollTop, scrollHeight, clientHeight } = this.elements.conversationList;
-                if (scrollHeight - scrollTop <= clientHeight + 50) {
-                    if (State.convPagination.hasMore && !State.convPagination.isLoading) {
-                        this.loadConversations(State.convPagination.page + 1);
-                    }
+                if (scrollTop + clientHeight >= scrollHeight - 30) { // Near bottom
+                    this.loadMoreConversations();
                 }
             });
         }
@@ -113,74 +109,74 @@ const UI = {
         });
     },
 
-    async loadConversations(page = 1) {
-        if (State.convPagination.isLoading) return;
-        const listEl = this.elements.conversationList;
-        if (!listEl) return;
+    async loadConversations(append = false) {
+        if (!append) {
+            State.convPagination = { page: 1, hasMore: true, isLoading: false };
+        }
 
+        if (State.convPagination.isLoading) return;
         State.convPagination.isLoading = true;
 
         try {
-            const response = await fetch(`${CONFIG.endpoints.history}?page=${page}`);
+            const response = await fetch(`${CONFIG.endpoints.history}?page=${State.convPagination.page}`);
             if (!response.ok) throw new Error('Failed to load conversations');
 
             const data = await response.json();
             const conversations = data.conversations || [];
+            const listEl = this.elements.conversationList;
 
-            State.convPagination.page = data.page;
-            State.convPagination.hasMore = data.has_next;
+            if (!listEl) return;
 
-            if (page === 1) {
-                listEl.innerHTML = '';
+            if (!append) listEl.innerHTML = '';
+
+            if (conversations.length === 0 && !append) {
+                listEl.innerHTML = '<div class="text-center py-8 text-gray-400 text-sm italic">Aucune conversation récente</div>';
+                State.convPagination.hasMore = false;
+                return;
             }
 
-            if (conversations.length === 0 && page === 1) {
-                listEl.innerHTML = '<div class="text-center py-8 text-gray-400 text-sm italic">Aucune conversation récente</div>';
-                return;
+            if (data.pagination) {
+                State.convPagination.hasMore = data.pagination.has_next;
             }
 
             conversations.forEach(conv => {
                 const el = document.createElement('div');
-                el.className = "relative group conversation-item-container mb-2";
+                el.className = "relative group mb-1";
 
                 // Style calc
                 const isActive = State.currentConversationId === conv.id;
-                const baseClass = "block p-3 rounded-xl transition-all duration-200 hover:bg-gray-100 dark:hover:bg-dark-surface group conversation-item";
+                const baseClass = "block p-3 rounded-xl transition-all duration-200 hover:bg-gray-100 dark:hover:bg-dark-surface group conversation-item flex items-center gap-3";
                 const activeClass = "bg-primary-50 dark:bg-primary-900/10 border border-primary-100 dark:border-primary-800";
                 const inactiveClass = "border border-transparent";
 
                 const time = new Date(conv.updated_at).toLocaleDateString();
 
                 el.innerHTML = `
-                    <a href="/defAI" class="${baseClass} ${isActive ? activeClass : inactiveClass}" data-id="${conv.id}">
-                        <div class="flex items-center gap-3">
-                            <div class="w-8 h-8 rounded-lg bg-primary-100 dark:bg-primary-900/30 flex items-center justify-center text-primary-600 dark:text-primary-400 flex-shrink-0">
-                                <i class="fas fa-comments text-xs"></i>
-                            </div>
-                            <div class="flex-1 min-w-0">
-                                <div class="flex items-center justify-between mb-0.5">
-                                    <h4 class="text-sm font-semibold truncate text-gray-900 dark:text-gray-100 group-hover:text-primary-600 transition-colors">
-                                        ${this.escapeHtml(conv.title || 'Nouvelle conversation')}
-                                    </h4>
-                                </div>
-                                <p class="text-xs text-gray-500 dark:text-gray-400 truncate leading-relaxed">
-                                    ${this.escapeHtml(conv.last_message || 'Pas de message')}
-                                </p>
-                            </div>
-                            <div class="text-[10px] text-gray-400 flex-shrink-0">
-                                ${time}
-                            </div>
+                    <a href="/defAI" class="${baseClass} ${isActive ? activeClass : inactiveClass} flex-1 min-w-0" data-id="${conv.id}">
+                        <div class="w-8 h-8 rounded-lg bg-primary-100 dark:bg-primary-900/30 flex items-center justify-center text-primary-600 dark:text-primary-400 flex-shrink-0">
+                            <i class="fas fa-comments text-xs"></i>
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <h4 class="text-sm font-medium text-gray-900 dark:text-gray-100 truncate group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors">
+                                ${conv.title || 'Nouvelle conversation'}
+                            </h4>
+                            <p class="text-xs text-gray-500 dark:text-gray-400 truncate">
+                                ${conv.last_message || '...'}
+                            </p>
+                        </div>
+                        <div class="text-[10px] text-gray-400 flex-shrink-0 pr-6">
+                            ${time}
                         </div>
                     </a>
-                    <button class="absolute right-2 top-1/2 -translate-y-1/2 p-2 text-gray-400 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-all duration-200 delete-conv-btn" 
+                    <button class="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 flex items-center justify-center text-gray-400 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-all z-10 delete-conv-btn" 
                             title="Supprimer la conversation"
-                            onclick="UI.deleteConversation(${conv.id}, event)">
+                            onclick="UI.deleteConversation(event, ${conv.id})">
                         <i class="fas fa-trash-alt text-xs"></i>
                     </button>
                 `;
 
-                const linkEl = el.querySelector('a');
-                linkEl.addEventListener('click', (e) => {
+                const link = el.querySelector('a');
+                link.addEventListener('click', (e) => {
                     e.preventDefault();
                     this.setActiveConversation(conv.id, true, conv.link || conv.id);
                     if (window.innerWidth < 1024) this.toggleSidebar();
@@ -194,6 +190,49 @@ const UI = {
             this.showToast('Impossible de charger les conversations', 'error');
         } finally {
             State.convPagination.isLoading = false;
+        }
+    },
+
+    async loadMoreConversations() {
+        if (!State.convPagination.hasMore || State.convPagination.isLoading) return;
+        State.convPagination.page++;
+        await this.loadConversations(true);
+    },
+
+    async deleteConversation(e, id) {
+        e.preventDefault();
+        e.stopPropagation();
+
+        if (!confirm('Voulez-vous vraiment supprimer cette conversation ?')) return;
+
+        try {
+            const response = await fetch(`/api/ai/conversations/${id}/delete`, {
+                method: 'DELETE',
+                headers: {
+                    'X-CSRFToken': CONFIG.csrfToken
+                }
+            });
+
+            if (!response.ok) throw new Error('Failed to delete conversation');
+
+            const data = await response.json();
+            if (data.success) {
+                this.showToast('Conversation supprimée', 'success');
+
+                // If the deleted conversation was the active one, start a new chat
+                if (State.currentConversationId === id) {
+                    this.clearActiveConversation();
+                    window.history.pushState({}, '', '/defAI');
+                }
+
+                // Reload list (or remove element)
+                this.loadConversations();
+            } else {
+                this.showToast(data.error || 'Erreur lors de la suppression', 'error');
+            }
+        } catch (error) {
+            console.error('Delete error:', error);
+            this.showToast('Erreur serveur lors de la suppression', 'error');
         }
     },
 
@@ -221,38 +260,6 @@ const UI = {
         if (pushState) {
             const url = '/defAI';
             window.history.pushState({ conversationId: id }, '', url);
-        }
-    },
-
-    async deleteConversation(id, event) {
-        if (event) {
-            event.preventDefault();
-            event.stopPropagation();
-        }
-
-        if (!confirm('Es-tu sûr de vouloir supprimer cette conversation ?')) return;
-
-        try {
-            const response = await fetch(`/api/ai/conversations/${id}`, {
-                method: 'DELETE',
-                headers: {
-                    'X-CSRFToken': CONFIG.csrfToken
-                }
-            });
-
-            if (!response.ok) throw new Error('Failed to delete');
-
-            this.showToast('supprimée', 'success');
-
-            if (State.currentConversationId === id) {
-                this.clearActiveConversation();
-                window.history.pushState({}, '', '/defAI');
-            }
-
-            this.loadConversations(1);
-        } catch (error) {
-            console.error('Delete error:', error);
-            this.showToast('Erreur lors de la suppression', 'error');
         }
     },
 
@@ -296,6 +303,7 @@ const UI = {
             });
 
             this.scrollToBottom();
+            // hljs.highlightAll(); // Removed to prevent double highlighting
         } catch (error) {
             console.error('Error loading history:', error);
             this.showToast('Erreur lors du chargement de la conversation', 'error');
@@ -348,6 +356,9 @@ const UI = {
                 fragment.appendChild(this.createMessageElement(msg.content, isUser, msg.attachments || []));
             });
             this.elements.messages.insertBefore(fragment, this.elements.messages.firstChild);
+
+            // hljs.highlightAll(); // Removed
+
 
             // Maintain scroll position
             const newHeight = this.elements.messages.scrollHeight;
@@ -920,6 +931,12 @@ const UI = {
                 // Enhance Code Blocks
                 this.enhanceCodeBlocks(contentWrapper);
 
+                // Highlight code blocks
+                // Marked is configured to highlight, so we don't need manual highlighting here
+                // contentWrapper.querySelectorAll('pre code').forEach((block) => {
+                //    hljs.highlightElement(block);
+                // });
+
                 // Render Math
                 this.renderMath(contentWrapper);
 
@@ -1448,8 +1465,7 @@ const UI = {
             const payload = {
                 message: message,
                 conversation_id: State.currentConversationId,
-                attachments: attachments,
-                stream: true // Activation du streaming
+                attachments: attachments
             };
 
             const response = await fetch(CONFIG.endpoints.chat, {
@@ -1461,103 +1477,62 @@ const UI = {
                 body: JSON.stringify(payload)
             });
 
-            // Retirer l'indicateur de saisie dès que la réponse commence
+            // Remove Typing Indicator
             typingObj.remove();
 
             if (!response.ok) {
                 const errData = await response.json();
-                this.showToast(errData.error || 'Erreur réseau', 'error');
-                throw new Error(errData.error || 'Erreur réseau');
+                this.showToast(errData.error || 'Network response was not ok', 'error');
+                throw new Error(errData.error || 'Network response was not ok');
             }
 
-            // Gestion du flux (Streaming)
-            const reader = response.body.getReader();
-            const decoder = new TextDecoder();
-            let fullAIContent = "";
-            let messageEl = null;
-            let contentDiv = null;
+            const data = await response.json();
 
-            while (true) {
-                const { done, value } = await reader.read();
-                if (done) break;
-
-                const chunk = decoder.decode(value, { stream: true });
-                const lines = chunk.split('\n');
-
-                for (const line of lines) {
-                    if (!line.trim() || !line.startsWith('data: ')) continue;
-
-                    try {
-                        const data = JSON.parse(line.slice(6));
-
-                        if (data.status === 'starting' && data.conversation_id) {
-                            State.currentConversationId = data.conversation_id;
-                            // Créer l'élément de message AI
-                            messageEl = this.createMessageElement('', false);
-                            this.elements.messages.appendChild(messageEl);
-                            contentDiv = messageEl.querySelector('.markdown-body');
-                        }
-                        else if (data.chunk) {
-                            fullAIContent += data.chunk;
-                            if (contentDiv) {
-                                contentDiv.innerHTML = marked.parse(this.formatAIContent(fullAIContent));
-                                this.scrollToBottom();
-                            }
-                        }
-                        else if (data.status === 'enriched' && data.response) {
-                            fullAIContent = data.response;
-                            if (contentDiv) {
-                                contentDiv.innerHTML = marked.parse(this.formatAIContent(fullAIContent));
-                                this.scrollToBottom();
-                            }
-                        }
-                        else if (data.status === 'thinking') {
-                            if (data.type === 'web_search') {
-                                this.showWebSearchLoader();
-                            } else if (data.type === 'image_generation') {
-                                this.showImageGenLoader();
-                            }
-                        }
-                        else if (data.status === 'enriching') {
-                            // On réinitialise le contenu pour le streaming de la relance
-                            fullAIContent = "";
-                            this.hideWebSearchLoader();
-                            this.hideImageGenLoader();
-                            if (contentDiv) {
-                                contentDiv.innerHTML = '<div class="typing-dot w-1 h-1 bg-primary-500 rounded-full inline-block animate-bounce mr-1"></div> Raffinement de la réponse...';
-                            }
-                        }
-                        else if (data.status === 'title_updated') {
-                            this.loadConversations(1);
-                        }
-                        else if (data.status === 'completed') {
-                            if (contentDiv) {
-                                if (!fullAIContent.trim()) {
-                                    fullAIContent = "Je ne sais pas quoi répondre. veuillez réessayer";
-                                }
-                                contentDiv.innerHTML = marked.parse(this.formatAIContent(fullAIContent));
-                                // Ajout des barres d'actions si la fonction existe
-                                if (typeof this.renderActionsBar === 'function') {
-                                    contentDiv.innerHTML += this.renderActionsBar(fullAIContent, data.metadata || {});
-                                }
-                                this.enhanceCodeBlocks(contentDiv);
-                                if (typeof this.renderMath === 'function') this.renderMath(contentDiv);
-                            }
-                        }
-                    } catch (e) {
-                        console.error("Erreur parsing chunk:", e);
-                    }
-                }
+            // Update conversation ID if returned
+            if (data.conversation_id) {
+                State.currentConversationId = data.conversation_id;
             }
+
+            // Gérer les loaders dynamiques basés sur la réponse
+            if (data.has_web_search) {
+                this.showWebSearchLoader();
+                await new Promise(resolve => setTimeout(resolve, 1500)); // Petit délai pour l'effet visuel
+                this.hideWebSearchLoader();
+            }
+
+            if (data.has_image_generation) {
+                this.showImageGenLoader();
+            }
+
+            // Note: The API returns { success: true, response: "AI Message...", ... }
+            const aiContent = data.response || data.message || "Je ne sais pas quoi répondre. veuillez réessayer";
+
+            // Add AI Message with Streaming Effect
+            await this.typeAIStream(aiContent, this.elements.messages, data.attachments || [], data);
+
+            if (data.has_image_generation) {
+                // Si une image est en cours, on pourrait attendre ou laisser le polling (existant peut-être) faire le job
+                // Ici on cache juste le loader après le texte
+                setTimeout(() => this.hideImageGenLoader(), 2000);
+            }
+
+            this.scrollToBottom();
+
+            // Highlight Code Blocks
+            // hljs.highlightAll(); // Removed
+
         } catch (error) {
-            console.error('Chat error:', error);
-            typingObj?.remove();
-            this.showToast('Erreur lors de la communication avec defAI', 'error');
+            console.error('Error:', error);
+            typingObj.remove();
+            this.elements.messages.appendChild(this.createMessageElement(`Désolé, une erreur est survenue: ${error.message}`, false));
+            this.scrollToBottom();
         } finally {
             State.isTyping = false;
         }
     }
 };
+
+// Global Helper for Welcome Buttons
 window.setInput = (text) => {
     const input = document.querySelector('#userInput');
     if (input) {

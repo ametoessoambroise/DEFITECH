@@ -27,7 +27,7 @@ def index():
     Page d'accueil (Landing Page).
     Si l'utilisateur est déjà connecté, on pourrait lui proposer un bouton vers son dashboard dans le template.
     """
-    current_year = datetime.datetime.now().year
+    current_year = datetime.datetime.now()
     return render_template("index.html", current_year=current_year)
 
 

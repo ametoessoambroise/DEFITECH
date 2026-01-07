@@ -13,6 +13,7 @@ from flask import (
     url_for,
     send_from_directory,
     Response,
+    stream_with_context,
 )
 from flask_login import login_required, current_user
 import json
@@ -1183,161 +1184,159 @@ def chat():
                     stream_mode = stream_mode.lower() == "true"
 
                 if stream_mode:
+                    user_id_fixed = current_user.id
 
                     def generate_stream():
-                        try:
-                            # 1. Envoyer les métadonnées initiales
-                            yield f"data: {json.dumps({'status': 'starting', 'conversation_id': conversation_id})}\n\n"
+                        with current_app.app_context():
+                            try:
+                                # 1. Envoyer les métadonnées initiales
+                                yield f"data: {json.dumps({'status': 'starting', 'conversation_id': conversation_id})}\n\n"
 
-                            # 2. Premier flux (réponse initiale)
-                            current_response = ""
-                            initial_gemini_response = gemini.stream_generate_response(
-                                prompt=gemini_message,
-                                context=context_data,
-                                conversation_history=messages,
-                                attachments=processed_attachments,
-                            )
-                            for chunk in initial_gemini_response:
-                                current_response += chunk
-                                yield f"data: {json.dumps({'chunk': chunk})}\n\n"
-
-                            # 3. Traiter les outils et enrichir si nécessaire (Boucle de processing)
-                            # On va itérer tant qu'on a des outils à traiter (max 3 itérations pour éviter les boucles infinies)
-                            for _ in range(3):
-                                sm_queries = parse_smart_queries(current_response)
-                                sql_queries = parse_sql_queries(current_response)
-                                data_reqs = parse_data_requests(current_response)
-                                img_reqs = parse_image_requests(current_response)
-
-                                if not (
-                                    sm_queries or sql_queries or data_reqs or img_reqs
-                                ):
-                                    break
-
-                                # Détection du type d'outil pour l'UI
-                                if sm_queries:
-                                    yield f"data: {json.dumps({'status': 'thinking', 'type': 'web_search'})}\n\n"
-                                elif sql_queries:
-                                    yield f"data: {json.dumps({'status': 'thinking', 'type': 'data_analysis'})}\n\n"
-                                elif img_reqs:
-                                    yield f"data: {json.dumps({'status': 'thinking', 'type': 'image_generation'})}\n\n"
-                                else:
-                                    yield f"data: {json.dumps({'status': 'thinking', 'type': 'internal_request'})}\n\n"
-
-                                # Traitement des SMART_QUERY
-                                if sm_queries:
-                                    sm_data = process_smart_queries(
-                                        sm_queries,
-                                        current_user.id,
-                                        user_role,
-                                        conversation_id,
+                                # 2. Premier flux (réponse initiale)
+                                current_response = ""
+                                initial_gemini_response = (
+                                    gemini.stream_generate_response(
+                                        prompt=gemini_message,
+                                        context=context_data,
+                                        conversation_history=messages,
+                                        attachments=processed_attachments,
                                     )
-                                    if sm_data:
-                                        # Relancer Gemini pour enrichir
-                                        enriched_prompt = f"RÉPONSE INITIALE:\n{current_response}\n\n=== DONNÉES RÉCUPÉRÉES ===\n{json.dumps(sm_data, ensure_ascii=False)}\n\nInstructions: Complète ta réponse avec ces données."
-                                        # On pourrait streamer la relance aussi, mais pour simplifier on envoie le bloc final après relance
-                                        relance_resp = call_gemini_api(
-                                            enriched_prompt,
-                                            context_data,
-                                            messages,
-                                            attachments=processed_attachments,
+                                )
+                                for chunk in initial_gemini_response:
+                                    current_response += chunk
+                                    yield f"data: {json.dumps({'chunk': chunk})}\n\n"
+
+                                # 3. Traiter les outils et enrichir si nécessaire (Boucle de processing)
+                                # On va itérer tant qu'on a des outils à traiter (max 3 itérations pour éviter les boucles infinies)
+                                for _ in range(3):
+                                    sm_queries = parse_smart_queries(current_response)
+                                    sql_queries = parse_sql_queries(current_response)
+                                    data_reqs = parse_data_requests(current_response)
+                                    img_reqs = parse_image_requests(current_response)
+
+                                    if not (
+                                        sm_queries
+                                        or sql_queries
+                                        or data_reqs
+                                        or img_reqs
+                                    ):
+                                        break
+
+                                    # Détection du type d'outil pour l'UI
+                                    tool_type = "internal_request"
+                                    if sm_queries:
+                                        tool_type = "web_search"
+                                    elif sql_queries:
+                                        tool_type = "data_analysis"
+                                    elif img_reqs:
+                                        tool_type = "image_generation"
+
+                                    yield f"data: {json.dumps({'status': 'thinking', 'type': tool_type})}\n\n"
+
+                                    enriched_prompt = None
+
+                                    # Traitement des SMART_QUERY
+                                    if sm_queries:
+                                        sm_data = process_smart_queries(
+                                            sm_queries,
+                                            user_id_fixed,
+                                            user_role,
+                                            conversation_id,
                                         )
-                                        if relance_resp["success"]:
-                                            current_response = relance_resp["response"]
-                                            # On nettoie les tags et on envoie la différence ou le bloc final?
-                                            # Pour la simplicité du front, on envoie un event "enriched" avec la réponse complète.
+                                        if sm_data:
+                                        # Relancer Gemini pour enrichir
+                                            enriched_prompt = f"RÉPONSE INITIALE:\n{current_response}\n\n=== DONNÉES RÉCUPÉRÉES ===\n{json.dumps(sm_data, ensure_ascii=False)}\n\nInstructions: Complète ta réponse avec ces données."
                                             current_response = re.sub(
                                                 r"\[SMART_QUERY:[^\]]+\]",
                                                 "",
                                                 current_response,
                                             ).strip()
-                                            yield f"data: {json.dumps({'status': 'enriched', 'response': current_response})}\n\n"
 
-                                # Traitement des SQL_QUERY (Similaire...)
-                                if sql_queries:
-                                    sql_data = process_sql_queries(
-                                        sql_queries, user_role
-                                    )
-                                    if sql_data:
-                                        enriched_prompt_sql = f"RÉPONSE INITIALE:\n{current_response}\n\n=== RÉSULTATS SQL ===\n{json.dumps(sql_data, ensure_ascii=False)}\n\nInstructions: Complète ta réponse."
-                                        relance_resp_sql = call_gemini_api(
-                                            enriched_prompt_sql,
-                                            context_data,
-                                            messages,
-                                            attachments=processed_attachments,
+                                    # Traitement des SQL_QUERY
+                                    elif sql_queries:
+                                        sql_data = process_sql_queries(
+                                            sql_queries, user_role
                                         )
-                                        if relance_resp_sql["success"]:
-                                            current_response = relance_resp_sql[
-                                                "response"
-                                            ]
+                                        if sql_data:
+                                            enriched_prompt = f"RÉPONSE INITIALE:\n{current_response}\n\n=== RÉSULTATS SQL ===\n{json.dumps(sql_data, ensure_ascii=False)}\n\nInstructions: Complète ta réponse."
                                             current_response = re.sub(
                                                 r"\[SQL_QUERY:[^\]]+\]",
                                                 "",
                                                 current_response,
                                             ).strip()
-                                            yield f"data: {json.dumps({'status': 'enriched', 'response': current_response})}\n\n"
 
-                                # Traitement des DATA_REQUESTS (Internal Requests)
-                                if data_reqs:
-                                    all_additional_data = {}
-                                    for data_req in data_reqs:
-                                        try:
-                                            result = orchestrator.execute_request(
-                                                data_req["type"],
-                                                current_user.id,
-                                                user_role,
-                                                request_context=data_req,
-                                            )
-                                            if result["success"]:
-                                                all_additional_data[
-                                                    data_req["type"]
-                                                ] = result["data"]
-                                        except Exception as e:
-                                            logger.error(
-                                                f"Erreur requête interne {data_req['type']}: {e}"
-                                            )
+                                    # Traitement des DATA_REQUESTS (Internal Requests)
+                                    elif data_reqs:
+                                        all_additional_data = {}
+                                        for data_req in data_reqs:
+                                            try:
+                                                result = orchestrator.execute_request(
+                                                    data_req["type"],
+                                                    user_id_fixed,
+                                                    user_role,
+                                                    request_context=data_req,
+                                                )
+                                                if result["success"]:
+                                                    all_additional_data[
+                                                        data_req["type"]
+                                                    ] = result["data"]
+                                            except Exception as e:
+                                                logger.error(
+                                                    f"Erreur requête interne {data_req['type']}: {e}"
+                                                )
 
-                                    if all_additional_data:
-                                        enhanced_prompt = f"""RÉPONSE INITIALE:\n{current_response}\n\n=== DONNÉES SUPPLÉMENTAIRES RÉCUPÉRÉES ===\n{json.dumps(all_additional_data, indent=2, ensure_ascii=False)}\n\n--- QUESTION INITIALE DE L'UTILISATEUR ---\n{message}\n\nFormat ta réponse finale en Markdown complet.\nIMPORTANT : Ne résume pas les parties techniques (codes, scripts). REPRODUIS-LES intégralement dans ta réponse finale."""
-                                        enhanced_response = call_gemini_api(
-                                            enhanced_prompt,
-                                            context_data,
-                                            messages,
-                                            attachments=processed_attachments,
+                                        if all_additional_data:
+                                            enriched_prompt = f"""RÉPONSE INITIALE:\n{current_response}\n\n=== DONNÉES SUPPLÉMENTAIRES RÉCUPÉRÉES ===\n{json.dumps(all_additional_data, indent=2, ensure_ascii=False)}\n\n--- QUESTION INITIALE DE L'UTILISATEUR ---\n{message}\n\nFormat ta réponse finale en Markdown complet.\nIMPORTANT : Ne résume pas les parties techniques (codes, scripts). REPRODUIS-LES intégralement dans ta réponse finale."""
+
+                                    # Si on a un prompt enrichi, on l'exécute en STREAMING
+                                    if enriched_prompt:
+                                        yield f"data: {json.dumps({'status': 'enriching'})}\n\n"
+                                        relance_stream = (
+                                            gemini.stream_generate_response(
+                                                prompt=enriched_prompt,
+                                                context=context_data,
+                                                conversation_history=messages,
+                                                attachments=processed_attachments,
+                                            )
                                         )
-                                        if enhanced_response["success"]:
-                                            current_response = enhanced_response[
-                                                "response"
-                                            ]
-                                            yield f"data: {json.dumps({'status': 'enriched', 'response': current_response})}\n\n"
+                                        # On remplace la réponse actuelle par la nouvelle streamée
+                                        current_response = ""
+                                        for chunk in relance_stream:
+                                            current_response += chunk
+                                            yield f"data: {json.dumps({'chunk': chunk, 'enriched': True})}\n\n"
 
-                            # 4. Sauvegarde finale et clôture
-                            save_message(conversation_id, "assistant", current_response)
+                                # 4. Sauvegarde finale et clôture
+                                save_message(
+                                    conversation_id, "assistant", current_response
+                                )
 
-                            # Mettre à jour le titre si c'est une nouvelle conversation
-                            conv_obj = AIConversation.query.get(conversation_id)
-                            if conv_obj and (
-                                not conv_obj.title
-                                or conv_obj.title == "Nouvelle conversation"
-                            ):
-                                try:
-                                    new_title = generate_conversation_title(
-                                        message, current_response
-                                    )
-                                    conv_obj.title = new_title
-                                    db.session.commit()
-                                    yield f"data: {json.dumps({'status': 'title_updated', 'title': new_title})}\n\n"
-                                except Exception as e:
-                                    logger.error(
-                                        f"Erreur lors de la mise à jour du titre: {e}"
-                                    )
+                                # Mettre à jour le titre si c'est une nouvelle conversation
+                                conv_obj = AIConversation.query.get(conversation_id)
+                                if conv_obj and (
+                                    not conv_obj.title
+                                    or conv_obj.title == "Nouvelle conversation"
+                                ):
+                                    try:
+                                        new_title = generate_conversation_title(
+                                            message, current_response
+                                        )
+                                        conv_obj.title = new_title
+                                        db.session.commit()
+                                        yield f"data: {json.dumps({'status': 'title_updated', 'title': new_title})}\n\n"
+                                    except Exception as e:
+                                        logger.error(
+                                            f"Erreur lors de la mise à jour du titre: {e}"
+                                        )
 
-                            yield f"data: {json.dumps({'status': 'completed', 'response': current_response})}\n\n"
-                        except Exception as e:
-                            logger.error(f"Erreur flux streaming: {e}")
-                            yield f"data: {json.dumps({'error': str(e)})}\n\n"
+                                yield f"data: {json.dumps({'status': 'completed', 'response': current_response})}\n\n"
+                            except Exception as e:
+                                logger.error(f"Erreur flux streaming: {e}")
+                                yield f"data: {json.dumps({'error': str(e)})}\n\n"
 
-                    return Response(generate_stream(), mimetype="text/event-stream")
+                    return Response(
+                        stream_with_context(generate_stream()),
+                        mimetype="text/event-stream",
+                    )
 
                 # --- LOGIQUE NORMALE (Non-streaming) ---
                 gemini_response = call_gemini_api(

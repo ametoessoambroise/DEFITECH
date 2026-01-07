@@ -140,12 +140,8 @@ const UI = {
             }
 
             conversations.forEach(conv => {
-                const el = document.createElement('a');
-                // URL purement cosmétique: on pointe vers /defAI qui existe côté Flask
-                const linkUrl = '/defAI';
-                el.href = linkUrl;
-                el.dataset.id = conv.id;
-                el.dataset.link = conv.link || conv.id;
+                const el = document.createElement('div');
+                el.className = "relative group conversation-item-container mb-2";
 
                 // Style calc
                 const isActive = State.currentConversationId === conv.id;
@@ -153,38 +149,41 @@ const UI = {
                 const activeClass = "bg-primary-50 dark:bg-primary-900/10 border border-primary-100 dark:border-primary-800";
                 const inactiveClass = "border border-transparent";
 
-                el.className = `${baseClass} ${isActive ? activeClass : inactiveClass}`;
-
                 const time = new Date(conv.updated_at).toLocaleDateString();
 
                 el.innerHTML = `
-                    <div class="flex items-center gap-3">
-                        <div class="w-8 h-8 rounded-lg bg-primary-100 dark:bg-primary-900/30 flex items-center justify-center text-primary-600 dark:text-primary-400 flex-shrink-0">
-                            <i class="fas fa-comments text-xs"></i>
-                        </div>
-                        <div class="flex-1 min-w-0">
-                            <div class="flex items-center justify-between mb-0.5">
-                                <h4 class="text-sm font-semibold truncate text-gray-900 dark:text-gray-100 group-hover:text-primary-600 transition-colors">
-                                    ${conv.title || 'Nouvelle conversation'}
-                                </h4>
+                    <a href="/defAI" class="${baseClass} ${isActive ? activeClass : inactiveClass}" data-id="${conv.id}">
+                        <div class="flex items-center gap-3">
+                            <div class="w-8 h-8 rounded-lg bg-primary-100 dark:bg-primary-900/30 flex items-center justify-center text-primary-600 dark:text-primary-400 flex-shrink-0">
+                                <i class="fas fa-comments text-xs"></i>
                             </div>
-                            <p class="text-xs text-gray-500 dark:text-gray-400 truncate leading-relaxed">
-                                ${conv.last_message || 'Pas de message'}
-                            </p>
+                            <div class="flex-1 min-w-0">
+                                <div class="flex items-center justify-between mb-0.5">
+                                    <h4 class="text-sm font-semibold truncate text-gray-900 dark:text-gray-100 group-hover:text-primary-600 transition-colors">
+                                        ${this.escapeHtml(conv.title || 'Nouvelle conversation')}
+                                    </h4>
+                                </div>
+                                <p class="text-xs text-gray-500 dark:text-gray-400 truncate leading-relaxed">
+                                    ${this.escapeHtml(conv.last_message || 'Pas de message')}
+                                </p>
+                            </div>
+                            <div class="text-[10px] text-gray-400 flex-shrink-0">
+                                ${time}
+                            </div>
                         </div>
-                        <div class="text-[10px] text-gray-400 flex-shrink-0">
-                            ${time}
-                        </div>
-                    </div>
+                    </a>
+                    <button class="absolute right-2 top-1/2 -translate-y-1/2 p-2 text-gray-400 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-all duration-200 delete-conv-btn" 
+                            title="Supprimer la conversation"
+                            onclick="UI.deleteConversation(${conv.id}, event)">
+                        <i class="fas fa-trash-alt text-xs"></i>
+                    </button>
                 `;
 
-                el.addEventListener('click', (e) => {
+                const linkEl = el.querySelector('a');
+                linkEl.addEventListener('click', (e) => {
                     e.preventDefault();
                     this.setActiveConversation(conv.id, true, conv.link || conv.id);
-                    // Mobile sidebar handling
-                    if (window.innerWidth < 1024) {
-                        this.toggleSidebar();
-                    }
+                    if (window.innerWidth < 1024) this.toggleSidebar();
                 });
 
                 listEl.appendChild(el);
@@ -222,6 +221,38 @@ const UI = {
         if (pushState) {
             const url = '/defAI';
             window.history.pushState({ conversationId: id }, '', url);
+        }
+    },
+
+    async deleteConversation(id, event) {
+        if (event) {
+            event.preventDefault();
+            event.stopPropagation();
+        }
+
+        if (!confirm('Es-tu sûr de vouloir supprimer cette conversation ?')) return;
+
+        try {
+            const response = await fetch(`/api/ai/conversations/${id}`, {
+                method: 'DELETE',
+                headers: {
+                    'X-CSRFToken': CONFIG.csrfToken
+                }
+            });
+
+            if (!response.ok) throw new Error('Failed to delete');
+
+            this.showToast('supprimée', 'success');
+
+            if (State.currentConversationId === id) {
+                this.clearActiveConversation();
+                window.history.pushState({}, '', '/defAI');
+            }
+
+            this.loadConversations(1);
+        } catch (error) {
+            console.error('Delete error:', error);
+            this.showToast('Erreur lors de la suppression', 'error');
         }
     },
 
@@ -1483,10 +1514,17 @@ const UI = {
                         else if (data.status === 'thinking') {
                             if (data.type === 'web_search') {
                                 this.showWebSearchLoader();
-                                setTimeout(() => this.hideWebSearchLoader(), 3000);
                             } else if (data.type === 'image_generation') {
                                 this.showImageGenLoader();
-                                setTimeout(() => this.hideImageGenLoader(), 5000);
+                            }
+                        }
+                        else if (data.status === 'enriching') {
+                            // On réinitialise le contenu pour le streaming de la relance
+                            fullAIContent = "";
+                            this.hideWebSearchLoader();
+                            this.hideImageGenLoader();
+                            if (contentDiv) {
+                                contentDiv.innerHTML = '<div class="typing-dot w-1 h-1 bg-primary-500 rounded-full inline-block animate-bounce mr-1"></div> Raffinement de la réponse...';
                             }
                         }
                         else if (data.status === 'title_updated') {

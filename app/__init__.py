@@ -138,6 +138,7 @@ def create_app(config_class=None):
     from app.routes.chat import chat_bp
     from app.routes.community import community_bp
     from app.routes.profiles import profile_bp
+    from app.routes.public_profiles import public_profile_bp
     from app.routes.resources import resources_bp
     from app.routes.study_planner import study_planner_bp
     from app.routes.ai_assistant import ai_assistant_bp
@@ -159,6 +160,7 @@ def create_app(config_class=None):
     app.register_blueprint(chat_bp)
     app.register_blueprint(community_bp)
     app.register_blueprint(profile_bp)
+    app.register_blueprint(public_profile_bp)
     app.register_blueprint(resources_bp)
     app.register_blueprint(study_planner_bp)
     app.register_blueprint(ai_assistant_bp)

@@ -5,7 +5,7 @@
   <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
     <!-- Header -->
     <div class="pt-6 pb-4 lg:pt-8 lg:pb-6">
-      <div class="flex sm:flex-col items-center justify-between">
+      <div class="flex flex-col sm:flex-row items-center justify-between">
         <div>
           <h1 class="text-2xl sm:text-3xl font-bold text-gray-900">Mon Profil</h1>
           <p class="mt-1 text-sm sm:text-base text-gray-500">
@@ -275,6 +275,52 @@
               });
             </script>
           </div>
+        </div>
+      </div>
+
+      <!-- Visibilité & Profil Public -->
+      <div class="bg-white rounded-xl border border-gray-200 overflow-hidden mt-4 mb-4">
+        <div class="px-4 py-3 sm:px-6 sm:py-4 border-b border-gray-100">
+          <h2 class="text-base sm:text-lg font-semibold text-gray-900">
+            Visibilité du Profil
+          </h2>
+          <p class="text-xs sm:text-sm text-gray-500 mt-0.5">
+            Gérez qui peut voir votre profil professionnel
+          </p>
+        </div>
+        <div class="px-4 py-4 sm:px-6 sm:py-5">
+            <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+                <div>
+                     <div class="flex items-center">
+                        {{ form.is_public_profile(class="w-5 h-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500 cursor-pointer") }}
+                        {{ form.is_public_profile.label(class="font-medium text-gray-700 ml-2 cursor-pointer") }}
+                    </div>
+                    <p class="text-sm text-gray-500 mt-1 ml-7">
+                        Si activé, votre profil sera accessible aux recruteurs via un lien public.
+                    </p>
+                     {% if form.is_public_profile.errors %} 
+                        {% for error in form.is_public_profile.errors %}
+                        <p class="mt-1 text-xs text-red-600 ml-7">{{ error }}</p>
+                        {% endfor %} 
+                    {% endif %}
+                </div>
+                
+                <div class="sm:text-right">
+                    {% if current_user.is_public_profile or form.is_public_profile.data %}
+                    <a href="{{ url_for('public_profile.view_profile', user_id=current_user.id) }}" target="_blank" class="inline-flex items-center text-sm text-blue-600 hover:text-blue-800 font-bold mb-2">
+                        <i class="fas fa-external-link-alt mr-2"></i> Voir mon profil public
+                    </a>
+                    <div class="flex items-center justify-end bg-gray-50 rounded-lg p-2 border border-gray-200">
+                         <input type="text" readonly value="{{ url_for('public_profile.view_profile', user_id=current_user.id, _external=True) }}" class="bg-transparent border-none p-0 text-xs text-gray-600 focus:ring-0 w-48 sm:w-64 text-right sm:text-left truncate mr-2">
+                        <button type="button" onclick="navigator.clipboard.writeText('{{ url_for('public_profile.view_profile', user_id=current_user.id, _external=True) }}'); alert('Lien copié !')" class="text-gray-400 hover:text-blue-600 p-1" title="Copier le lien">
+                             <i class="far fa-copy"></i>
+                        </button>
+                    </div>
+                    {% else %}
+                    <span class="text-sm text-gray-400 italic"><i class="fas fa-lock mr-1"></i> Profil privé</span>
+                    {% endif %}
+                </div>
+            </div>
         </div>
       </div>
 

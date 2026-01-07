@@ -55,6 +55,11 @@ class User(UserMixin, db.Model):
     is_biometric_enabled = db.Column(db.Boolean, default=False, nullable=False)
     app_lock_timeout = db.Column(db.Integer, default=5, nullable=False)  # en minutes
 
+    # Visibilité du profil (Profil Public) - Phase 11
+    is_public_profile = db.Column(
+        db.Boolean, default=True, server_default="true", nullable=False
+    )
+
     # Sécurité anti-bruteforce pour le PIN
     failed_pin_attempts = db.Column(db.Integer, default=0, nullable=False)
     last_failed_pin_attempt = db.Column(db.DateTime, nullable=True)

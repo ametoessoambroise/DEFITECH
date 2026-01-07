@@ -82,6 +82,42 @@ DEFITECH | L'école des battants - BTS, Licence, Master
           <div
             class="animate-slide-up flex flex-col sm:flex-row gap-4 w-full xs:w-auto px-4 xs:px-0"
           >
+            {% if current_user.is_authenticated %}
+              {% if current_user.role == 'etudiant' %}
+              <a
+                href="{{ url_for('students.dashboard') }}"
+                class="w-full xs:w-auto px-8 py-4 bg-defitech-red text-white font-bold rounded-xl shadow-xl hover:bg-red-700 hover:scale-105 transition-all text-center flex items-center justify-center gap-2 text-lg"
+              >
+                <span>Mon Espace Etudiant</span>
+                <i class="fas fa-user-graduate text-sm md:text-lg"></i>
+              </a>
+              {% elif current_user.role == 'enseignant' %}
+              <a
+                href="{{ url_for('teachers.dashboard') }}"
+                class="w-full xs:w-auto px-8 py-4 bg-defitech-red text-white font-bold rounded-xl shadow-xl hover:bg-red-700 hover:scale-105 transition-all text-center flex items-center justify-center gap-2 text-lg"
+              >
+                <span>Mon Espace Enseignant</span>
+                <i class="fas fa-chalkboard-teacher text-sm md:text-lg"></i>
+              </a>
+              {% elif current_user.role == 'admin' %}
+              <a
+                href="{{ url_for('admin.dashboard') }}"
+                class="w-full xs:w-auto px-8 py-4 bg-defitech-red text-white font-bold rounded-xl shadow-xl hover:bg-red-700 hover:scale-105 transition-all text-center flex items-center justify-center gap-2 text-lg"
+              >
+                <span>Administration</span>
+                <i class="fas fa-user-shield text-sm md:text-lg"></i>
+              </a>
+              {% else %}
+               <!-- Fallback if authenticated but unknown role -->
+              <a
+                href="{{ url_for('main.index') }}"
+                class="w-full xs:w-auto px-8 py-4 bg-defitech-red text-white font-bold rounded-xl shadow-xl hover:bg-red-700 hover:scale-105 transition-all text-center flex items-center justify-center gap-2 text-lg"
+              >
+                <span>Mon Compte</span>
+                <i class="fas fa-user text-sm md:text-lg"></i>
+              </a>
+              {% endif %}
+            {% else %}
             <a
               href="{{ url_for('auth.register') }}"
               class="w-full xs:w-auto px-8 py-4 bg-defitech-red text-white font-bold rounded-xl shadow-xl hover:bg-red-700 hover:scale-105 transition-all text-center flex items-center justify-center gap-2 text-lg"
@@ -89,6 +125,7 @@ DEFITECH | L'école des battants - BTS, Licence, Master
               <span>Je m'inscris</span>
               <i class="fas fa-user-plus text-sm md:text-lg"></i>
             </a>
+            {% endif %}
             <a
               href="#formations"
               class="w-full xs:w-auto px-8 py-4 bg-white text-defitech-blue font-bold rounded-xl shadow-lg hover:bg-gray-50 transition-all text-center flex items-center justify-center gap-2 text-lg"
@@ -107,7 +144,7 @@ DEFITECH | L'école des battants - BTS, Licence, Master
                 23
               </div>
               <div
-                class="text-[10px] sm:text-sm opacity-80 uppercase tracking-wider"
+                class="text-[10px] z-[9999] text-black sm:text-sm opacity-80 uppercase tracking-wider"
               >
                 Ans d'expertise
               </div>
@@ -117,7 +154,7 @@ DEFITECH | L'école des battants - BTS, Licence, Master
                 5k+
               </div>
               <div
-                class="text-[10px] sm:text-sm opacity-80 uppercase tracking-wider"
+                class="text-[10px] z-[9999] text-black font-bold sm:text-sm opacity-80 uppercase tracking-wider"
               >
                 Diplômés
               </div>
@@ -127,7 +164,7 @@ DEFITECH | L'école des battants - BTS, Licence, Master
                 100%
               </div>
               <div
-                class="text-[10px] sm:text-sm opacity-80 uppercase tracking-wider"
+                class="text-[10px] z-[9999] text-black sm:text-sm opacity-80 uppercase tracking-wider"
               >
                 Pratique
               </div>
@@ -436,12 +473,44 @@ DEFITECH | L'école des battants - BTS, Licence, Master
             Les places sont limitées.
           </p>
           <div class="flex flex-col sm:flex-row justify-center gap-4 pt-4">
+            {% if current_user.is_authenticated %}
+              {% if current_user.role == 'etudiant' %}
+              <button
+                onclick="location.href='{{ url_for('students.dashboard') }}'"
+                class="bg-white text-defitech-blue px-8 py-3 rounded-full font-bold shadow-lg hover:bg-gray-100 transition-colors flex items-center justify-center gap-2"
+              >
+                <i class="fas fa-user-graduate"></i> Mon Espace Etudiant
+              </button>
+              {% elif current_user.role == 'enseignant' %}
+              <button
+                onclick="location.href='{{ url_for('teachers.dashboard') }}'"
+                class="bg-white text-defitech-blue px-8 py-3 rounded-full font-bold shadow-lg hover:bg-gray-100 transition-colors flex items-center justify-center gap-2"
+              >
+                <i class="fas fa-chalkboard-teacher"></i> Mon Espace Enseignant
+              </button>
+              {% elif current_user.role == 'admin' %}
+              <button
+                onclick="location.href='{{ url_for('admin.dashboard') }}'"
+                class="bg-white text-defitech-blue px-8 py-3 rounded-full font-bold shadow-lg hover:bg-gray-100 transition-colors flex items-center justify-center gap-2"
+              >
+                <i class="fas fa-user-shield"></i> Administration
+              </button>
+              {% else %}
+              <button
+                onclick="location.href='{{ url_for('main.index') }}'"
+                class="bg-white text-defitech-blue px-8 py-3 rounded-full font-bold shadow-lg hover:bg-gray-100 transition-colors flex items-center justify-center gap-2"
+              >
+                <i class="fas fa-user"></i> Mon Compte
+              </button>
+              {% endif %}
+            {% else %}
             <button
               onclick="location.href='{{ url_for('auth.register') }}'"
               class="bg-white text-defitech-blue px-8 py-3 rounded-full font-bold shadow-lg hover:bg-gray-100 transition-colors"
             >
               S'inscrire en ligne
             </button>
+            {% endif %}
             <a
               href="tel:+22822262525"
               target="_blank"

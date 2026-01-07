@@ -363,10 +363,17 @@
             <!-- Non authentifié -->
             <div class="flex items-center space-x-2 sm:space-x-3">
               <a
-                href="{{ url_for('auth.login') }}"
-                class="text-gray-700 hover:text-blue-600 font-medium text-xs sm:text-sm transition whitespace-nowrap"
+                href="{{ url_for('main.roadmap') }}"
+                class="text-gray-700 hover:text-blue-600 font-medium transition whitespace-nowrap text-xs sm:text-sm"
               >
-                Connexion
+                Roadmap
+              </a>
+              <a
+                href="{{ url_for('public_profile.list_students') }}"
+                class="text-gray-700 hover:text-blue-600 font-medium transition whitespace-nowrap text-xs sm:text-sm flex items-center gap-1"
+              >
+                <i class="fas fa-users text-sm"></i>
+                Annuaire
               </a>
               <a
                 href="{{ url_for('auth.register') }}"

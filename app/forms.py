@@ -15,6 +15,7 @@ from wtforms import (
     ValidationError,
     FileField,
     HiddenField,
+    BooleanField,
 )
 from wtforms.validators import DataRequired, Email, Length, Optional, EqualTo
 from flask_wtf.file import FileField as WTF_FileField, FileAllowed
@@ -109,6 +110,10 @@ class UpdateProfileForm(FlaskForm):
         "Github",
         validators=[Optional(), Length(max=200)],
         render_kw={"placeholder": "https://github.com/ton_username"},
+    )
+    is_public_profile = BooleanField(
+        "Profil public (visible par tous)",
+        default=True,
     )
 
     # Champs spécifiques aux enseignants
@@ -266,10 +271,11 @@ class BugReportAdminForm(BugReportForm):
 # Formulaires pour le profil étendu
 class CompetenceForm(FlaskForm):
     """Formulaire pour les compétences"""
+
     nom = StringField(
         "Nom de la compétence",
         validators=[DataRequired(), Length(min=2, max=100)],
-        render_kw={"placeholder": "Ex: Python, Gestion de projet..."}
+        render_kw={"placeholder": "Ex: Python, Gestion de projet..."},
     )
     niveau = SelectField(
         "Niveau",
@@ -277,9 +283,9 @@ class CompetenceForm(FlaskForm):
             ("débutant", "Débutant"),
             ("intermédiaire", "Intermédiaire"),
             ("avancé", "Avancé"),
-            ("expert", "Expert")
+            ("expert", "Expert"),
         ],
-        validators=[DataRequired()]
+        validators=[DataRequired()],
     )
     categorie = SelectField(
         "Catégorie",
@@ -287,60 +293,58 @@ class CompetenceForm(FlaskForm):
             ("technique", "Technique"),
             ("linguistique", "Linguistique"),
             ("professionnelle", "Professionnelle"),
-            ("personnelle", "Personnelle")
+            ("personnelle", "Personnelle"),
         ],
-        validators=[DataRequired()]
+        validators=[DataRequired()],
     )
     submit = SubmitField("Ajouter la compétence")
 
 
 class FormationForm(FlaskForm):
     """Formulaire pour les formations"""
+
     diplome = StringField(
         "Diplôme",
         validators=[DataRequired(), Length(min=2, max=200)],
-        render_kw={"placeholder": "Ex: Licence informatique"}
+        render_kw={"placeholder": "Ex: Licence informatique"},
     )
     etablissement = StringField(
         "Établissement",
         validators=[DataRequired(), Length(min=2, max=200)],
-        render_kw={"placeholder": "Ex: Université de Paris"}
+        render_kw={"placeholder": "Ex: Université de Paris"},
     )
     domaine = StringField(
         "Domaine",
         validators=[Optional(), Length(max=200)],
-        render_kw={"placeholder": "Ex: Informatique, Marketing..."}
+        render_kw={"placeholder": "Ex: Informatique, Marketing..."},
     )
     description = TextAreaField(
         "Description",
         validators=[Optional()],
-        render_kw={"rows": 3, "placeholder": "Description de la formation..."}
+        render_kw={"rows": 3, "placeholder": "Description de la formation..."},
     )
     date_debut = DateField(
-        "Date de début",
-        validators=[DataRequired()],
-        render_kw={"type": "date"}
+        "Date de début", validators=[DataRequired()], render_kw={"type": "date"}
     )
     date_fin = DateField(
-        "Date de fin",
-        validators=[Optional()],
-        render_kw={"type": "date"}
+        "Date de fin", validators=[Optional()], render_kw={"type": "date"}
     )
     en_cours = SelectField(
         "Statut",
         choices=[("False", "Terminée"), ("True", "En cours")],
         default="False",
-        validators=[DataRequired()]
+        validators=[DataRequired()],
     )
     submit = SubmitField("Ajouter la formation")
 
 
 class LangueForm(FlaskForm):
     """Formulaire pour les langues"""
+
     nom = StringField(
         "Langue",
         validators=[DataRequired(), Length(min=2, max=100)],
-        render_kw={"placeholder": "Ex: Anglais, Espagnol..."}
+        render_kw={"placeholder": "Ex: Anglais, Espagnol..."},
     )
     niveau_ecrit = SelectField(
         "Niveau écrit",
@@ -350,9 +354,9 @@ class LangueForm(FlaskForm):
             ("B1", "B1 - Intermédiaire"),
             ("B2", "B2 - Avancé"),
             ("C1", "C1 - Expérimenté"),
-            ("C2", "C2 - Maîtrise")
+            ("C2", "C2 - Maîtrise"),
         ],
-        validators=[DataRequired()]
+        validators=[DataRequired()],
     )
     niveau_oral = SelectField(
         "Niveau oral",
@@ -362,90 +366,84 @@ class LangueForm(FlaskForm):
             ("B1", "B1 - Intermédiaire"),
             ("B2", "B2 - Avancé"),
             ("C1", "C1 - Expérimenté"),
-            ("C2", "C2 - Maîtrise")
+            ("C2", "C2 - Maîtrise"),
         ],
-        validators=[DataRequired()]
+        validators=[DataRequired()],
     )
     submit = SubmitField("Ajouter la langue")
 
 
 class ProjetForm(FlaskForm):
     """Formulaire pour les projets"""
+
     titre = StringField(
         "Titre du projet",
         validators=[DataRequired(), Length(min=2, max=200)],
-        render_kw={"placeholder": "Ex: Site e-commerce"}
+        render_kw={"placeholder": "Ex: Site e-commerce"},
     )
     description = TextAreaField(
         "Description",
         validators=[Optional()],
-        render_kw={"rows": 4, "placeholder": "Description du projet..."}
+        render_kw={"rows": 4, "placeholder": "Description du projet..."},
     )
     technologies = StringField(
         "Technologies",
         validators=[Optional(), Length(max=300)],
-        render_kw={"placeholder": "Ex: Python, React, MySQL..."}
+        render_kw={"placeholder": "Ex: Python, React, MySQL..."},
     )
     date_debut = DateField(
-        "Date de début",
-        validators=[DataRequired()],
-        render_kw={"type": "date"}
+        "Date de début", validators=[DataRequired()], render_kw={"type": "date"}
     )
     date_fin = DateField(
-        "Date de fin",
-        validators=[Optional()],
-        render_kw={"type": "date"}
+        "Date de fin", validators=[Optional()], render_kw={"type": "date"}
     )
     lien = StringField(
         "Lien du projet",
         validators=[Optional(), Length(max=500)],
-        render_kw={"placeholder": "https://github.com/..."}
+        render_kw={"placeholder": "https://github.com/..."},
     )
     en_cours = SelectField(
         "Statut",
         choices=[("False", "Terminé"), ("True", "En cours")],
         default="False",
-        validators=[DataRequired()]
+        validators=[DataRequired()],
     )
     submit = SubmitField("Ajouter le projet")
 
 
 class ExperienceForm(FlaskForm):
     """Formulaire pour les expériences professionnelles"""
+
     poste = StringField(
         "Poste",
         validators=[DataRequired(), Length(min=2, max=200)],
-        render_kw={"placeholder": "Ex: Développeur web"}
+        render_kw={"placeholder": "Ex: Développeur web"},
     )
     entreprise = StringField(
         "Entreprise",
         validators=[DataRequired(), Length(min=2, max=200)],
-        render_kw={"placeholder": "Ex: Tech Solutions"}
+        render_kw={"placeholder": "Ex: Tech Solutions"},
     )
     lieu = StringField(
         "Lieu",
         validators=[Optional(), Length(max=200)],
-        render_kw={"placeholder": "Ex: Paris, France"}
+        render_kw={"placeholder": "Ex: Paris, France"},
     )
     description = TextAreaField(
         "Description",
         validators=[Optional()],
-        render_kw={"rows": 4, "placeholder": "Description des missions..."}
+        render_kw={"rows": 4, "placeholder": "Description des missions..."},
     )
     date_debut = DateField(
-        "Date de début",
-        validators=[DataRequired()],
-        render_kw={"type": "date"}
+        "Date de début", validators=[DataRequired()], render_kw={"type": "date"}
     )
     date_fin = DateField(
-        "Date de fin",
-        validators=[Optional()],
-        render_kw={"type": "date"}
+        "Date de fin", validators=[Optional()], render_kw={"type": "date"}
     )
     en_poste = SelectField(
         "Statut",
         choices=[("False", "Terminé"), ("True", "En poste")],
         default="False",
-        validators=[DataRequired()]
+        validators=[DataRequired()],
     )
     submit = SubmitField("Ajouter l'expérience")

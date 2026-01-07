@@ -366,7 +366,6 @@ def _handle_teacher_profile_update_request(form):
 
 def _handle_direct_profile_update(form):
     """Gère la modification directe du profil (pour non-enseignants)"""
-    import os
 
     # Mise à jour des informations de base
     current_user.nom = form.nom.data
@@ -384,6 +383,7 @@ def _handle_direct_profile_update(form):
     current_user.linkedin = form.linkedin.data
     current_user.github = form.github.data
     current_user.bio = form.bio.data
+    current_user.is_public_profile = form.is_public_profile.data
 
     # Mise à jour du mot de passe si fourni
     if form.nouveau_mot_de_passe.data:
@@ -439,6 +439,7 @@ def _populate_form_with_current_data(form):
     form.linkedin.data = current_user.linkedin
     form.github.data = current_user.github
     form.bio.data = current_user.bio
+    form.is_public_profile.data = current_user.is_public_profile
 
     # Si l'utilisateur est un enseignant, pré-remplir ses champs spécifiques
     if current_user.role == "enseignant":

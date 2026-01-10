@@ -2,7 +2,7 @@
 <html lang="fr" class="dark">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
     <title>Messagerie</title>
 
     <!-- Styles globaux -->
@@ -13,20 +13,39 @@
     <script src="https://cdn.tailwindcss.com"></script>
 
     <style>
-      @import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap");
+      @import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap");
+
+      * {
+        -webkit-tap-highlight-color: transparent;
+      }
 
       body {
         font-family: "Inter", sans-serif;
+        overscroll-behavior: none;
       }
 
       .glass-panel {
-        background: rgba(30, 41, 59, 0.7);
-        backdrop-filter: blur(12px);
-        border: 1px solid rgba(255, 255, 255, 0.08);
+        background: rgba(15, 23, 42, 0.95);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+      }
+
+      .glass-footer {
+        background: rgba(15, 23, 42, 0.98);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        border-top: 1px solid rgba(255, 255, 255, 0.06);
+      }
+
+      /* Custom Scrollbar */
+      .chat-scroll {
+        scrollbar-width: thin;
+        scrollbar-color: rgba(255, 255, 255, 0.1) transparent;
       }
 
       .chat-scroll::-webkit-scrollbar {
-        width: 6px;
+        width: 4px;
       }
 
       .chat-scroll::-webkit-scrollbar-track {
@@ -35,31 +54,47 @@
 
       .chat-scroll::-webkit-scrollbar-thumb {
         background: rgba(255, 255, 255, 0.1);
-        border-radius: 3px;
+        border-radius: 2px;
+      }
+
+      .chat-scroll::-webkit-scrollbar-thumb:hover {
+        background: rgba(255, 255, 255, 0.15);
       }
 
       /* Message Bubbles */
       .msg-bubble {
-        max-width: 80%;
-        padding: 12px 16px;
-        border-radius: 18px;
+        max-width: min(85%, 400px);
+        padding: 10px 14px;
+        border-radius: 16px;
         position: relative;
-        animation: slideUp 0.3s ease-out forwards;
+        animation: slideUp 0.25s cubic-bezier(0.4, 0, 0.2, 1) forwards;
         opacity: 0;
-        transform: translateY(10px);
+        transform: translateY(8px);
+        word-wrap: break-word;
+        overflow-wrap: break-word;
+      }
+
+      @media (max-width: 320px) {
+        .msg-bubble {
+          max-width: 90%;
+          padding: 9px 12px;
+          font-size: 14px;
+        }
       }
 
       .msg-sent {
-        background: #2563eb;
+        background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
         color: white;
         border-bottom-right-radius: 4px;
         margin-left: auto;
+        box-shadow: 0 2px 8px rgba(37, 99, 235, 0.3);
       }
 
       .msg-received {
-        background: #334155;
+        background: rgba(51, 65, 85, 0.9);
         color: #f1f5f9;
         border-bottom-left-radius: 4px;
+        border: 1px solid rgba(255, 255, 255, 0.05);
       }
 
       @keyframes slideUp {
@@ -69,147 +104,225 @@
         }
       }
 
+      /* Typing Indicator */
       .typing-dot {
+        width: 6px;
+        height: 6px;
+        background: currentColor;
+        border-radius: 50%;
         animation: bounce 1.4s infinite ease-in-out;
       }
 
-      .typing-dot:nth-child(1) {
-        animation-delay: -0.32s;
-      }
-
-      .typing-dot:nth-child(2) {
-        animation-delay: -0.16s;
-      }
+      .typing-dot:nth-child(1) { animation-delay: -0.32s; }
+      .typing-dot:nth-child(2) { animation-delay: -0.16s; }
 
       @keyframes bounce {
-        0%,
-        80%,
-        100% {
-          transform: scale(0);
-        }
+        0%, 80%, 100% { transform: scale(0); opacity: 0.5; }
+        40% { transform: scale(1); opacity: 1; }
+      }
 
-        40% {
-          transform: scale(1);
+      /* Input Focus Effect */
+      .input-wrapper {
+        transition: all 0.2s ease;
+      }
+
+      .input-wrapper:focus-within {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(59, 130, 246, 0.15);
+      }
+
+      /* Button Ripple Effect */
+      .btn-send {
+        position: relative;
+        overflow: hidden;
+        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+      }
+
+      .btn-send:active {
+        transform: scale(0.95);
+      }
+
+      .btn-send:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+        transform: none !important;
+      }
+
+      /* Avatar Glow */
+      .avatar-glow {
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+        animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+      }
+
+      @keyframes pulse {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.5; }
+      }
+
+      /* Status Indicator */
+      .status-online {
+        animation: statusPulse 2s ease-in-out infinite;
+      }
+
+      @keyframes statusPulse {
+        0%, 100% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.7); }
+        50% { box-shadow: 0 0 0 4px rgba(34, 197, 94, 0); }
+      }
+
+      /* Empty State Animation */
+      .empty-state-icon {
+        animation: float 3s ease-in-out infinite;
+      }
+
+      @keyframes float {
+        0%, 100% { transform: translateY(0px); }
+        50% { transform: translateY(-10px); }
+      }
+
+      /* Responsive Typography */
+      @media (max-width: 320px) {
+        .header-title { font-size: 13px; }
+        .header-subtitle { font-size: 10px; }
+        .msg-time { font-size: 9px; }
+      }
+
+      /* Safe Area Insets for Mobile */
+      @supports (padding: max(0px)) {
+        .safe-top {
+          padding-top: max(16px, env(safe-area-inset-top));
+        }
+        .safe-bottom {
+          padding-bottom: max(16px, env(safe-area-inset-bottom));
+        }
+      }
+
+      /* Prevent zoom on input focus (iOS) */
+      @media screen and (max-width: 768px) {
+        input, textarea, select {
+          font-size: 16px !important;
         }
       }
     </style>
   </head>
 
-  <body
-    class="bg-slate-900 h-screen flex flex-col text-slate-100 overflow-hidden"
-  >
+  <body class="bg-slate-950 h-screen flex flex-col text-slate-100 overflow-hidden">
+    
     <!-- App Lock Overlay -->
     {% if current_user.is_authenticated and current_user.is_app_lock_enabled %}
-    {% include 'components/lock_screen.html' %} {% endif %}
+    {% include 'components/lock_screen.html' %}
+    {% endif %}
 
     <!-- Header -->
-    <header
-      class="h-16 glass-panel flex items-center justify-between px-4 z-20 shadow-lg"
-    >
-      <div class="flex items-center gap-4">
+    <header class="glass-panel safe-top flex items-center justify-between px-3 sm:px-4 py-3 z-20">
+      <div class="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
         <button
           onclick="window.history.back()"
-          class="w-10 h-10 rounded-full flex items-center justify-center hover:bg-white/5 transition-colors text-white"
+          class="w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center hover:bg-white/5 active:bg-white/10 transition-colors text-white flex-shrink-0"
+          aria-label="Retour"
         >
-          <i class="fas fa-arrow-left"></i>
+          <i class="fas fa-arrow-left text-sm sm:text-base"></i>
         </button>
 
-        <div class="flex items-center gap-3">
+        <div class="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
           <!-- Admin Avatar -->
-          <div class="relative">
+          <div class="relative flex-shrink-0">
             {% if admin.photo_profil %}
             <img
               src="{{ get_profile_picture(admin) }}"
-              class="w-10 h-10 rounded-full object-cover border border-slate-600"
-              onerror="this.src='https://res.cloudinary.com/dmokvhpjt/image/upload/v1766894468/gep1294qd7tbddgvtmpj.png'"
+              class="w-9 h-9 sm:w-10 sm:h-10 rounded-full object-cover border-2 border-slate-700 shadow-lg"
+              onerror="this.onerror=null; this.src='https://res.cloudinary.com/dmokvhpjt/image/upload/v1766894468/gep1294qd7tbddgvtmpj.png'"
+              alt="Admin avatar"
             />
             {% else %}
             <div
-              class="w-10 h-10 rounded-full bg-blue-600/20 text-blue-400 flex items-center justify-center border border-blue-500/30"
+              class="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center text-white text-sm sm:text-base font-semibold shadow-lg"
             >
               <i class="fas fa-headset"></i>
             </div>
             {% endif %}
             <div
               id="status-indicator"
-              class="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-slate-900 rounded-full"
+              class="status-online absolute bottom-0 right-0 w-2.5 h-2.5 sm:w-3 sm:h-3 bg-green-500 border-2 border-slate-950 rounded-full"
             ></div>
           </div>
 
-          <div>
-            <h1 class="font-semibold text-sm">
+          <div class="min-w-0 flex-1">
+            <h1 class="header-title font-semibold text-sm sm:text-base truncate">
               {{ admin.prenom }} {{ admin.nom }}
             </h1>
-            <div class="flex items-center gap-2 text-xs text-slate-400 h-4">
+            <div class="flex items-center gap-2 text-xs h-4">
               <span
                 id="typing-status"
                 class="hidden items-center gap-1 text-blue-400"
               >
-                <span class="w-1 h-1 bg-current rounded-full typing-dot"></span>
-                <span class="w-1 h-1 bg-current rounded-full typing-dot"></span>
-                <span class="w-1 h-1 bg-current rounded-full typing-dot"></span>
-                écrit...
+                <span class="typing-dot"></span>
+                <span class="typing-dot"></span>
+                <span class="typing-dot"></span>
+                <span class="ml-1 text-[10px] sm:text-xs">écrit...</span>
               </span>
-              <span id="online-text">Support Admin</span>
+              <span id="online-text" class="header-subtitle text-[10px] sm:text-xs text-slate-400">Support Admin</span>
             </div>
           </div>
         </div>
       </div>
 
       <!-- Actions -->
-      <div class="flex gap-2">
-        <button
-          onclick="clearChat()"
-          class="w-10 h-10 rounded-full hover:bg-white/5 text-red-400 transition-colors"
-          title="Effacer l'historique local"
-        >
-          <i class="fas fa-trash-alt"></i>
-        </button>
-      </div>
+      <button
+        onclick="clearChat()"
+        class="w-9 h-9 sm:w-10 sm:h-10 rounded-full hover:bg-red-500/10 active:bg-red-500/20 text-red-400 transition-colors flex-shrink-0 flex items-center justify-center"
+        title="Effacer l'historique local"
+        aria-label="Effacer"
+      >
+        <i class="fas fa-trash-alt text-sm sm:text-base"></i>
+      </button>
     </header>
 
     <!-- Chat Area -->
     <main
       id="chat-container"
-      class="flex-1 overflow-y-auto chat-scroll p-4 space-y-4 relative"
+      class="flex-1 overflow-y-auto chat-scroll relative"
+      style="background: linear-gradient(180deg, #0f172a 0%, #020617 100%);"
     >
       <!-- Empty State -->
       <div
         id="empty-state"
-        class="absolute inset-0 flex flex-col items-center justify-center text-slate-500 pointer-events-none"
+        class="absolute inset-0 flex flex-col items-center justify-center text-slate-500 pointer-events-none px-4"
       >
         <div
-          class="w-20 h-20 bg-slate-800 rounded-full flex items-center justify-center mb-4 text-3xl"
+          class="empty-state-icon w-16 h-16 sm:w-20 sm:h-20 bg-gradient-to-br from-slate-800 to-slate-900 rounded-full flex items-center justify-center mb-4 text-2xl sm:text-3xl shadow-xl border border-slate-700"
         >
           <i class="fas fa-comments"></i>
         </div>
-        <p>Commencez la conversation avec le support</p>
+        <p class="text-sm sm:text-base text-center">Commencez la conversation avec le support</p>
+        <p class="text-xs sm:text-sm text-slate-600 mt-2 text-center">Nous sommes là pour vous aider 24/7</p>
       </div>
 
-      <!-- Messages injected here -->
-      <div id="messages-list" class="space-y-4 pb-4"></div>
+      <!-- Messages Container -->
+      <div id="messages-list" class="space-y-3 sm:space-y-4 p-3 sm:p-4 pb-2"></div>
     </main>
 
     <!-- Input Area -->
-    <footer class="p-4 glass-panel z-20">
-      <form id="chat-form" class="flex items-end gap-3 max-w-4xl mx-auto">
+    <footer class="glass-footer safe-bottom p-3 sm:p-4 z-20">
+      <form id="chat-form" class="flex items-end gap-2 sm:gap-3 max-w-4xl mx-auto">
         <div
-          class="flex-1 bg-slate-800 rounded-2xl border border-slate-700 focus-within:border-blue-500 focus-within:ring-1 focus-within:ring-blue-500 transition-all"
+          class="input-wrapper flex-1 bg-slate-800/80 rounded-2xl border border-slate-700/50 focus-within:border-blue-500/50 focus-within:bg-slate-800"
         >
           <textarea
             id="message-input"
             rows="1"
             placeholder="Écrivez votre message..."
-            class="w-full bg-transparent text-white px-4 py-3 focus:outline-none resize-none max-h-32"
-            oninput="this.style.height = ''; this.style.height = Math.min(this.scrollHeight, 128) + 'px'"
+            class="w-full bg-transparent text-white text-sm sm:text-base px-3 sm:px-4 py-2.5 sm:py-3 focus:outline-none resize-none max-h-32"
+            maxlength="2000"
+            oninput="autoResize(this)"
           ></textarea>
         </div>
         <button
           type="submit"
           id="send-btn"
-          class="w-12 h-12 rounded-full bg-blue-600 hover:bg-blue-500 text-white flex items-center justify-center shadow-lg shadow-blue-600/20 transition-all hover:scale-105 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
+          class="btn-send w-11 h-11 sm:w-12 sm:h-12 rounded-full bg-gradient-to-br from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white flex items-center justify-center shadow-lg shadow-blue-600/30 flex-shrink-0"
+          aria-label="Envoyer"
         >
-          <i class="fas fa-paper-plane"></i>
+          <i class="fas fa-paper-plane text-sm sm:text-base"></i>
         </button>
       </form>
     </footer>
@@ -241,11 +354,20 @@
       const socket = io();
       let typingTimeout;
 
+      // Auto-resize textarea
+      function autoResize(textarea) {
+        textarea.style.height = 'auto';
+        textarea.style.height = Math.min(textarea.scrollHeight, 128) + 'px';
+        
+        // Enable/disable send button
+        DOM.sendBtn.disabled = !textarea.value.trim();
+      }
+
       // ==========================================
       // SOCKET EVENTS
       // ==========================================
       socket.on('connect', () => {
-        console.log('Connected to chat');
+        console.log('✅ Connected to chat');
         loadHistory();
       });
 
@@ -253,13 +375,13 @@
         appendMessage({
           content: data.content,
           isMe: false,
-          timestamp: data.timestamp
+          timestamp: data.timestamp || new Date().toISOString()
         });
         playNotificationSound();
       });
 
       socket.on('message_sent', (data) => {
-        // Already appended optimistically usually, but can confirm here
+        // Already appended optimistically
       });
 
       socket.on('user_typing', (data) => {
@@ -276,12 +398,17 @@
         sendMessage();
       });
 
+      DOM.input.addEventListener('input', () => {
+        autoResize(DOM.input);
+      });
+
       DOM.input.addEventListener('keydown', (e) => {
         if (e.key === 'Enter' && !e.shiftKey) {
           e.preventDefault();
           sendMessage();
         }
-        // Emit typing
+        
+        // Emit typing status
         socket.emit('typing', { receiver_id: CONFIG.adminId, is_typing: true });
         clearTimeout(typingTimeout);
         typingTimeout = setTimeout(() => {
@@ -307,6 +434,7 @@
 
         DOM.input.value = '';
         DOM.input.style.height = 'auto';
+        DOM.sendBtn.disabled = true;
       }
 
       function appendMessage({ content, isMe, timestamp }) {
@@ -315,20 +443,27 @@
         const div = document.createElement('div');
         div.className = `flex w-full ${isMe ? 'justify-end' : 'justify-start'}`;
 
-        const time = new Date(timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        const time = new Date(timestamp).toLocaleTimeString('fr-FR', { 
+          hour: '2-digit', 
+          minute: '2-digit' 
+        });
 
         div.innerHTML = `
-                  <div class="msg-bubble ${isMe ? 'msg-sent' : 'msg-received'} group">
-                      <div class="whitespace-pre-wrap break-words text-sm sm:text-base">${escapeHtml(content)}</div>
-                      <div class="text-[10px] mt-1 opacity-70 ${isMe ? 'text-blue-100' : 'text-slate-400'} flex items-center justify-end gap-1">
-                          ${time}
-                          ${isMe ? '<i class="fas fa-check"></i>' : ''}
-                      </div>
-                  </div>
-              `;
+          <div class="msg-bubble ${isMe ? 'msg-sent' : 'msg-received'}">
+            <div class="whitespace-pre-wrap break-words text-sm sm:text-base leading-relaxed">
+              ${escapeHtml(content)}
+            </div>
+            <div class="msg-time text-[9px] sm:text-[10px] mt-1.5 opacity-70 ${isMe ? 'text-blue-100' : 'text-slate-400'} flex items-center justify-end gap-1">
+              ${time}
+              ${isMe ? '<i class="fas fa-check text-[8px]"></i>' : ''}
+            </div>
+          </div>
+        `;
 
         DOM.list.appendChild(div);
-        scrollToBottom();
+        
+        // Smooth scroll
+        setTimeout(() => scrollToBottom(), 50);
       }
 
       function toggleTyping(isTyping) {
@@ -337,7 +472,10 @@
       }
 
       function scrollToBottom() {
-        DOM.container.scrollTop = DOM.container.scrollHeight;
+        DOM.container.scrollTo({
+          top: DOM.container.scrollHeight,
+          behavior: 'smooth'
+        });
       }
 
       async function loadHistory() {
@@ -345,8 +483,8 @@
           const res = await fetch(`/chat/api/history?with=${CONFIG.adminId}`);
           const data = await res.json();
 
-          if (data.success && data.messages.length > 0) {
-            DOM.list.innerHTML = ''; // Clear
+          if (data.success && data.messages?.length > 0) {
+            DOM.list.innerHTML = '';
             data.messages.forEach(msg => {
               appendMessage({
                 content: msg.content,
@@ -356,7 +494,7 @@
             });
           }
         } catch (e) {
-          console.error('History load failed', e);
+          console.error('❌ History load failed:', e);
         }
       }
 
@@ -368,15 +506,27 @@
       }
 
       function playNotificationSound() {
-        // Optional beep
+        try {
+          const audio = new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBixy0O7SjC8KHm7A7+OUQwwTYKvk67hcGAg+k9jxxHInBiho0e3YjzsLGGS57OShTwwLUrDo6axXFAxHouHyvmwhBilryO/VizMJHm/C8eSVRAwSY7Hm7bZaFgo7ktLvxXEpBSdt0ezahTgKGWO37+mlUQ0NURDU6qxeFAwHouHzv24iBihoy+/VizMKG2/C8uWVRQwTY7Hm7rBZFAk8ktPvxXEqBCdtz+zahTgKGWS47+mkUQ0NUhDV6ateFQ0IouHzwW8iByhr0e/VizQJG2/D8+WVRQwTZLHm7rBZFAo+ktTwxnEpByhuz+zahTcJGGS57+ejUQwNTxDU6atdFQ4IouHywW8iByhr0e/WizMKG27D8+WVRAwTZLHl7bFZFAo9ktTwxnEpByhuz+zahTcJGWW57+ejUQwNTxDU6KtdFQ4JouHywW8iByhr0e7WizMKG27D8+WVRAwTZLHl7bBZFAo9k9TwxnAqByhuz+3ahTcJGGS57+ijUQwNTxDU6KtdFQ4IouHywG8iCChr0e7WizMKG27D8+WVRAwTZLHl7bBYFAo9k9TwxnAqByhtz+3ahTcJGGS47+ijUQwNTxDU6KtdFQ4IouHywG8iCChr0e7WizMKG27D8+WVRAwTZLHl7bBYFAo9k9TwxnAqByhtz+3ahTcJGGS47+ijUQwNTxDU6KtdFQ4IouHywG8iCChr0e7WizMKG27D8+WVRAwTZLHl7bBYFAo9k9TwxnAqByhtz+3ahTcJGGS47+ijUQwNTxDU6KtdFQ4IouHywG8iCChr0e7WizMKG27D8+WVRAwTZLHl7bBYFAo9k9TwxnAqByhtz+3ahTcJGGS47+ijUQwNTxDU6KtdFQ4IouHywG8iCChr0e7WizMKG27D8+WVRAwTZLHl7bBYFAo9k9TwxnAqByhtz+3ahTcJGGS47+ijUQwNTxDU6KtdFQ4Iov==');
+          audio.volume = 0.3;
+          audio.play().catch(() => {});
+        } catch (e) {
+          // Silent fail
+        }
       }
 
       function clearChat() {
-        if (confirm('Effacer l\'affichage local ?')) {
+        if (confirm('Êtes-vous sûr de vouloir effacer l\'historique local ?')) {
           DOM.list.innerHTML = '';
           DOM.empty.style.display = 'flex';
         }
       }
+
+      // Initialize
+      DOM.sendBtn.disabled = true;
+      
+      // Prevent zoom on iOS
+      document.addEventListener('gesturestart', (e) => e.preventDefault());
     </script>
   </body>
 </html>

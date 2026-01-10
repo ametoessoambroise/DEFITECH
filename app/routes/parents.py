@@ -99,11 +99,27 @@ def link_child():
 
     from app.extensions import db
 
-    new_link = Parent(user_id=current_user.id, etudiant_id=etudiant.id)
-    db.session.add(new_link)
+    # Rechercher un enregistrement Parent existant pour cet étudiant avec le même email
+    # mais sans user_id (créé lors de l'inscription de l'étudiant par exemple)
+    p_record = Parent.query.filter_by(
+        etudiant_id=etudiant.id, email=current_user.email, user_id=None
+    ).first()
 
-    # Optionnel: marquer le code comme utilisé ou le supprimer si on veut qu'il soit unique à un seul parent
-    # Mais généralement un code peut être utilisé par les deux parents.
+    if p_record:
+        # Lier l'enregistrement existant au compte utilisateur actuel
+        p_record.user_id = current_user.id
+        p_record.nom = current_user.nom
+        p_record.prenom = current_user.prenom
+    else:
+        # Créer un nouvel enregistrement
+        new_link = Parent(
+            user_id=current_user.id,
+            etudiant_id=etudiant.id,
+            nom=current_user.nom,
+            prenom=current_user.prenom,
+            email=current_user.email,
+        )
+        db.session.add(new_link)
 
     db.session.commit()
 

@@ -87,23 +87,48 @@
     >
       <h2 class="text-2xl font-bold text-gray-900">Tous les projets</h2>
       <div class="flex gap-3">
+        <div class="relative">
+          <button
+            id="filter-btn"
+            onclick="toggleFilterMenu(event)"
+            class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors flex items-center gap-2"
+          >
+            <i class="fas fa-filter"></i> Filtrer
+          </button>
+          <div
+            id="filter-menu"
+            class="hidden absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-xl border border-gray-100 z-50 py-2"
+          >
+            <button
+              onclick="filterByTech('all')"
+              class="w-full text-left px-4 py-2 text-sm hover:bg-blue-50 hover:text-blue-600 transition-colors"
+            >
+              Tous les projets
+            </button>
+            <div class="border-t border-gray-100 my-1"></div>
+            <div id="tech-filter-list">
+              <!-- Tech filters will be injected here -->
+            </div>
+          </div>
+        </div>
         <button
-          class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+          id="sort-btn"
+          onclick="sortProjects()"
+          class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors flex items-center gap-2"
         >
-          <i class="fas fa-filter mr-2"></i>Filtrer
-        </button>
-        <button
-          class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
-        >
-          <i class="fas fa-sort mr-2"></i>Trier
+          <i class="fas fa-sort"></i> Trier par date
         </button>
       </div>
     </div>
 
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+    <div
+      id="projects-grid"
+      class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+    >
       {% for projet in projets %}
       <div
-        class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-lg hover:border-blue-300 transition-all duration-300 group"
+        class="project-card bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-lg hover:border-blue-300 transition-all duration-300 group"
+        data-index="{{ loop.index0 }}"
       >
         <!-- Project Header -->
         <div class="p-6 border-b border-gray-100">
@@ -205,6 +230,7 @@
             </div>
             <div class="flex gap-2">
               <button
+                onclick="showProjectDetails({{ loop.index0 }})"
                 class="p-2.5 rounded-lg bg-gray-50 text-gray-600 hover:bg-gray-100 hover:text-gray-900 transition-all"
                 title="Détails"
               >
@@ -212,8 +238,8 @@
               </button>
               <a
                 href="{{ projet.lien }}"
-                class="p-2.5 rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition-all shadow-sm hover:shadow-md"
-                download="{{ projet.name }}"
+                class="download-btn p-2.5 rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition-all shadow-sm hover:shadow-md"
+                download="{{ projet.titre | replace(' ', '_') | lower }}.zip"
                 title="Télécharger"
               >
                 <i class="fas fa-download text-sm"></i>
@@ -235,6 +261,26 @@
         </div>
       </div>
       {% endfor %}
+    </div>
+    <div
+      id="no-results"
+      class="hidden text-center py-20 bg-white rounded-2xl shadow-sm border border-gray-200"
+    >
+      <div
+        class="w-16 h-16 bg-gray-50 rounded-2xl flex items-center justify-center mx-auto mb-4"
+      >
+        <i class="fas fa-search text-gray-400 text-2xl"></i>
+      </div>
+      <h3 class="text-xl font-bold text-gray-900 mb-2">Aucun projet trouvé</h3>
+      <p class="text-gray-600">
+        Essayez de modifier vos filtres pour trouver ce que vous cherchez.
+      </p>
+      <button
+        onclick="filterByTech('all')"
+        class="mt-4 text-blue-600 font-bold hover:underline"
+      >
+        Réinitialiser les filtres
+      </button>
     </div>
     {% else %}
     <!-- Empty State -->
@@ -282,6 +328,135 @@
       </div>
     </div>
     {% endif %}
+  </div>
+</div>
+
+<!-- Project Details Modal -->
+<div
+  id="project-modal"
+  class="fixed inset-0 z-50 hidden overflow-y-auto"
+  aria-labelledby="modal-title"
+  role="dialog"
+  aria-modal="true"
+>
+  <div
+    class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0"
+  >
+    <div
+      class="fixed inset-0 bg-gray-900 bg-opacity-75 transition-opacity backdrop-blur-sm"
+      aria-hidden="true"
+      onclick="closeProjectModal()"
+    ></div>
+
+    <span
+      class="hidden sm:inline-block sm:align-middle sm:h-screen"
+      aria-hidden="true"
+      >&#8203;</span
+    >
+
+    <div
+      class="inline-block align-bottom bg-white rounded-2xl text-left overflow-hidden shadow-2xl transform transition-all sm:my-8 sm:align-middle sm:max-w-2xl sm:w-full border border-gray-100"
+    >
+      <div
+        class="bg-gradient-to-r from-blue-700 to-blue-900 px-6 py-4 flex items-center justify-between"
+      >
+        <h3
+          class="text-xl font-bold text-white"
+          id="modal-project-title text-white"
+        >
+          Détails du projet
+        </h3>
+        <button
+          onclick="closeProjectModal()"
+          class="text-white/80 hover:text-white transition-colors"
+        >
+          <i class="fas fa-times text-xl"></i>
+        </button>
+      </div>
+
+      <div class="p-6">
+        <div id="modal-content" class="space-y-6">
+          <!-- Dynamically populated -->
+          <div
+            class="flex items-center gap-4 p-4 bg-blue-50 rounded-xl border border-blue-100"
+          >
+            <div
+              class="w-12 h-12 bg-blue-600 rounded-xl flex items-center justify-center text-white shadow-lg"
+            >
+              <i class="fas fa-rocket text-xl"></i>
+            </div>
+            <div>
+              <h4
+                class="text-lg font-bold text-gray-900"
+                id="modal-title-display"
+              >
+                Projet
+              </h4>
+              <p class="text-sm text-blue-600 font-medium" id="modal-date">
+                Synchronisé le ...
+              </p>
+            </div>
+          </div>
+
+          <div>
+            <h5
+              class="text-sm font-bold text-gray-900 uppercase tracking-wider mb-3 flex items-center gap-2"
+            >
+              <i class="fas fa-align-left text-blue-600"></i> Description
+            </h5>
+            <p
+              class="text-gray-600 leading-relaxed text-sm"
+              id="modal-description"
+            >
+              Aucune description fournie.
+            </p>
+          </div>
+
+          <div>
+            <h5
+              class="text-sm font-bold text-gray-900 uppercase tracking-wider mb-3 flex items-center gap-2"
+            >
+              <i class="fas fa-tags text-blue-600"></i> Technologies
+            </h5>
+            <div class="flex flex-wrap gap-2" id="modal-techs">
+              <!-- Techs go here -->
+            </div>
+          </div>
+
+          <div id="modal-tree-container">
+            <h5
+              class="text-sm font-bold text-gray-900 uppercase tracking-wider mb-3 flex items-center gap-2"
+            >
+              <i class="fas fa-folder-tree text-blue-600"></i> Structure du
+              projet
+            </h5>
+            <div
+              class="bg-gray-900 rounded-xl p-4 font-mono text-xs text-gray-300 max-h-48 overflow-y-auto border border-gray-800"
+              id="modal-tree-content"
+            >
+              <!-- Tree goes here -->
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="bg-gray-50 px-6 py-4 flex justify-end gap-3 rounded-b-2xl">
+        <button
+          onclick="closeProjectModal()"
+          class="px-4 py-2 text-sm font-bold text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-all active:scale-95"
+        >
+          Fermer
+        </button>
+        <a
+          id="modal-download-link"
+          href="#"
+          download=""
+          class="px-5 py-2 text-sm font-bold text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-all shadow-md active:scale-95 flex items-center gap-2"
+        >
+          <i class="fas fa-download"></i> Télécharger (ZIP)
+        </a>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -359,6 +534,161 @@
     }
   }
 
+  // Project Data for JS
+  const PROJECTS_DATA = [
+      {% for projet in projets %}
+      {
+          index: {{ loop.index0 }},
+          id: {{ projet.id }},
+          titre: "{{ projet.titre | escape }}",
+          description: "{{ projet.description | replace('\n', ' ') | replace('\r', '') | escape }}",
+          technologies: "{{ projet.technologies | escape }}",
+          lien: "{{ projet.lien }}",
+          updated_at: "{{ projet.updated_at.strftime('%d/%m/%Y à %H:%M') }}",
+          updated_at_raw: {{ projet.updated_at.timestamp() }},
+          structure: {{ projet.structure_json | tojson | safe if projet.structure_json else '[]' }}
+      }{% if not loop.last %},{% endif %}
+      {% endfor %}
+  ];
+
+  function showProjectDetails(index) {
+      const projet = PROJECTS_DATA[index];
+      const modal = document.getElementById('project-modal');
+
+      document.getElementById('modal-title-display').textContent = projet.titre;
+      document.getElementById('modal-date').textContent = "Synchronisé le " + projet.updated_at;
+      document.getElementById('modal-description').textContent = projet.description || "Aucune description disponible.";
+
+      // Technologies
+      const techContainer = document.getElementById('modal-techs');
+      techContainer.innerHTML = '';
+      if (projet.technologies) {
+          projet.technologies.split(',').forEach(tech => {
+              const span = document.createElement('span');
+              span.className = "px-3 py-1 bg-blue-50 text-blue-700 text-xs font-bold rounded-lg border border-blue-100";
+              span.textContent = tech.trim();
+              techContainer.appendChild(span);
+          });
+      }
+
+      // Structure
+      const treeContainer = document.getElementById('modal-tree-container');
+      const treeContent = document.getElementById('modal-tree-content');
+      if (projet.structure && projet.structure.length > 0) {
+          treeContainer.classList.remove('hidden');
+          treeContent.innerHTML = projet.structure.map(item => `
+              <div class="flex items-center py-1 hover:bg-white/5 px-2 rounded transition-colors group">
+                  <span class="text-gray-600 mr-2">├──</span>
+                  <i class="fas ${item.type === 'file' ? 'fa-file-code text-blue-400' : 'fa-folder text-yellow-500'} mr-2 text-[10px]"></i>
+                  <span class="truncate">${item.path}</span>
+              </div>
+          `).join('');
+      } else {
+          treeContainer.classList.add('hidden');
+      }
+
+      // Download link
+      const downloadLink = document.getElementById('modal-download-link');
+      downloadLink.href = projet.lien;
+      downloadLink.download = projet.titre.toLowerCase().replace(/\s+/g, '_') + ".zip";
+
+      // Show modal with animation
+      modal.classList.remove('hidden');
+      document.body.style.overflow = 'hidden';
+  }
+
+  function closeProjectModal() {
+      const modal = document.getElementById('project-modal');
+      modal.classList.add('hidden');
+      document.body.style.overflow = 'auto';
+  }
+
+  // Filter & Sort Logic
+  let currentSort = 'desc'; // newest first
+
+  function toggleFilterMenu(e) {
+      e.stopPropagation();
+      const menu = document.getElementById('filter-menu');
+      menu.classList.toggle('hidden');
+  }
+
+  function filterByTech(tech) {
+      const grid = document.getElementById('projects-grid');
+      const cards = document.querySelectorAll('.project-card');
+      const noResults = document.getElementById('no-results');
+      let visibleCount = 0;
+
+      cards.forEach(card => {
+          const index = card.getAttribute('data-index');
+          const projet = PROJECTS_DATA[index];
+          const matches = tech === 'all' || (projet.technologies && projet.technologies.includes(tech));
+
+          if (matches) {
+              card.style.display = 'block';
+              visibleCount++;
+          } else {
+              card.style.display = 'none';
+          }
+      });
+
+      if (noResults) {
+          noResults.classList.toggle('hidden', visibleCount > 0);
+      }
+
+      document.getElementById('filter-menu').classList.add('hidden');
+
+      // Update UI feedback
+      const filterBtn = document.getElementById('filter-btn');
+      filterBtn.innerHTML = `<i class="fas fa-filter"></i> ${tech === 'all' ? 'Filtrer' : tech}`;
+      filterBtn.classList.toggle('bg-blue-50', tech !== 'all');
+      filterBtn.classList.toggle('text-blue-600', tech !== 'all');
+  }
+
+  function toggleSort() {
+      currentSort = currentSort === 'desc' ? 'asc' : 'desc';
+      const grid = document.getElementById('projects-grid');
+      const cards = Array.from(document.querySelectorAll('.project-card'));
+      const sortText = document.getElementById('sort-text');
+      const sortBtn = document.getElementById('sort-btn');
+
+      cards.sort((a, b) => {
+          const projA = PROJECTS_DATA[a.getAttribute('data-index')];
+          const projB = PROJECTS_DATA[b.getAttribute('data-index')];
+          return currentSort === 'desc' ?
+              projB.updated_at_raw - projA.updated_at_raw :
+              projA.updated_at_raw - projB.updated_at_raw;
+      });
+
+      // Re-append in new order
+      cards.forEach(card => grid.appendChild(card));
+
+      // Update UI
+      sortText.textContent = currentSort === 'desc' ? 'Plus récents' : 'Plus anciens';
+      sortBtn.classList.add('bg-blue-50', 'text-blue-600');
+  }
+
+  function initTechFilters() {
+      const techList = document.getElementById('tech-filter-list');
+      const techs = new Set();
+
+      PROJECTS_DATA.forEach(p => {
+          if (p.technologies) {
+              p.technologies.split(',').forEach(t => techs.add(t.trim()));
+          }
+      });
+
+      techList.innerHTML = Array.from(techs).sort().map(tech => `
+          <button onclick="filterByTech('${tech}')" class="w-full text-left px-4 py-2 text-sm hover:bg-blue-50 hover:text-blue-600 transition-colors">
+              ${tech}
+          </button>
+      `).join('');
+  }
+
+  // Close menus when clicking outside
+  document.addEventListener('click', () => {
+      document.getElementById('filter-menu').classList.add('hidden');
+  });
+
   // Animation on scroll
   const observerOptions = {
     threshold: 0.1,
@@ -375,12 +705,19 @@
   }, observerOptions);
 
   document.addEventListener("DOMContentLoaded", () => {
-    const cards = document.querySelectorAll(".bg-white");
+    const cards = document.querySelectorAll(".project-card");
     cards.forEach((card) => {
       card.style.opacity = "0";
       card.style.transform = "translateY(20px)";
       card.style.transition = "opacity 0.5s ease, transform 0.5s ease";
       observer.observe(card);
+    });
+
+    initTechFilters();
+
+    // Close modal on escape key
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') closeProjectModal();
     });
   });
 </script>

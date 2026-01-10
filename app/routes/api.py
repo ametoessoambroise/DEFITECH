@@ -2,6 +2,7 @@ from flask import Blueprint, request, jsonify, current_app
 from werkzeug.security import check_password_hash
 from app.models.user import User
 from app.services.jwt_service import JWTService
+from app.utils.cloudinary_utils import upload_to_cloudinary
 import functools
 
 api_bp = Blueprint("api", __name__, url_prefix="/api")
@@ -99,7 +100,6 @@ def get_projects(current_user):
 def sync_project(current_user):
     from app.models.projet import Projet
     from app.extensions import db
-    import os
     import json
     from werkzeug.utils import secure_filename
 
@@ -138,17 +138,22 @@ def sync_project(current_user):
         if technologies:
             project.technologies = technologies
 
-    # Sauvegarde du ZIP
-    upload_path = os.path.join(current_app.root_path, "static", "uploads", "projects")
-    if not os.path.exists(upload_path):
-        os.makedirs(upload_path)
-
-    filename = secure_filename(f"project_{project.id}_{current_user.id}.zip")
-    zip_path = os.path.join(upload_path, filename)
-    zip_file.save(zip_path)
-
-    # Mise à jour des liens et structure
-    project.lien = f"/static/uploads/projects/{filename}"
+    # Sauvegarde du ZIP sur Cloudinary
+    try:
+        filename = secure_filename(f"project_{project.id}_{current_user.id}.zip")
+        upload_result = upload_to_cloudinary(
+            zip_file.stream, filename, folder="projects", resource_type="raw"
+        )
+        project.lien = upload_result.get("secure_url")
+    except Exception as e:
+        current_app.logger.error(f"Erreur lors de l'upload Cloudinary: {str(e)}")
+        # Optionnel: on peut garder un fallback local ou retourner une erreur
+        return (
+            jsonify(
+                {"message": "Erreur lors de la sauvegarde du fichier sur le cloud"}
+            ),
+            500,
+        )
     if structure_json_data:
         try:
             project.structure_json = json.loads(structure_json_data)
@@ -196,7 +201,7 @@ def defai_chat(current_user):
             "message_id": 789
         }
     """
-    from app.services.defai_code_assistant import DefaiCodeAssistantService, CodeContext
+    from app.services.defai_code_assistant import DefaiCodeAssistantService
     from app.models.ai_assistant import AIConversation, AIMessage
     from app.routes.ai_assistant import call_gemini_api, orchestrator
     from app.extensions import db

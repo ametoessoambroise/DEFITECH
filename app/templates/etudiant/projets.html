@@ -1,0 +1,378 @@
+{% extends "base.html" %} {% block title %}Mes Projets | DEFITECH{% endblock %}
+{% block content %}
+<div class="min-h-screen bg-gray-50">
+  <!-- Header Section -->
+  <div
+    class="bg-gradient-to-r from-blue-700 to-blue-900 text-white py-16 px-4 sm:px-6 lg:px-8"
+  >
+    <div class="max-w-7xl mx-auto">
+      <div class="text-center">
+        <div
+          class="inline-flex items-center justify-center w-16 h-16 bg-white/10 backdrop-blur-sm rounded-2xl mb-6"
+        >
+          <i class="fas fa-rocket text-3xl text-white"></i>
+        </div>
+        <h1 class="text-4xl md:text-5xl font-bold mb-4">
+          Tableau de Bord des Projets
+        </h1>
+        <p class="text-blue-100 text-lg max-w-2xl mx-auto">
+          Gérez et visualisez vos projets synchronisés depuis VS Code
+          (Intelitech)
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Stats Section -->
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-8 mb-12">
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div class="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
+        <div class="flex items-center justify-between">
+          <div>
+            <p class="text-sm text-gray-600 font-medium">Total Projets</p>
+            <p class="text-3xl font-bold text-gray-900 mt-1">
+              {{ projets|length }}
+            </p>
+          </div>
+          <div
+            class="w-12 h-12 bg-blue-50 rounded-lg flex items-center justify-center"
+          >
+            <i class="fas fa-folder text-blue-600 text-xl"></i>
+          </div>
+        </div>
+      </div>
+
+      <div class="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
+        <div class="flex items-center justify-between">
+          <div>
+            <p class="text-sm text-gray-600 font-medium">Synchronisés</p>
+            <p class="text-3xl font-bold text-gray-900 mt-1">
+              {{ projets|length }}
+            </p>
+          </div>
+          <div
+            class="w-12 h-12 bg-green-50 rounded-lg flex items-center justify-center"
+          >
+            <i class="fas fa-sync text-green-600 text-xl"></i>
+          </div>
+        </div>
+      </div>
+
+      <div class="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
+        <div class="flex items-center justify-between">
+          <div>
+            <p class="text-sm text-gray-600 font-medium">Technologies</p>
+            <p class="text-3xl font-bold text-gray-900 mt-1">
+              {% set all_techs = [] %} {% for projet in projets %} {% if
+              projet.technologies %} {% for tech in
+              projet.technologies.split(',') %} {% if tech.strip() not in
+              all_techs %} {{ all_techs.append(tech.strip()) or '' }} {% endif
+              %} {% endfor %} {% endif %} {% endfor %} {{ all_techs|length }}
+            </p>
+          </div>
+          <div
+            class="w-12 h-12 bg-purple-50 rounded-lg flex items-center justify-center"
+          >
+            <i class="fas fa-code text-purple-600 text-xl"></i>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Projects Grid -->
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-16">
+    {% if projets %}
+    <div
+      class="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4"
+    >
+      <h2 class="text-2xl font-bold text-gray-900">Tous les projets</h2>
+      <div class="flex gap-3">
+        <button
+          class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+        >
+          <i class="fas fa-filter mr-2"></i>Filtrer
+        </button>
+        <button
+          class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+        >
+          <i class="fas fa-sort mr-2"></i>Trier
+        </button>
+      </div>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      {% for projet in projets %}
+      <div
+        class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-lg hover:border-blue-300 transition-all duration-300 group"
+      >
+        <!-- Project Header -->
+        <div class="p-6 border-b border-gray-100">
+          <div class="flex items-start justify-between mb-3">
+            <div class="flex-1">
+              <h3
+                class="text-xl font-bold text-gray-900 mb-2 group-hover:text-blue-700 transition-colors line-clamp-1"
+              >
+                {{ projet.titre }}
+              </h3>
+              <p class="text-sm text-gray-600 line-clamp-2">
+                {{ projet.description or 'Aucune description disponible pour ce
+                projet.' }}
+              </p>
+            </div>
+            <div class="ml-3 flex-shrink-0">
+              <div
+                class="w-10 h-10 bg-gradient-to-br from-blue-500 to-blue-700 rounded-lg flex items-center justify-center text-white font-bold text-sm shadow-sm"
+              >
+                {{ projet.titre[0].upper() }}
+              </div>
+            </div>
+          </div>
+
+          <!-- Technologies -->
+          {% if projet.technologies %}
+          <div class="flex flex-wrap gap-2 mt-4">
+            {% for tech in projet.technologies.split(',')[:4] %}
+            <span
+              class="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-medium bg-blue-50 text-blue-700 border border-blue-100"
+            >
+              <i class="fas fa-code text-[10px] mr-1.5"></i>
+              {{ tech.strip() }}
+            </span>
+            {% endfor %} {% if projet.technologies.split(',')|length > 4 %}
+            <span
+              class="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-medium bg-gray-100 text-gray-600"
+            >
+              +{{ projet.technologies.split(',')|length - 4 }}
+            </span>
+            {% endif %}
+          </div>
+          {% endif %}
+        </div>
+
+        <!-- Project Body -->
+        <div class="p-6">
+          <!-- Structure Preview -->
+          {% if projet.structure_json %}
+          <div class="mb-4">
+            <button
+              onclick="toggleTree('tree-{{ loop.index }}')"
+              class="w-full flex items-center justify-between px-4 py-3 rounded-lg bg-gray-50 hover:bg-gray-100 border border-gray-200 transition-colors group/btn"
+            >
+              <span class="flex items-center text-sm font-medium text-gray-700">
+                <i class="fas fa-folder-tree mr-2 text-blue-600"></i>
+                Explorer l'arborescence
+              </span>
+              <i
+                class="fas fa-chevron-down text-gray-400 transition-transform duration-300"
+                id="icon-{{ loop.index }}"
+              ></i>
+            </button>
+
+            <div
+              id="tree-{{ loop.index }}"
+              class="hidden mt-3 max-h-64 overflow-y-auto bg-gray-900 rounded-lg p-4 border border-gray-700"
+              style="scrollbar-width: thin; scrollbar-color: #4b5563 #1f2937"
+            >
+              <div class="space-y-1 font-mono text-xs">
+                {% for item in projet.structure_json %}
+                <div
+                  class="flex items-center py-1 text-gray-300 hover:text-white hover:bg-gray-800 px-2 rounded transition-colors cursor-default"
+                >
+                  <span class="text-gray-600 mr-2">├──</span>
+                  {% if item.type == 'file' %}
+                  <i
+                    class="fas fa-file-code text-blue-400 mr-2 text-[10px]"
+                  ></i>
+                  {% else %}
+                  <i class="fas fa-folder text-yellow-500 mr-2 text-[10px]"></i>
+                  {% endif %}
+                  <span class="truncate">{{ item.path }}</span>
+                </div>
+                {% endfor %}
+              </div>
+            </div>
+          </div>
+          {% endif %}
+
+          <!-- Project Meta -->
+          <div
+            class="flex items-center justify-between pt-4 border-t border-gray-100"
+          >
+            <div class="flex items-center text-xs text-gray-500">
+              <i class="far fa-clock mr-1.5"></i>
+              <span>{{ projet.updated_at.strftime('%d/%m/%Y à %H:%M') }}</span>
+            </div>
+            <div class="flex gap-2">
+              <button
+                class="p-2.5 rounded-lg bg-gray-50 text-gray-600 hover:bg-gray-100 hover:text-gray-900 transition-all"
+                title="Détails"
+              >
+                <i class="fas fa-eye text-sm"></i>
+              </button>
+              <a
+                href="{{ projet.lien }}"
+                class="p-2.5 rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition-all shadow-sm hover:shadow-md"
+                download="{{ projet.name }}"
+                title="Télécharger"
+              >
+                <i class="fas fa-download text-sm"></i>
+              </a>
+            </div>
+          </div>
+        </div>
+
+        <!-- Status Badge -->
+        <div class="px-6 pb-4">
+          <div
+            class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-green-50 text-green-700 border border-green-200"
+          >
+            <span
+              class="w-1.5 h-1.5 bg-green-500 rounded-full mr-2 animate-pulse"
+            ></span>
+            Synchronisé
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    {% else %}
+    <!-- Empty State -->
+    <div class="text-center py-20">
+      <div
+        class="max-w-md mx-auto bg-white rounded-2xl shadow-sm border border-gray-200 p-12"
+      >
+        <div
+          class="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-blue-50 to-blue-100 rounded-2xl mb-6"
+        >
+          <i class="fas fa-rocket text-4xl text-blue-600"></i>
+        </div>
+        <h2 class="text-2xl font-bold text-gray-900 mb-3">
+          Aucun projet synchronisé
+        </h2>
+        <p class="text-gray-600 mb-8 leading-relaxed">
+          Utilisez l'extension Intelitech pour VS Code pour synchroniser vos
+          projets et commencer à travailler.
+        </p>
+        <button
+          class="inline-flex items-center px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white font-medium rounded-lg hover:from-blue-700 hover:to-blue-800 transition-all shadow-lg shadow-blue-500/30 hover:shadow-xl"
+        >
+          <i class="fas fa-download mr-2"></i>
+          Télécharger l'extension
+        </button>
+        <div
+          class="mt-6 flex items-center justify-center gap-6 text-sm text-gray-500"
+        >
+          <a href="#" class="hover:text-blue-600 transition-colors">
+            <i class="fas fa-book mr-1"></i>Documentation
+          </a>
+          <a href="#" class="hover:text-blue-600 transition-colors">
+            <i class="fas fa-question-circle mr-1"></i>Guide rapide
+          </a>
+        </div>
+      </div>
+    </div>
+    {% endif %}
+  </div>
+</div>
+
+<style>
+  /* Custom scrollbar for tree view */
+  #tree-{{ loop.index }}::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  #tree-{{ loop.index }}::-webkit-scrollbar-track {
+    background: #1F2937;
+    border-radius: 3px;
+  }
+
+  #tree-{{ loop.index }}::-webkit-scrollbar-thumb {
+    background: #4B5563;
+    border-radius: 3px;
+  }
+
+  #tree-{{ loop.index }}::-webkit-scrollbar-thumb:hover {
+    background: #6B7280;
+  }
+
+  /* Smooth animations */
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .bg-white {
+    animation: fadeIn 0.3s ease-out;
+  }
+
+  /* Line clamp utilities */
+  .line-clamp-1 {
+    display: -webkit-box;
+    -webkit-line-clamp: 1;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .line-clamp-2 {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .line-clamp-3 {
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+</style>
+
+<script>
+  function toggleTree(id) {
+    const el = document.getElementById(id);
+    const iconId = "icon-" + id.split("-")[1];
+    const icon = document.getElementById(iconId);
+
+    if (el.classList.contains("hidden")) {
+      el.classList.remove("hidden");
+      icon.style.transform = "rotate(180deg)";
+    } else {
+      el.classList.add("hidden");
+      icon.style.transform = "rotate(0deg)";
+    }
+  }
+
+  // Animation on scroll
+  const observerOptions = {
+    threshold: 0.1,
+    rootMargin: "0px 0px -50px 0px",
+  };
+
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach((entry) => {
+      if (entry.isIntersecting) {
+        entry.target.style.opacity = "1";
+        entry.target.style.transform = "translateY(0)";
+      }
+    });
+  }, observerOptions);
+
+  document.addEventListener("DOMContentLoaded", () => {
+    const cards = document.querySelectorAll(".bg-white");
+    cards.forEach((card) => {
+      card.style.opacity = "0";
+      card.style.transform = "translateY(20px)";
+      card.style.transition = "opacity 0.5s ease, transform 0.5s ease";
+      observer.observe(card);
+    });
+  });
+</script>
+{% endblock %}

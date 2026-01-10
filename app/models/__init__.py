@@ -29,6 +29,13 @@ try:
     from .study_progress import StudyProgress  # noqa: F401
     from .webauthn_credential import WebauthnCredential  # noqa: F401
     from .security_incident import SecurityIncident  # noqa: F401
+    from .academic import (
+        AcademicArchivedStudent,
+        AcademicArchivedGrade,
+        PromotionRule,
+    )  # noqa: F401
+    from .academic_year_config import AcademicYearConfig  # noqa: F401
+    from .evaluation_period import EvaluationPeriod  # noqa: F401
 except Exception:
     # Laisser silencieux pendant l'initialisation; init_models fera les imports complets
     User = None  # type: ignore
@@ -56,6 +63,9 @@ except Exception:
     StudyProgress = None  # type: ignore
     WebauthnCredential = None  # type: ignore
     SecurityIncident = None  # type: ignore
+    AcademicArchivedStudent = None  # type: ignore
+    AcademicArchivedGrade = None  # type: ignore
+    PromotionRule = None  # type: ignore
 
     from .annee import Annee
     from .matiere import Matiere
@@ -88,6 +98,13 @@ def init_models():
     from .ai_assistant import AIConversation, AIMessage, Dataset
     from .webauthn_credential import WebauthnCredential
     from .security_incident import SecurityIncident
+    from .academic import (
+        AcademicArchivedStudent,
+        AcademicArchivedGrade,
+        PromotionRule,
+    )
+    from .academic_year_config import AcademicYearConfig
+    from .evaluation_period import EvaluationPeriod
 
     # Retourne un dictionnaire des modèles pour faciliter l'import
     return {
@@ -119,6 +136,11 @@ def init_models():
         "Dataset": Dataset,
         "WebauthnCredential": WebauthnCredential,
         "SecurityIncident": SecurityIncident,
+        "AcademicArchivedStudent": AcademicArchivedStudent,
+        "AcademicArchivedGrade": AcademicArchivedGrade,
+        "PromotionRule": PromotionRule,
+        "AcademicYearConfig": AcademicYearConfig,
+        "EvaluationPeriod": EvaluationPeriod,
     }
 
 
@@ -162,4 +184,10 @@ __all__ = [
     "Dataset",
     "WebauthnCredential",
     "SecurityIncident",
+    # Modèles de Gestion Académique
+    "AcademicArchivedStudent",
+    "AcademicArchivedGrade",
+    "PromotionRule",
+    "AcademicYearConfig",
+    "EvaluationPeriod",
 ]

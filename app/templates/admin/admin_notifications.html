@@ -7,12 +7,12 @@ Administration DEFITECH{% endblock %} {% block content %}
           Notifications globales
         </h1>
         <p class="text-sm text-gray-500 mt-1">
-          Gérez les messages affichés sur tout le site
+          Gérez les messages affichés sur toute la plat
         </p>
       </div>
 
       <a
-        href="{{ url_for('admin_create_global_notification') }}"
+        href="{{ url_for('admin.admin_create_global_notification') }}"
         class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium shadow-sm transition flex items-center"
       >
         <i class="fas fa-plus mr-2"></i>
@@ -185,7 +185,7 @@ Administration DEFITECH{% endblock %} {% block content %}
             {% if notification.est_active %}
             <form
               method="POST"
-              action="{{ url_for('admin_toggle_global_notification', notification_id=notification.id) }}"
+              action="{{ url_for('admin.admin_toggle_global_notification', notification_id=notification.id) }}"
               onsubmit="return confirm('Êtes-vous sûr de vouloir désactiver cette notification ?');"
             >
               <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
@@ -200,7 +200,7 @@ Administration DEFITECH{% endblock %} {% block content %}
             {% else %}
             <form
               method="POST"
-              action="{{ url_for('admin_toggle_global_notification', notification_id=notification.id) }}"
+              action="{{ url_for('admin.admin_toggle_global_notification', notification_id=notification.id) }}"
             >
               <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
               <button
@@ -215,7 +215,7 @@ Administration DEFITECH{% endblock %} {% block content %}
 
             <form
               method="POST"
-              action="{{ url_for('admin_delete_global_notification', notification_id=notification.id) }}"
+              action="{{ url_for('admin.admin_delete_global_notification', notification_id=notification.id) }}"
               onsubmit="return confirm('Êtes-vous sûr de vouloir supprimer cette notification ? Cette action est irréversible.');"
             >
               <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
@@ -250,7 +250,7 @@ Administration DEFITECH{% endblock %} {% block content %}
         Vous n'avez créé aucune notification globale pour le moment.
       </p>
       <a
-        href="{{ url_for('admin_create_global_notification') }}"
+        href="{{ url_for('admin.admin_create_global_notification') }}"
         class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium"
       >
         Créer votre première notification

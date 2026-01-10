@@ -1,0 +1,113 @@
+{% extends "base.html" %} {% block title %}Détails Archive | DEFITECH{% endblock
+%} {% block content %}
+<div class="min-h-screen bg-gray-50 py-8 px-4 sm:px-6 lg:px-8">
+  <div class="max-w-4xl mx-auto">
+    <div class="mb-6">
+      <a
+        href="javascript:history.back()"
+        class="text-blue-600 hover:text-blue-800 font-semibold flex items-center"
+      >
+        <i class="fas fa-arrow-left mr-2"></i> Retour
+      </a>
+    </div>
+
+    <div class="bg-white rounded-2xl shadow-xl overflow-hidden mb-8">
+      <div class="bg-gradient-to-r from-blue-700 to-indigo-800 p-8 text-white">
+        <div class="flex justify-between items-start">
+          <div>
+            <h1 class="text-3xl font-bold mb-2">Relevé de Notes Archivé</h1>
+            <p class="opacity-90">
+              {{ archive.annee_academique }} • {{ archive.niveau }} • {{
+              archive.filiere_nom }}
+            </p>
+          </div>
+          <span
+            class="px-4 py-2 rounded-lg text-lg font-bold bg-white text-blue-900"
+          >
+            {{ archive.decision_jury }}
+          </span>
+        </div>
+      </div>
+
+      <div class="p-8">
+        <h3 class="text-lg font-bold text-gray-900 mb-4 border-b pb-2">
+          Détails des Matières
+        </h3>
+        <div class="overflow-x-auto">
+          <table class="min-w-full divide-y divide-gray-200">
+            <thead>
+              <tr>
+                <th
+                  class="px-4 py-2 text-left text-xs font-bold text-gray-500 uppercase"
+                >
+                  Matière
+                </th>
+                <th
+                  class="px-4 py-2 text-center text-xs font-bold text-gray-500 uppercase"
+                >
+                  Semestre
+                </th>
+                <th
+                  class="px-4 py-2 text-center text-xs font-bold text-gray-500 uppercase"
+                >
+                  Credits
+                </th>
+                <th
+                  class="px-4 py-2 text-center text-xs font-bold text-gray-500 uppercase"
+                >
+                  Moyenne
+                </th>
+                <th
+                  class="px-4 py-2 text-center text-xs font-bold text-gray-500 uppercase"
+                >
+                  Statut
+                </th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-200">
+              {% for grade in archive.grades %}
+              <tr class="hover:bg-gray-50">
+                <td class="px-4 py-3 text-sm font-medium text-gray-900">
+                  {{ grade.matiere_nom }}
+                </td>
+                <td class="px-4 py-3 text-center text-sm text-gray-500">
+                  {{ grade.semestre }}
+                </td>
+                <td class="px-4 py-3 text-center text-sm text-gray-900">
+                  {{ grade.credits_matiere }}
+                </td>
+                <td
+                  class="px-4 py-3 text-center text-sm font-bold text-gray-900"
+                >
+                  {{ grade.moyenne_matiere }}
+                </td>
+                <td class="px-4 py-3 text-center">
+                  {% if grade.is_validated %}
+                  <span class="text-green-600 font-bold text-xs"
+                    ><i class="fas fa-check"></i> Validé</span
+                  >
+                  {% else %}
+                  <span class="text-red-600 font-bold text-xs"
+                    ><i class="fas fa-times"></i> Non Validé</span
+                  >
+                  {% endif %}
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+            <tfoot class="bg-gray-50 font-bold">
+              <tr>
+                <td colspan="2" class="px-4 py-3 text-right">TOTAL</td>
+                <td class="px-4 py-3 text-center">
+                  {{ archive.credits_total_valides }}
+                </td>
+                <td colspan="2"></td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

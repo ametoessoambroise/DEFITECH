@@ -145,7 +145,13 @@ def create_app(config_class=None):
     from app.routes.image_search import image_search_bp
     from app.routes.seo import seo_bp
     from app.routes.app_lock import app_lock_bp
+    from app.routes.admin_academic import admin_academic_bp
+    from app.routes.academic_history import academic_history_bp
 
+    from app.routes.api import api_bp
+
+    csrf.exempt(api_bp)
+    app.register_blueprint(api_bp)
     app.register_blueprint(auth_bp)
     app.register_blueprint(admin_bp)
     app.register_blueprint(teachers_bp)
@@ -168,6 +174,8 @@ def create_app(config_class=None):
     app.register_blueprint(image_search_bp, url_prefix="/image-search")
     app.register_blueprint(seo_bp)
     app.register_blueprint(app_lock_bp)
+    app.register_blueprint(admin_academic_bp)
+    app.register_blueprint(academic_history_bp)
 
     # Register SocketIO handlers
     register_socketio_handlers(socketio)

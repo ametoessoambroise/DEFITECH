@@ -1,0 +1,109 @@
+{% extends "admin/base.html" %} {% block title %}Archives Académiques |
+DEFITECH{% endblock %} {% block content %}
+<div class="min-h-screen bg-gray-50 py-8 px-4 sm:px-6 lg:px-8">
+  <div class="max-w-7xl mx-auto">
+    <h1 class="text-3xl font-bold text-gray-900 mb-8">Archives Académiques</h1>
+
+    <!-- Search -->
+    <div class="bg-white rounded-xl shadow-sm p-6 mb-8">
+      <form
+        action="{{ url_for('academic_history.search_history') }}"
+        method="GET"
+        class="grid grid-cols-1 md:grid-cols-4 gap-4"
+      >
+        <input
+          type="text"
+          name="filiere"
+          placeholder="Filière..."
+          class="rounded-lg border-gray-300"
+          value="{{ request.args.get('filiere', '') }}"
+        />
+        <input
+          type="text"
+          name="annee"
+          placeholder="Année (ex: 2024-2025)..."
+          class="rounded-lg border-gray-300"
+          value="{{ request.args.get('annee', '') }}"
+        />
+        <button
+          type="submit"
+          class="bg-blue-600 text-white rounded-lg px-4 py-2 font-bold hover:bg-blue-700 transition"
+        >
+          Rechercher
+        </button>
+      </form>
+    </div>
+
+    <div class="bg-white rounded-xl shadow-lg run-overflow-hidden">
+      <table class="min-w-full divide-y divide-gray-200">
+        <thead class="bg-gray-50">
+          <tr>
+            <th
+              class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+            >
+              Année
+            </th>
+            <th
+              class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+            >
+              Filière / Niveau
+            </th>
+            <th
+              class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+            >
+              Résultats
+            </th>
+            <th
+              class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+            >
+              Décision
+            </th>
+            <th
+              class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+            >
+              Actions
+            </th>
+          </tr>
+        </thead>
+        <tbody class="bg-white divide-y divide-gray-200">
+          {% for archive in archives %}
+          <tr class="hover:bg-gray-50">
+            <td
+              class="px-6 py-4 whitespace-nowrap text-sm font-bold text-gray-900"
+            >
+              {{ archive.annee_academique }}
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap">
+              <div class="text-sm font-medium text-gray-900">
+                {{ archive.filiere_nom }}
+              </div>
+              <div class="text-sm text-gray-500">{{ archive.niveau }}</div>
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+              Crédits: {{ archive.credits_total_valides }} / 60
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap">
+              <span
+                class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full {{ 'bg-green-100 text-green-800' if archive.decision_jury == 'ADMIS' else 'bg-red-100 text-red-800' }}"
+              >
+                {{ archive.decision_jury }}
+              </span>
+            </td>
+            <td
+              class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium"
+            >
+              <a
+                href="{{ url_for('admin_academic.download_archive', archive_id=archive.id) }}"
+                class="text-indigo-600 hover:text-indigo-900"
+              >
+                <i class="fas fa-download mr-1"></i> PDF
+              </a>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}

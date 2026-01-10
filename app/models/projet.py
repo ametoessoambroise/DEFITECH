@@ -17,6 +17,7 @@ class Projet(db.Model):
     date_fin = db.Column(db.Date)
     lien = db.Column(db.String(500))
     en_cours = db.Column(db.Boolean, default=False)
+    structure_json = db.Column(db.JSON, nullable=True)
     created_at = db.Column(db.DateTime, default=db.func.current_timestamp())
     updated_at = db.Column(
         db.DateTime,
@@ -34,6 +35,7 @@ class Projet(db.Model):
             "date_fin": self.date_fin.isoformat() if self.date_fin else None,
             "lien": self.lien,
             "en_cours": self.en_cours,
+            "structure_json": self.structure_json,
             "created_at": self.created_at.isoformat() if self.created_at else None,
             "updated_at": self.updated_at.isoformat() if self.updated_at else None,
         }

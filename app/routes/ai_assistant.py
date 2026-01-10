@@ -792,6 +792,11 @@ def get_conversations():
         conversations = get_user_conversations(
             current_user.id, page=page, per_page=per_page
         )
+        if request.is_json or request.args.get("format") == "json":
+            return jsonify({
+                "success": True,
+                "data": conversations
+            })
         return jsonify(conversations)
     except Exception as e:
         logger.error(f"Erreur route conversations: {e}")
@@ -849,6 +854,11 @@ def create_new_conversation():
             return jsonify({"error": "Rôle utilisateur non reconnu"}), 400
 
         conversation = create_conversation(current_user.id, user_role)
+        if request.is_json or request.args.get("format") == "json":
+            return jsonify({
+                "success": True,
+                "data": conversation
+            })
         return jsonify(conversation)
     except Exception as e:
         logger.error(f"Erreur création conversation: {e}")
@@ -891,6 +901,11 @@ def get_conversation(conversation_id):
         result = get_conversation_messages(
             conversation_id, current_user.id, page=page, per_page=per_page
         )
+        if request.is_json or request.args.get("format") == "json":
+            return jsonify({
+                "success": True,
+                "data": result
+            })
         return jsonify(result)
     except Exception as e:
         logger.error(f"Erreur récupération conversation: {e}")

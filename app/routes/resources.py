@@ -334,6 +334,48 @@ def index():
         # Calculer les statistiques
         stats = calculate_stats(resources)
 
+        if request.is_json or request.args.get("format") == "json":
+            return jsonify(
+                {
+                    "success": True,
+                    "data": {
+                        "resources": [
+                            {
+                                "id": r.id,
+                                "titre": r.titre,
+                                "description": r.description,
+                                "nom_fichier": r.nom_fichier,
+                                "url": r.chemin_fichier,
+                                "type_fichier": r.type_fichier,
+                                "taille": r.taille,
+                                "type_ressource": r.type_ressource,
+                                "filiere": r.filiere,
+                                "annee": r.annee,
+                                "matiere": r.matiere.nom if r.matiere else None,
+                                "enseignant": (
+                                    f"{r.enseignant.prenom} {r.enseignant.nom}"
+                                    if r.enseignant
+                                    else "Admin"
+                                ),
+                                "date_upload": (
+                                    r.date_upload.isoformat() if r.date_upload else None
+                                ),
+                                "telechargements": getattr(
+                                    r, "nombre_telechargements", 0
+                                ),
+                            }
+                            for r in resources
+                        ],
+                        "stats": stats,
+                        "filters": {
+                            "filieres": user_context["filieres"],
+                            "annees": user_context["annees"],
+                            "resource_types": RESOURCE_TYPES,
+                        },
+                    },
+                }
+            )
+
         return render_template(
             "resources/index.html",
             resources=resources,
@@ -372,12 +414,18 @@ def upload():
 
     """
     if current_user.role != "enseignant":
-        flash("Seuls les enseignants peuvent uploader des ressources.", "error")
+        msg = "Seuls les enseignants peuvent uploader des ressources."
+        if request.is_json or request.args.get("format") == "json":
+            return jsonify({"success": False, "error": msg}), 403
+        flash(msg, "error")
         return redirect(url_for("resources.index"))
 
     enseignant = Enseignant.query.filter_by(user_id=current_user.id).first()
     if not enseignant:
-        flash("Profil enseignant non trouvé.", "error")
+        msg = "Profil enseignant non trouvé."
+        if request.is_json or request.args.get("format") == "json":
+            return jsonify({"success": False, "error": msg}), 404
+        flash(msg, "error")
         return redirect(url_for("resources.index"))
 
     filieres, annees = get_enseignant_filieres(enseignant.id)
@@ -390,13 +438,21 @@ def upload():
         )
 
     if request.method == "POST":
+        is_json = request.is_json
+        data = request.get_json() if is_json else request.form
+
         # Validation des champs
-        titre = request.form.get("titre", "").strip()
-        description = request.form.get("description", "").strip()
-        type_ressource = request.form.get("type_ressource", "")
-        filiere = request.form.get("filiere", "")
-        annee = request.form.get("annee", "")
-        matiere_id = request.form.get("matiere_id", type=int)
+        titre = data.get("titre", "").strip()
+        description = data.get("description", "").strip()
+        type_ressource = data.get("type_ressource", "")
+        filiere = data.get("filiere", "")
+        annee = data.get("annee", "")
+        matiere_id = data.get("matiere_id")
+        if matiere_id:
+            try:
+                matiere_id = int(matiere_id)
+            except ValueError:
+                matiere_id = None
 
         # Validation des données
         errors = []
@@ -419,20 +475,21 @@ def upload():
             errors.append("La description ne doit pas dépasser 1000 caractères.")
 
         # Validation du fichier (Cloudinary URL)
-        file_url = request.form.get("file_url")
+        file_url = data.get("file_url")
         if not file_url:
             errors.append("Le fichier doit être uploadé avant de soumettre.")
 
         if errors:
+            if is_json:
+                return jsonify({"success": False, "errors": errors}), 400
             for error in errors:
                 flash(error, "error")
             return redirect(request.url)
 
         try:
-            # Récupérer les métadonnées depuis le formulaire (peuplées par JS après upload Cloudinary)
-            original_filename = request.form.get("original_filename", "unknown")
-            file_size = request.form.get("file_size", 0)
-            file_format = request.form.get("file_format", "").lower()
+            original_filename = data.get("original_filename", "unknown")
+            file_size = data.get("file_size", 0)
+            file_format = data.get("file_format", "").lower()
 
             # Si le format n'est pas fourni, essayer de le déduire de l'URL ou du nom original
             if not file_format and "." in original_filename:
@@ -456,6 +513,15 @@ def upload():
             db.session.add(resource)
             db.session.commit()
 
+            if is_json:
+                return jsonify(
+                    {
+                        "success": True,
+                        "message": f"Ressource '{titre}' ajoutée avec succès !",
+                        "resource_id": resource.id,
+                    }
+                )
+
             flash(f"Ressource '{titre}' ajoutée avec succès !", "success")
             current_app.logger.info(
                 f"Ressource ajoutée : {titre} par {current_user.prenom} {current_user.nom}"
@@ -464,11 +530,26 @@ def upload():
 
         except Exception as e:
             db.session.rollback()
-            current_app.logger.error(
-                f"Erreur lors de l'enregistrement de la ressource: {str(e)}"
-            )
-            flash(f"Erreur lors de l'enregistrement : {str(e)}", "error")
+            msg = f"Erreur lors de l'enregistrement : {str(e)}"
+            if is_json:
+                return jsonify({"success": False, "error": msg}), 500
+            flash(msg, "error")
             return redirect(request.url)
+
+    if request.is_json or request.args.get("format") == "json":
+        return jsonify(
+            {
+                "success": True,
+                "data": {
+                    "filieres": filieres,
+                    "annees": annees,
+                    "matieres": [{"id": m.id, "nom": m.nom} for m in matieres],
+                    "resource_types": RESOURCE_TYPES,
+                    "allowed_extensions": sorted(ALLOWED_EXTENSIONS.keys()),
+                    "max_file_size_mb": MAX_FILE_SIZE // (1024 * 1024),
+                },
+            }
+        )
 
     return render_template(
         "resources/upload.html",
@@ -659,6 +740,38 @@ def my_resources():
         )
 
         stats = calculate_stats(resources)
+
+        if request.is_json or request.args.get("format") == "json":
+            return jsonify(
+                {
+                    "success": True,
+                    "data": {
+                        "resources": [
+                            {
+                                "id": r.id,
+                                "titre": r.titre,
+                                "description": r.description,
+                                "nom_fichier": r.nom_fichier,
+                                "url": r.chemin_fichier,
+                                "type_fichier": r.type_fichier,
+                                "taille": r.taille,
+                                "type_ressource": r.type_ressource,
+                                "filiere": r.filiere,
+                                "annee": r.annee,
+                                "matiere": r.matiere.nom if r.matiere else None,
+                                "date_upload": (
+                                    r.date_upload.isoformat() if r.date_upload else None
+                                ),
+                                "telechargements": getattr(
+                                    r, "nombre_telechargements", 0
+                                ),
+                            }
+                            for r in resources
+                        ],
+                        "stats": stats,
+                    },
+                }
+            )
 
         return render_template(
             "resources/my_resources.html",

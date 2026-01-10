@@ -23,11 +23,14 @@ from app.models.devoir import Devoir
 from app.models.devoir_vu import DevoirVu
 from app.models.notification import Notification
 from app.models.presence import Presence
-from app.models.presence import Presence
 from app.models.note import Note
 from app.models.note_modification_request import NoteModificationRequest
-from app.models.user import User  # Ensure User is imported for admin query
 from app.services.validation_service import ValidationService
+import logging
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
 
 teachers_bp = Blueprint("teachers", __name__, url_prefix="/enseignant")
 
@@ -112,6 +115,30 @@ def dashboard():
     # Prendre la première matière si elle existe
     matiere_courante = matieres[0] if matieres else None
 
+    if request.is_json or request.args.get("format") == "json":
+        # Support Mobile : Retourner les stats dashboard enseignant
+        return jsonify(
+            {
+                "success": True,
+                "data": {
+                    "subjects_count": len(matieres),
+                    "students_count": etudiants_count,
+                    "courses_today_count": cours_aujourdhui_count,
+                    "assignments_count": devoirs_a_corriger,
+                    "notifications_count": len(notifications),
+                    "courses_today": [
+                        {
+                            "heure_debut": c.heure_debut.strftime("%H:%M"),
+                            "heure_fin": c.heure_fin.strftime("%H:%M"),
+                            "salle": c.salle.nom_salle if c.salle else "Non définie",
+                            "matiere": c.matiere.nom_matiere if c.matiere else "-",
+                        }
+                        for c in cours_aujourdhui
+                    ],
+                },
+            }
+        )
+
     return render_template(
         "enseignant/dashboard.html",
         matieres=matieres,
@@ -163,6 +190,23 @@ def cours_aujourdhui():
         .order_by(EmploiTemps.heure_debut)
         .all()
     )
+    if request.is_json or request.args.get("format") == "json":
+        return jsonify(
+            {
+                "success": True,
+                "data": [
+                    {
+                        "filiere_nom": c.filiere_nom,
+                        "heure_debut": c.heure_debut.strftime("%H:%M"),
+                        "heure_fin": c.heure_fin.strftime("%H:%M"),
+                        "salle": c.salle_nom,
+                        "matiere_nom": c.matiere_nom,
+                    }
+                    for c in cours_aujourdhui
+                ],
+            }
+        )
+
     return render_template(
         "enseignant/cours_aujourdhui.html", cours_aujourdhui=cours_aujourdhui
     )
@@ -176,6 +220,8 @@ def notes():
     """
 
     if current_user.role != "enseignant":
+        if request.args.get("format") == "json" or request.is_json:
+            return jsonify({"success": False, "error": "Accès non autorisé"}), 403
         flash("Accès non autorisé.", "error")
         return redirect(url_for("main.index"))
 
@@ -226,32 +272,108 @@ def notes():
                 dates_evaluations[date_key] = note.date_evaluation.strftime("%Y-%m-%d")
 
     if request.method == "POST":
-        etudiant_id = request.form["etudiant_id"]
-        matiere_id = request.form["matiere_id"]
-        type_eval = request.form["type_eval"]  # 'devoir', 'examen' ou 'TP
-        note_val = float(request.form["note"])
+        if request.is_json:
+            data = request.get_json()
+            etudiant_id = data.get("etudiant_id")
+            matiere_id = data.get("matiere_id")
+            type_eval = data.get("type_eval")
+            note_val = data.get("note")
+        else:
+            etudiant_id = request.form["etudiant_id"]
+            matiere_id = request.form["matiere_id"]
+            type_eval = request.form["type_eval"]
+            note_val = request.form["note"]
+
+        # --- RESTRICTION SAISIE ---
+        # Vérifier si une période d'évaluation est ouverte pour ce type
+        from app.models.evaluation_period import EvaluationPeriod
+        from datetime import date
+
+        type_upper = type_eval.upper()
+        if type_upper == "TP":
+            type_upper = "DEVOIR"
+
+        today = date.today()
+        active_period = EvaluationPeriod.query.filter(
+            EvaluationPeriod.type_eval == type_upper,
+            EvaluationPeriod.start_date <= today,
+            EvaluationPeriod.end_date >= today,
+        ).first()
+
+        # Si pas de période active (Sauf si Admin/SuperUser ? Non, user demande restriction stricte)
+        if not active_period:
+            msg = f"La saisie des notes pour '{type_eval}' est fermée actuellement."
+            if request.is_json:
+                return jsonify({"success": False, "error": msg}), 403
+            flash(msg, "error")
+            return redirect(url_for("teachers.notes"))
+        # --------------------------
+
+        try:
+            note_float = float(note_val)
+        except (TypeError, ValueError):
+            if request.is_json:
+                return jsonify({"success": False, "error": "Note invalide"}), 400
+            flash("Note invalide.", "error")
+            return redirect(url_for("teachers.notes"))
 
         etu = Etudiant.query.get(etudiant_id)
-        if etu.filiere not in filieres or etu.annee not in annees:
-            flash("Vous n'avez pas le droit de modifier cette note.", "error")
+        if not etu or etu.filiere not in filieres or etu.annee not in annees:
+            msg = "Vous n'avez pas le droit de modifier cette note."
+            if request.is_json:
+                return jsonify({"success": False, "error": msg}), 403
+            flash(msg, "error")
             return redirect(url_for("teachers.notes"))
 
         note = Note.query.filter_by(
             etudiant_id=etudiant_id, matiere_id=matiere_id, type_evaluation=type_eval
         ).first()
         if note:
-            note.note = note_val
+            note.note = note_float
         else:
             note = Note(
                 etudiant_id=etudiant_id,
                 matiere_id=matiere_id,
                 type_evaluation=type_eval,
-                note=note_val,
+                note=note_float,
             )
             db.session.add(note)
         db.session.commit()
+
+        if request.is_json:
+            return jsonify({"success": True, "message": "Note enregistrée"})
         flash("Note enregistrée.", "success")
         return redirect(url_for("teachers.notes"))
+
+    if request.args.get("format") == "json" or request.is_json:
+        return jsonify(
+            {
+                "success": True,
+                "data": {
+                    "etudiants": [
+                        {
+                            "id": e.id,
+                            "nom": e.nom,
+                            "prenom": e.prenom,
+                            "filiere": e.filiere,
+                            "annee": e.annee,
+                            "gender": e.gender,
+                        }
+                        for e in etudiants
+                    ],
+                    "matieres": [
+                        {
+                            "id": m.id,
+                            "nom": m.nom,
+                            "filiere": m.filiere.nom if m.filiere else "",
+                        }
+                        for m in matieres
+                    ],
+                    "notes_existantes": notes_existantes_js,
+                    "dates_evaluations": dates_evaluations,
+                },
+            }
+        )
 
     return render_template(
         "enseignant/notes.html",
@@ -292,9 +414,10 @@ def manage_rattrapage():
         data = json.loads(enseignant.filieres_enseignees)
         filieres_noms = data.get("filieres", [])
         annees_noms = data.get("annees", [])
-    except:
+    except Exception as e:
         filieres_noms = []
         annees_noms = []
+        logger.error("Erreur :", e)
 
     # Charger tous les étudiants potentiels
     candidats = Etudiant.query.filter(
@@ -331,16 +454,50 @@ def manage_rattrapage():
                         }
                     )
 
-    if request.method == "POST":
-        etu_id = request.form.get("etudiant_id")
-        matiere_id = request.form.get("matiere_id")
-        note_val_str = request.form.get("note")
+    if request.is_json or request.args.get("format") == "json":
+        if request.method == "POST":
+            # Si c'était un JSON POST, on traite différemment ?
+            # Non, plus simple de garder la logique et retourner success
+            pass
+        else:
+            return jsonify(
+                {
+                    "success": True,
+                    "data": [
+                        {
+                            "etudiant_id": item["etudiant"].id,
+                            "matiere_id": item["matiere"].id,
+                            "nom": item["user"].nom,
+                            "prenom": item["user"].prenom,
+                            "numero_etudiant": item["etudiant"].numero_etudiant,
+                            "matiere_nom": item["matiere"].nom,
+                            "filiere": item["matiere"].filiere.nom,
+                            "annee": item["matiere"].annee,
+                            "moyenne": item["moyenne"],
+                            "note_actuelle": item["note_actuelle"],
+                        }
+                        for item in rattrapage_data
+                    ],
+                }
+            )
 
-        if etu_id and matiere_id and note_val_str:
+    if request.method == "POST":
+        if request.is_json:
+            etu_id = request.json.get("etudiant_id")
+            matiere_id = request.json.get("matiere_id")
+            note_val = request.json.get("note")
+        else:
+            etu_id = request.form.get("etudiant_id")
+            matiere_id = request.form.get("matiere_id")
+            note_val_str = request.form.get("note")
             try:
-                val = float(note_val_str)
+                note_val = float(note_val_str) if note_val_str else None
+            except ValueError:
+                note_val = None
+
+        if etu_id and matiere_id and note_val is not None:
+            try:
                 # Sauvegarder/Mettre à jour
-                # Type = Rattrapage
                 note_obj = Note.query.filter_by(
                     etudiant_id=etu_id,
                     matiere_id=matiere_id,
@@ -348,27 +505,31 @@ def manage_rattrapage():
                 ).first()
 
                 if note_obj:
-                    # Rattrapage: peut-on modifier directement ?
-                    # Suppose admin approval ?
-                    # Pour simplifier le rattrapage, disons que c'est direct
-                    # ou soumis à la même regle.
-                    # Appliquons la règle de demande si modification
-                    # Sauf si c'est la première saisie (None -> Val)
-                    # ICI on fait simple: update direct pour Rattrapage (souvent session unique)
-                    note_obj.note = val
+                    note_obj.note = note_val
                 else:
                     note_obj = Note(
                         etudiant_id=etu_id,
                         matiere_id=matiere_id,
                         type_evaluation="Rattrapage",
-                        note=val,
+                        note=note_val,
                     )
                     db.session.add(note_obj)
 
                 db.session.commit()
+                if request.is_json or request.args.get("format") == "json":
+                    return jsonify(
+                        {"success": True, "message": "Note de rattrapage enregistrée"}
+                    )
                 flash("Note de rattrapage enregistrée", "success")
-            except ValueError:
-                flash("Note invalide", "error")
+            except Exception as e:
+                db.session.rollback()
+                if request.is_json or request.args.get("format") == "json":
+                    return jsonify({"success": False, "error": str(e)}), 500
+                flash("Erreur lors de l'enregistrement", "error")
+        else:
+            if request.is_json or request.args.get("format") == "json":
+                return jsonify({"success": False, "error": "Données invalides"}), 400
+            flash("Note invalide", "error")
 
         return redirect(url_for("teachers.manage_rattrapage"))
 
@@ -459,17 +620,27 @@ def devoirs():
         filieres = []
         annees = []
 
-    if request.method == "POST":
-        titre = request.form["titre"]
-        description = request.form["description"]
-        type_devoir = request.form["type"]
-        filiere = request.form["filiere"]
-        annee = request.form["annee"]
-        date_limite = request.form.get("date_limite")
+    if request.is_json or request.args.get("format") == "json":
+        if request.method == "GET":
+            return jsonify({"success": True, "filieres": filieres, "annees": annees})
 
-        # Cloudinary File Handling
-        file_url = request.form.get("file_url")
-        # original_filename = request.form.get("original_filename") # Optionnel si on veut stocker le nom d'origine
+    if request.method == "POST":
+        if request.is_json:
+            titre = request.json.get("titre")
+            description = request.json.get("description")
+            type_devoir = request.json.get("type")
+            filiere = request.json.get("filiere")
+            annee = request.json.get("annee")
+            date_limite = request.json.get("date_limite")
+            file_url = request.json.get("file_url")
+        else:
+            titre = request.form["titre"]
+            description = request.form["description"]
+            type_devoir = request.form["type"]
+            filiere = request.form["filiere"]
+            annee = request.form["annee"]
+            date_limite = request.form.get("date_limite")
+            file_url = request.form.get("file_url")
 
         # Création du devoir
         devoir = Devoir(
@@ -480,10 +651,11 @@ def devoirs():
             annee=annee,
             enseignant_id=enseignant.id,
             date_limite=date_limite if date_limite else None,
-            fichier=file_url,  # Stocke l'URL Cloudinary directement
+            fichier=file_url,
         )
         db.session.add(devoir)
         db.session.commit()
+
         # Notifier tous les étudiants concernés
         etudiants = Etudiant.query.filter_by(filiere=filiere, annee=annee).all()
         for etu in etudiants:
@@ -494,6 +666,12 @@ def devoirs():
                 type="info",
             )
         db.session.commit()
+
+        if request.is_json or request.args.get("format") == "json":
+            return jsonify(
+                {"success": True, "message": f"{type_devoir.capitalize()} envoyé."}
+            )
+
         flash(
             f"{type_devoir.capitalize()} envoyé à tous les étudiants de {filiere} {annee}.",
             "success",
@@ -735,6 +913,29 @@ def devoirs_a_corriger():
         devoirs_info.append(
             {"devoir": d, "nom_fichier": d.fichier, "etudiant": etudiant}
         )
+    if request.is_json or request.args.get("format") == "json":
+        return jsonify(
+            {
+                "success": True,
+                "data": [
+                    {
+                        "devoir_id": info["devoir"].id,
+                        "titre": info["devoir"].titre,
+                        "filiere": info["devoir"].filiere,
+                        "annee": info["devoir"].annee,
+                        "etudiant_nom": (
+                            info["etudiant"].nom if info["etudiant"] else "Inconnu"
+                        ),
+                        "fichier_url": (
+                            f"/static/uploads/{info['nom_fichier']}"
+                            if info["nom_fichier"]
+                            else None
+                        ),
+                    }
+                    for info in devoirs_info
+                ],
+            }
+        )
     return render_template(
         "enseignant/devoirs_a_corriger.html", devoirs_info=devoirs_info
     )
@@ -757,6 +958,23 @@ def devoir_vus(devoir_id):
         flash("Vous ne pouvez voir que vos propres devoirs.", "error")
         return redirect(url_for("teachers.devoirs"))
     vus = DevoirVu.query.filter_by(devoir_id=devoir_id).all()
+    if request.is_json or request.args.get("format") == "json":
+        return jsonify(
+            {
+                "success": True,
+                "devoir_titre": devoir.titre,
+                "vus_count": len(vus),
+                "data": [
+                    {
+                        "nom": vu.etudiant.user.nom,
+                        "prenom": vu.etudiant.user.prenom,
+                        "sexe": vu.etudiant.user.sexe,
+                        "date_vue": vu.date_vue.strftime("%d/%m/%Y %H:%M"),
+                    }
+                    for vu in vus
+                ],
+            }
+        )
     return render_template("enseignant/devoir_vus.html", devoir=devoir, vus=vus)
 
 
@@ -816,6 +1034,27 @@ def manage_etudiants():
             etudiant_id=etudiant.id, matiere_id=matiere_id_defaut, date_cours=today
         ).first()
         presence_status[etudiant.id] = bool(presence.present) if presence else False
+
+    if request.is_json or request.args.get("format") == "json":
+        return jsonify(
+            {
+                "success": True,
+                "data": [
+                    {
+                        "user_id": user.id,
+                        "etudiant_id": etudiant.id,
+                        "nom": user.nom,
+                        "prenom": user.prenom,
+                        "filiere": etudiant.filiere,
+                        "annee": etudiant.annee,
+                        "present_aujourdhui": presence_status.get(etudiant.id, False),
+                    }
+                    for user, etudiant in etudiants_data
+                ],
+                "filieres": filieres,
+                "annees": annees,
+            }
+        )
 
     return render_template(
         "enseignant/mes_etudiants.html",

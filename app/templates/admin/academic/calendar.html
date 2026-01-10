@@ -1,0 +1,259 @@
+{% extends "admin/base.html" %} {% block title %}Calendrier Académique |
+DEFITECH{% endblock %} {% block content %}
+<div class="min-h-screen pb-12">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <!-- Header -->
+    <div class="mb-8">
+      <h1 class="text-3xl font-extrabold text-gray-900">
+        Calendrier Académique
+      </h1>
+      <p class="mt-2 text-gray-600">
+        Configuration de l'année scolaire et des périodes d'évaluation.
+      </p>
+    </div>
+
+    <!-- Global Configuration Card -->
+    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-8">
+      <h2 class="text-xl font-bold text-gray-800 mb-4 flex items-center">
+        <i class="fas fa-calendar-alt text-blue-600 mr-2"></i> Configuration
+        Globale
+      </h2>
+
+      <form
+        action="{{ url_for('admin_academic.calendar_view') }}"
+        method="POST"
+        class="grid grid-cols-1 md:grid-cols-2 gap-6"
+      >
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1"
+            >Année Académique Courante</label
+          >
+          <input
+            type="text"
+            name="current_year"
+            value="{{ config.current_year if config else '' }}"
+            placeholder="ex: 2025-2026"
+            class="w-full rounded-lg border-gray-300 focus:ring-blue-500 focus:border-blue-500"
+            required
+          />
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1"
+            >Date de Séparation des Semestres</label
+          >
+          <input
+            type="date"
+            name="semester_split_date"
+            value="{{ config.semester_split_date if config and config.semester_split_date else '' }}"
+            class="w-full rounded-lg border-gray-300 focus:ring-blue-500 focus:border-blue-500"
+          />
+          <p class="text-xs text-gray-500 mt-1">
+            Date marquant la fin du Semestre 1 et le début du Semestre 2.
+          </p>
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1"
+            >Date de Début d'Année</label
+          >
+          <input
+            type="date"
+            name="start_date"
+            value="{{ config.start_date if config else '' }}"
+            class="w-full rounded-lg border-gray-300 focus:ring-blue-500 focus:border-blue-500"
+            required
+          />
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1"
+            >Date de Fin d'Année</label
+          >
+          <input
+            type="date"
+            name="end_date"
+            value="{{ config.end_date if config else '' }}"
+            class="w-full rounded-lg border-gray-300 focus:ring-blue-500 focus:border-blue-500"
+            required
+          />
+        </div>
+
+        <div class="md:col-span-2 flex justify-end">
+          <button
+            type="submit"
+            class="px-6 py-2 bg-blue-600 text-white font-bold rounded-lg hover:bg-blue-700 transition"
+          >
+            Enregistrer la Configuration
+          </button>
+        </div>
+      </form>
+    </div>
+
+    <!-- Evaluation Periods Section -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <!-- Add Period Form -->
+      <div
+        class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 h-fit"
+      >
+        <h2 class="text-lg font-bold text-gray-800 mb-4 flex items-center">
+          <i class="fas fa-plus-circle text-green-600 mr-2"></i> Ajouter une
+          Période
+        </h2>
+
+        <form action="{{ url_for('admin_academic.add_period') }}" method="POST">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+
+          <div class="mb-4">
+            <label class="block text-sm font-medium text-gray-700 mb-1"
+              >Nom de la Période</label
+            >
+            <input
+              type="text"
+              name="name"
+              placeholder="ex: Devoirs Semestre 1"
+              class="w-full rounded-lg border-gray-300 focus:ring-green-500 focus:border-green-500"
+              required
+            />
+          </div>
+
+          <div class="mb-4">
+            <label class="block text-sm font-medium text-gray-700 mb-1"
+              >Type d'Évaluation</label
+            >
+            <select
+              name="type_eval"
+              class="w-full rounded-lg border-gray-300 focus:ring-green-500 focus:border-green-500"
+              required
+            >
+              <option value="DEVOIR">Devoir</option>
+              <option value="EXAMEN">Examen</option>
+              <option value="RATTRAPAGE">Rattrapage</option>
+            </select>
+            <p class="text-xs text-gray-500 mt-1">
+              Autorise la saisie de ce type de notes.
+            </p>
+          </div>
+
+          <div class="grid grid-cols-2 gap-4 mb-4">
+            <div>
+              <label class="block text-xs font-medium text-gray-700 mb-1"
+                >Date Début</label
+              >
+              <input
+                type="date"
+                name="start_date"
+                class="w-full rounded-lg border-gray-300 text-sm"
+                required
+              />
+            </div>
+            <div>
+              <label class="block text-xs font-medium text-gray-700 mb-1"
+                >Date Fin</label
+              >
+              <input
+                type="date"
+                name="end_date"
+                class="w-full rounded-lg border-gray-300 text-sm"
+                required
+              />
+            </div>
+          </div>
+
+          <button
+            type="submit"
+            class="w-full py-2 bg-green-600 text-white font-bold rounded-lg hover:bg-green-700 transition"
+          >
+            Ajouter la Période
+          </button>
+        </form>
+      </div>
+
+      <!-- Periods List -->
+      <div
+        class="lg:col-span-2 bg-white rounded-2xl shadow-sm border border-gray-100 p-6"
+      >
+        <h2 class="text-xl font-bold text-gray-800 mb-4 flex items-center">
+          <i class="fas fa-clock text-indigo-600 mr-2"></i> Périodes Actives
+        </h2>
+
+        {% if periods %}
+        <div class="overflow-x-auto">
+          <table class="w-full text-left border-collapse">
+            <thead>
+              <tr
+                class="text-xs text-gray-500 uppercase border-b border-gray-100"
+              >
+                <th class="py-3 font-semibold">Nom</th>
+                <th class="py-3 font-semibold">Type</th>
+                <th class="py-3 font-semibold">Dates</th>
+                <th class="py-3 font-semibold">État</th>
+                <th class="py-3 font-semibold text-right">Action</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-50">
+              {% for period in periods %}
+              <tr class="group hover:bg-gray-50 transition">
+                <td class="py-3 font-medium text-gray-900">
+                  {{ period.name }}
+                </td>
+                <td class="py-3">
+                  <span
+                    class="px-2 py-1 text-xs font-bold rounded-full {% if period.type_eval == 'DEVOIR' %}bg-blue-100 text-blue-700 {% elif period.type_eval == 'EXAMEN' %}bg-purple-100 text-purple-700 {% else %}bg-orange-100 text-orange-700{% endif %}"
+                  >
+                    {{ period.type_eval }}
+                  </span>
+                </td>
+                <td class="py-3 text-sm text-gray-600">
+                  {{ period.start_date.strftime('%d/%m') }} - {{
+                  period.end_date.strftime('%d/%m/%Y') }}
+                </td>
+                <td class="py-3">
+                  {% if period.is_open() %}
+                  <span
+                    class="text-xs font-bold text-green-600 flex items-center"
+                  >
+                    <span class="w-2 h-2 bg-green-500 rounded-full mr-1"></span>
+                    Ouvert
+                  </span>
+                  {% else %}
+                  <span class="text-xs font-bold text-gray-400">Fermé</span>
+                  {% endif %}
+                </td>
+                <td class="py-3 text-right">
+                  <form
+                    action="{{ url_for('admin_academic.delete_period', id=period.id) }}"
+                    method="POST"
+                    onsubmit="return confirm('Supprimer cette période ?');"
+                    class="inline-block"
+                  >
+                    <input
+                      type="hidden"
+                      name="csrf_token"
+                      value="{{ csrf_token() }}"
+                    />
+                    <button
+                      type="submit"
+                      class="text-gray-400 hover:text-red-600 transition"
+                    >
+                      <i class="fas fa-trash"></i>
+                    </button>
+                  </form>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        {% else %}
+        <div class="text-center py-8 text-gray-500 bg-gray-50 rounded-lg">
+          <p>Aucune période d'évaluation configurée.</p>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

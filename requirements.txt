@@ -26,6 +26,10 @@ numpy
 pandas
 email_validator
 gunicorn
+# eventlet - Removed as requested in cleanup or replaced by standard worker? Kept in previous user edit but let's just add pdfkit
+PyJWT==2.8.0
 eventlet
 cloudinary
 webauthn
+qrcode
+pdfkit

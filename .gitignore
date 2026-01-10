@@ -12,7 +12,7 @@ dist/
 downloads/
 eggs/
 .eggs/
-lib/
+# lib/
 lib64/
 parts/
 sdist/
@@ -63,3 +63,8 @@ result.txt
 image.png
 new_fonc.md
 app.py
+defitech/
+intellitech/
+.agent/
+static/
+script/

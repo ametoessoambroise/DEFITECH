@@ -8,6 +8,7 @@ from flask import (
     current_app,
     abort,
     send_from_directory,
+    jsonify,
 )
 from flask_login import login_required, current_user
 import os
@@ -69,12 +70,6 @@ def filiere_admin_required(f):
 def index():
     """
     Page d'accueil de la communauté.
-
-    Cette fonction est l'endpoint de la route principale de la communauté.
-    Elle est appelée lorsque l'utilisateur accède à la page d'accueil de la communauté.
-
-    Returns:
-        Response: La réponse HTTP contenant la page d'accueil de la communauté.
     """
     from app.models.filiere import Filiere, FiliereAdmin
 
@@ -90,6 +85,25 @@ def index():
     else:  # Étudiant
         filieres = Filiere.query.filter_by(nom=current_user.etudiant.filiere).all()
 
+    if request.is_json or request.args.get("format") == "json":
+        return jsonify(
+            {
+                "success": True,
+                "data": {
+                    "communities": [
+                        {
+                            "id": f.id,
+                            "nom": f.nom,
+                            "description": getattr(
+                                f, "description", f"Communauté {f.nom}"
+                            ),
+                        }
+                        for f in filieres
+                    ]
+                },
+            }
+        )
+
     # Si l'utilisateur n'a qu'une seule filière, rediriger directement vers celle-ci
     if len(filieres) == 1:
         return redirect(url_for("community.filiale", filiere_id=filieres[0].id))
@@ -101,16 +115,7 @@ def index():
 @login_required
 def filiale(filiere_id):
     """
-    Affiche les publications d'une filière spécifique.
-
-    Cette fonction est l'endpoint de la route '/filiere/{filiere_id}'.
-    Elle est appelée lorsque l'utilisateur accède à la page des publications d'une filière spécifique.
-
-    Paramètres:
-        - filiere_id (int): L'ID de la filière pour laquelle afficher les publications.
-
-    Retourne:
-        Response: La réponse HTTP contenant la page des publications de la filière spécifiée.
+    Affiche les publications d'une filière spécifique (Support JSON).
     """
     from app.models.filiere import Filiere, FiliereAdmin
     from app.models.post import Post
@@ -142,15 +147,47 @@ def filiale(filiere_id):
 
     # Appliquer le tri
     if sort == "popular":
-        # Note: Vous devrez peut-être ajouter un compteur de vues pour un tri précis par popularité
-        query = query.order_by(Post.est_epingle.desc(), Post.date_creation.desc())
+        query = query.order_by(
+            Post.est_epingle.desc(), Post.vues.desc(), Post.date_creation.desc()
+        )
     else:  # newest par défaut
         query = query.order_by(Post.est_epingle.desc(), Post.date_creation.desc())
 
     # Pagination
-    posts = query.paginate(page=page, per_page=10, error_out=False)
+    posts_pagination = query.paginate(page=page, per_page=10, error_out=False)
 
-    # Récupérer toutes les filières pour le menu latéral
+    if request.is_json or request.args.get("format") == "json":
+        return jsonify(
+            {
+                "success": True,
+                "data": {
+                    "filiere": {"id": filiere.id, "nom": filiere.nom},
+                    "posts": [
+                        {
+                            "id": p.id,
+                            "titre": p.titre,
+                            "contenu_apercu": p.contenu[:150]
+                            + ("..." if len(p.contenu) > 150 else ""),
+                            "auteur": f"{p.auteur.prenom} {p.auteur.nom}",
+                            "auteur_id": p.auteur_id,
+                            "date_creation": p.date_creation.isoformat(),
+                            "est_epingle": p.est_epingle,
+                            "vues": p.vues,
+                            "nb_commentaires": len(p.commentaires),
+                        }
+                        for p in posts_pagination.items
+                    ],
+                    "pagination": {
+                        "total": posts_pagination.total,
+                        "pages": posts_pagination.pages,
+                        "current": posts_pagination.page,
+                        "has_next": posts_pagination.has_next,
+                    },
+                },
+            }
+        )
+
+    # Récupérer toutes les filières pour le menu latéral (Version HTML uniquement)
     if current_user.role == "admin":
         filieres = Filiere.query.all()
     elif current_user.role == "enseignant":
@@ -166,7 +203,7 @@ def filiale(filiere_id):
         "community/list_posts.html",
         filiere=filiere,
         filieres=filieres,
-        posts=posts,
+        posts=posts_pagination,
         current_sort=sort,
         current_search=search,
     )
@@ -176,16 +213,7 @@ def filiale(filiere_id):
 @login_required
 def view_post(post_id):
     """
-    Affiche un post et ses commentaires.
-
-    Cette fonction est l'endpoint de la route '/post/{post_id}'.
-    Elle est appelée lorsque l'utilisateur accède à la page d'un post spécifique avec ses commentaires.
-
-    Paramètres:
-        - post_id (int): L'ID du post à afficher.
-
-    Retourne:
-        Response: La réponse HTTP contenant la page du post spécifié avec ses commentaires.
+    Affiche un post et ses commentaires (Support JSON).
     """
     from app.models.post import Post
     from app.models.commentaire import Commentaire
@@ -211,6 +239,45 @@ def view_post(post_id):
         .all()
     )
 
+    if request.is_json or request.args.get("format") == "json":
+        return jsonify(
+            {
+                "success": True,
+                "data": {
+                    "post": {
+                        "id": post.id,
+                        "titre": post.titre,
+                        "contenu": post.contenu,
+                        "auteur": f"{post.auteur.prenom} {post.auteur.nom}",
+                        "auteur_id": post.auteur_id,
+                        "date_creation": post.date_creation.isoformat(),
+                        "est_epingle": post.est_epingle,
+                        "vues": post.vues,
+                        "filiere_id": post.filiere_id,
+                        "pieces_jointes": [
+                            {
+                                "id": pj.id,
+                                "nom": pj.nom_fichier,
+                                "url": pj.chemin_fichier,
+                                "type": pj.type_fichier,
+                            }
+                            for pj in post.pieces_jointes
+                        ],
+                    },
+                    "commentaires": [
+                        {
+                            "id": c.id,
+                            "contenu": c.contenu,
+                            "auteur": f"{c.auteur.prenom} {c.auteur.nom}",
+                            "auteur_id": c.auteur_id,
+                            "date_creation": c.date_creation.isoformat(),
+                        }
+                        for c in commentaires
+                    ],
+                },
+            }
+        )
+
     return render_template(
         "community/view_post.html",
         post=post,
@@ -223,16 +290,7 @@ def view_post(post_id):
 @login_required
 def create_post(filiere_id):
     """
-    Créer un nouveau post.
-
-    Cette fonction est l'endpoint de la route '/post/nouveau/{filiere_id}'.
-    Elle est appelée lorsque l'utilisateur souhaite créer un nouveau post pour la filière spécifiée.
-
-    Paramètres:
-        - filiere_id (int): L'ID de la filière pour laquelle créer le post.
-
-    Retourne:
-        Response: La réponse HTTP contenant la page de création de post pour la filière spécifiée.
+    Créer un nouveau post (Support JSON).
     """
     from app.models.filiere import Filiere
     from app.models.post import Post
@@ -245,11 +303,17 @@ def create_post(filiere_id):
         abort(403)
 
     if request.method == "POST":
-        titre = request.form.get("titre", "").strip()
-        contenu = request.form.get("contenu", "").strip()
+        is_json = request.is_json
+        data = request.get_json() if is_json else request.form
+
+        titre = data.get("titre", "").strip()
+        contenu = data.get("contenu", "").strip()
 
         if not titre or not contenu:
-            flash("Le titre et le contenu sont obligatoires", "error")
+            msg = "Le titre et le contenu sont obligatoires"
+            if is_json:
+                return jsonify({"success": False, "error": msg}), 400
+            flash(msg, "error")
             return render_template("community/edit_post.html", filiere=filiere)
 
         # Créer le post
@@ -265,44 +329,50 @@ def create_post(filiere_id):
         db.session.flush()  # Pour obtenir l'ID du post
 
         # Gérer les pièces jointes (Cloudinary Refactor)
-        uploaded_files_json = request.form.get("uploaded_files_json")
-        if uploaded_files_json:
-            try:
-                uploaded_files = json.loads(uploaded_files_json)
-                for file_data in uploaded_files:
-                    # Ajouter la pièce jointe
-                    piece_jointe = PieceJointe(
-                        nom_fichier=file_data.get("original_name"),
-                        chemin_fichier=file_data.get("url"),  # Cloudinary URL
-                        type_fichier=file_data.get("type", "document"),
-                        type_mime=file_data.get(
-                            "format"
-                        ),  # Ou deviner depuis l'URL si manquant
-                        taille=file_data.get("size"),
-                        post_id=post.id,
-                    )
-                    db.session.add(piece_jointe)
-            except json.JSONDecodeError:
-                flash("Erreur lors du traitement des pièces jointes", "error")
+        uploaded_files = []
+        if is_json:
+            uploaded_files = data.get("pieces_jointes", [])
+        else:
+            uploaded_files_json = request.form.get("uploaded_files_json")
+            if uploaded_files_json:
+                try:
+                    uploaded_files = json.loads(uploaded_files_json)
+                except json.JSONDecodeError:
+                    flash("Erreur lors du traitement des pièces jointes", "error")
+
+        for file_data in uploaded_files:
+            piece_jointe = PieceJointe(
+                nom_fichier=file_data.get("original_name") or file_data.get("nom"),
+                chemin_fichier=file_data.get("url"),
+                type_fichier=file_data.get("type", "document"),
+                type_mime=file_data.get("format") or file_data.get("type"),
+                taille=file_data.get("size") or file_data.get("taille", 0),
+                post_id=post.id,
+            )
+            db.session.add(piece_jointe)
 
         db.session.commit()
-        flash("Votre publication a été créée avec succès !", "success")
 
         # Créer une notification pour les abonnés de la filière
         try:
-            nb_notifications = NotificationService.notify_new_post(
+            NotificationService.notify_new_post(
                 post_id=post.id,
                 author_name=f"{current_user.prenom} {current_user.nom}",
                 post_title=post.titre,
             )
-            current_app.logger.info(
-                f"Notifications envoyées à {nb_notifications} abonnés de la filière {post.filiere.nom}"
-            )
         except Exception as e:
-            current_app.logger.error(
-                f"Erreur lors de l'envoi des notifications: {str(e)}"
+            current_app.logger.error(f"Erreur notification: {str(e)}")
+
+        if is_json:
+            return jsonify(
+                {
+                    "success": True,
+                    "message": "Publication créée avec succès !",
+                    "post_id": post.id,
+                }
             )
 
+        flash("Votre publication a été créée avec succès !", "success")
         return redirect(url_for("community.view_post", post_id=post.id))
 
     return render_template(
@@ -462,19 +532,7 @@ def delete_post(post_id):
 @login_required
 def add_comment(post_id):
     """
-    Ajoute un commentaire à un post.
-
-    Cette fonction est appelée lorsque l'utilisateur souhaite ajouter un commentaire à un post.
-    Elle crée un nouveau commentaire avec le contenu fourni par l'utilisateur et l'associe au post spécifié.
-
-    Paramètres:
-        - post_id: L'ID du post auquel ajouter le commentaire.
-
-    Retourne:
-        - Redirige vers la page du post si tout est correct.
-
-    Exceptions:
-        - None
+    Ajoute un commentaire à un post (Support JSON).
     """
     from app.models.post import Post
     from app.models.commentaire import Commentaire
@@ -489,23 +547,16 @@ def add_comment(post_id):
     ):
         abort(403)
 
-    contenu = request.form.get("contenu", "").strip()
+    is_json = request.is_json
+    data = request.get_json() if is_json else request.form
+    contenu = data.get("contenu", "").strip()
 
     if not contenu:
-        flash("Le commentaire ne peut pas être vide", "error")
+        msg = "Le commentaire ne peut pas être vide"
+        if is_json:
+            return jsonify({"success": False, "error": msg}), 400
+        flash(msg, "error")
         return redirect(url_for("community.view_post", post_id=post_id))
-
-    # Vérifier que l'utilisateur actuel existe bien dans la base de données
-    from app.models.user import User
-
-    user_exists = User.query.get(current_user.id)
-    if not user_exists:
-        # Forcer la déconnexion si l'utilisateur n'existe plus
-        from flask_login import logout_user
-
-        logout_user()
-        flash("Votre session a expiré. Veuillez vous reconnecter.", "error")
-        return redirect(url_for("auth.login"))
 
     # Créer le commentaire
     commentaire = Commentaire(
@@ -514,22 +565,33 @@ def add_comment(post_id):
 
     db.session.add(commentaire)
 
-    # Créer une notification pour l'auteur du post en utilisant le service
+    # Créer une notification pour l'auteur du post
     try:
-        notification_sent = NotificationService.notify_post_author(
+        NotificationService.notify_post_author(
             post_id=post_id,
             commenter_id=current_user.id,
             commenter_name=f"{current_user.prenom} {current_user.nom}",
             post_title=post.titre,
         )
-        if notification_sent:
-            current_app.logger.info(
-                f"Notification envoyée à l'auteur du post {post_id}"
-            )
     except Exception as e:
-        current_app.logger.error(f"Erreur lors de l'envoi de la notification: {str(e)}")
+        current_app.logger.error(f"Erreur notification: {str(e)}")
 
     db.session.commit()
+
+    if is_json:
+        return jsonify(
+            {
+                "success": True,
+                "message": "Commentaire ajouté !",
+                "comment_id": commentaire.id,
+                "data": {
+                    "id": commentaire.id,
+                    "contenu": commentaire.contenu,
+                    "auteur": f"{current_user.prenom} {current_user.nom}",
+                    "date_creation": commentaire.date_creation.isoformat(),
+                },
+            }
+        )
 
     flash("Commentaire ajouté!", "success")
     return redirect(

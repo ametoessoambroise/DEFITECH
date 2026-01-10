@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, redirect, url_for, flash, jsonify
+from flask import Blueprint, render_template, redirect, url_for, flash, jsonify, request
 from flask_login import login_required, current_user
 from datetime import datetime, timedelta
 
@@ -12,9 +12,21 @@ from app.models.devoir_vu import DevoirVu
 from app.models.emploi_temps import EmploiTemps
 from app.models.filiere import Filiere
 from app.models.matiere import Matiere
-from app.services.validation_service import ValidationService
+
+from app.models.projet import Projet
 
 students_bp = Blueprint("students", __name__, url_prefix="/etudiant")
+
+
+@students_bp.route("/projets")
+@login_required
+def projets_list():
+    if current_user.role != "etudiant":
+        flash("Accès non autorisé.", "error")
+        return redirect(url_for("main.index"))
+
+    projets = Projet.query.filter_by(user_id=current_user.id).all()
+    return render_template("etudiant/projets.html", projets=projets)
 
 
 @students_bp.route("/dashboard")
@@ -86,6 +98,50 @@ def dashboard():
     else:
         average = None
 
+    # Projets récents (Intelitech)
+    projets_recents = (
+        Projet.query.filter_by(user_id=current_user.id)
+        .order_by(Projet.updated_at.desc())
+        .limit(3)
+        .all()
+    )
+
+    if request.is_json or request.args.get("format") == "json":
+        # Support Mobile : Retourner les données brutes
+        return jsonify(
+            {
+                "success": True,
+                "data": {
+                    "filiere": etudiant.filiere,
+                    "annee": etudiant.annee,
+                    "numero_etudiant": etudiant.numero_etudiant,
+                    "average": average,
+                    "presence": presence,
+                    "notes_count": len(notes),
+                    "subjects_count": len(
+                        set([n.matiere_id for n in notes])
+                    ),  # Matières uniques
+                    "devoirs_count": devoirs_count,
+                    "recent_grades": [
+                        {
+                            "matiere": n.matiere.nom if n.matiere else "-",
+                            "note": n.note,
+                            "type": n.type_evaluation,
+                            "date": n.date_evaluation.strftime("%Y-%m-%d"),
+                        }
+                        for n in sorted(
+                            notes, key=lambda x: x.date_evaluation, reverse=True
+                        )[:5]
+                    ],
+                    "notifications_count": len(notifications),  # Simple count for badge
+                    "recent_projects": [
+                        {"titre": p.titre, "techs": p.technologies}
+                        for p in projets_recents
+                    ],
+                },
+            }
+        )
+
     return render_template(
         "etudiant/dashboard.html",
         etudiant=etudiant,
@@ -95,6 +151,7 @@ def dashboard():
         notifications=notifications,
         devoirs_count=devoirs_count,
         emploi_temps=emploi_temps,
+        projets_recents=projets_recents,
     )
 
 
@@ -139,6 +196,22 @@ def voir_notes():
             }
         )
 
+    if request.is_json or request.args.get("format") == "json":
+        return jsonify(
+            {
+                "success": True,
+                "data": [
+                    {
+                        "matiere": n["matiere"],
+                        "type": n["type"],
+                        "note": n["note"],
+                        "date": n["date"].strftime("%Y-%m-%d") if n["date"] else None,
+                    }
+                    for n in notes_display
+                ],
+            }
+        )
+
     return render_template("etudiant/voir_notes.html", notes=notes_display)
 
 
@@ -177,6 +250,38 @@ def devoirs():
         .order_by(Notification.date_created.desc())
         .all()
     )
+
+    if request.is_json or request.args.get("format") == "json":
+        return jsonify(
+            {
+                "success": True,
+                "data": [
+                    {
+                        "id": d.id,
+                        "type": d.type,
+                        "titre": d.titre,
+                        "description": d.description,
+                        "date_limite": (
+                            d.date_limite.strftime("%Y-%m-%d")
+                            if d.date_limite
+                            else None
+                        ),
+                        "fichier_url": (
+                            url_for(
+                                "static",
+                                filename="uploads/" + d.fichier,
+                                _external=True,
+                            )
+                            if d.fichier
+                            else None
+                        ),
+                        "enseignant": f"{d.enseignant.user.nom} {d.enseignant.user.prenom}",
+                        "date_creation": d.date_creation.strftime("%Y-%m-%d %H:%M"),
+                    }
+                    for d in devoirs
+                ],
+            }
+        )
 
     return render_template(
         "etudiant/devoirs.html", devoirs=devoirs, notifications=notifications
@@ -217,6 +322,43 @@ def voir_devoir(devoir_id):
         vu = DevoirVu(devoir_id=devoir.id, etudiant_id=etudiant.id)
         db.session.add(vu)
         db.session.commit()
+    if request.is_json or request.args.get("format") == "json":
+        return jsonify(
+            {
+                "success": True,
+                "data": {
+                    "id": devoir.id,
+                    "type": devoir.type,
+                    "titre": devoir.titre,
+                    "description": devoir.description,
+                    "date_limite": (
+                        devoir.date_limite.strftime("%Y-%m-%d")
+                        if devoir.date_limite
+                        else None
+                    ),
+                    "date_limite_full": (
+                        devoir.date_limite.strftime("%A %d %B %Y")
+                        if devoir.date_limite
+                        else None
+                    ),
+                    "date_creation": devoir.date_creation.strftime("%Y-%m-%d %H:%M"),
+                    "filiere": devoir.filiere,
+                    "annee": devoir.annee,
+                    "enseignant": f"{devoir.enseignant.user.nom} {devoir.enseignant.user.prenom}",
+                    "fichier": devoir.fichier,
+                    "fichier_url": (
+                        url_for(
+                            "static",
+                            filename="uploads/" + devoir.fichier,
+                            _external=True,
+                        )
+                        if devoir.fichier
+                        else None
+                    ),
+                },
+            }
+        )
+
     return render_template("etudiant/voir_devoir.html", devoir=devoir)
 
 
@@ -224,7 +366,7 @@ def voir_devoir(devoir_id):
 @login_required
 def mes_rattrapages():
     """
-    Affiche la liste des rattrapages de l'étudiant.
+    Affiche la liste des matières NON validées nécessitant un rattrapage.
     """
     if current_user.role != "etudiant":
         return redirect(url_for("main.index"))
@@ -233,44 +375,60 @@ def mes_rattrapages():
     if not etudiant:
         return redirect(url_for("main.index"))
 
-    filiere_obj = Filiere.query.filter_by(nom=etudiant.filiere).first()
-    if not filiere_obj:
-        flash("Erreur de configuration (Filière introuvable).", "error")
-        return redirect(url_for("students.dashboard"))
+    # Utilisation du moteur académique pour avoir la même logique que l'admin
+    from app.services.academic_engine import AcademicEngine
 
-    matieres = Matiere.query.filter_by(
-        filiere_id=filiere_obj.id, annee=etudiant.annee
-    ).all()
-
+    result = AcademicEngine.evaluate_student_progression(etudiant.id)
     rattrapages_list = []
 
-    for matiere in matieres:
-        is_valid, moyenne, message = ValidationService.valider_matiere(
-            etudiant.id, matiere.id
-        )
+    if result:
+        for detail in result["details"]:
+            stats = detail["stats"]
+            matiere = detail["matiere"]
 
-        # On affiche si non validé OU si en attente
-        if not is_valid:
-            # Récupérer la note de rattrapage si elle existe
-            notes = ValidationService.get_notes(etudiant.id, matiere.id)
-            note_rattrapage = next(
-                (n for n in notes if n.type_evaluation == "Rattrapage"), None
-            )
+            # Si la matière n'est pas validée, elle est en rattrapage
+            if not stats["is_validated"]:
+                # Vérifier si une note de rattrapage existe déjà pour info
+                notes = Note.query.filter_by(
+                    etudiant_id=etudiant.id,
+                    matiere_id=matiere.id,
+                    type_evaluation="Rattrapage",
+                ).first()
 
-            rattrapage_data = {
-                "matiere": matiere,
-                "moyenne_initiale": moyenne,
-                "statut": message,
-                "date_rattrapage": None,  # A implémenter si gestion planning
-                "salle": None,  # A implémenter si gestion planning
-                "note_rattrapage": note_rattrapage.note if note_rattrapage else None,
+                rattrapages_list.append(
+                    {
+                        "matiere": matiere,
+                        "moyenne_initiale": stats["moyenne"],
+                        "statut": "A RATTRAPER",
+                        "note_rattrapage": notes.note if notes else None,
+                        # Champs futurs
+                        "date_rattrapage": None,
+                        "salle": None,
+                    }
+                )
+
+    if request.is_json or request.args.get("format") == "json":
+        return jsonify(
+            {
+                "success": True,
+                "data": [
+                    {
+                        "matiere": r["matiere"].nom,
+                        "credits": r["matiere"].credit,
+                        "moyenne_initiale": r["moyenne_initiale"],
+                        "statut": r["statut"],
+                        "note_rattrapage": r["note_rattrapage"],
+                        "date_rattrapage": r["date_rattrapage"],
+                        "salle": r["salle"],
+                    }
+                    for r in rattrapages_list
+                ],
             }
-            rattrapages_list.append(rattrapage_data)
+        )
 
     return render_template(
         "etudiant/mes-rattrapages.html", rattrapages=rattrapages_list
     )
-
 
 
 @students_bp.route("/api/emploi-temps", methods=["GET"])

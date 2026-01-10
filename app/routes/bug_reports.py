@@ -7,6 +7,7 @@ from flask import (
     flash,
     request,
     current_app,
+    jsonify,
 )
 from flask_login import login_required, current_user
 import os
@@ -68,6 +69,19 @@ def list_bug_reports():
             .paginate(page=page, per_page=per_page, error_out=False)
         )
 
+    if request.args.get("format") == "json":
+        return jsonify(
+            {
+                "success": True,
+                "data": {
+                    "bug_reports": [report.to_dict() for report in bug_reports.items],
+                    "total": bug_reports.total,
+                    "pages": bug_reports.pages,
+                    "current_page": bug_reports.page,
+                },
+            }
+        )
+
     return render_template("bug_reports/list.html", bug_reports=bug_reports)
 
 
@@ -94,43 +108,52 @@ def new_bug_report():
     """
     form = BugReportForm()
 
-    if form.validate_on_submit():
-        # Créer un nouveau rapport de bug
-        bug_report = BugReport(
-            title=form.title.data,
-            description=form.description.data,
-            steps_to_reproduce=form.steps_to_reproduce.data,
-            priority=form.priority.data,
-            user_id=current_user.id,
-        )
+    if request.method == "POST":
+        if form.validate_on_submit():
+            # Créer un nouveau rapport de bug
+            bug_report = BugReport(
+                title=form.title.data,
+                description=form.description.data,
+                steps_to_reproduce=form.steps_to_reproduce.data,
+                priority=form.priority.data,
+                user_id=current_user.id,
+            )
 
-        # Remplacer la partie de code qui gère le téléchargement de l'image par :
-        if "screenshot" in request.files:
-            file = request.files["screenshot"]
-            if file and file.filename != "" and allowed_file(file.filename):
-                try:
-                    # Upload direct sur Cloudinary
-                    upload_result = upload_to_cloudinary(
-                        file,
-                        f"bug_{datetime.now().strftime('%Y%m%d_%H%M%S')}",
-                        folder="bug_reports",
-                        resource_type="image",
-                    )
-                    bug_report.image_path = upload_result.get("secure_url")
-                except Exception as e:
-                    logger.error(f"Erreur upload screenshot bug report: {e}")
-                    flash(
-                        "Une erreur est survenue lors de l'upload de la capture d'écran.",
-                        "warning",
-                    )
-        db.session.add(bug_report)
-        db.session.commit()
+            # Remplacer la partie de code qui gère le téléchargement de l'image par :
+            if "screenshot" in request.files:
+                file = request.files["screenshot"]
+                if file and file.filename != "" and allowed_file(file.filename):
+                    try:
+                        # Upload direct sur Cloudinary
+                        upload_result = upload_to_cloudinary(
+                            file,
+                            f"bug_{datetime.now().strftime('%Y%m%d_%H%M%S')}",
+                            folder="bug_reports",
+                            resource_type="image",
+                        )
+                        bug_report.image_path = upload_result.get("secure_url")
+                    except Exception as e:
+                        logger.error(f"Erreur upload screenshot bug report: {e}")
+                        if request.args.get("format") != "json":
+                            flash(
+                                "Une erreur est survenue lors de l'upload de la capture d'écran.",
+                                "warning",
+                            )
 
-        flash(
-            "Votre rapport de bug a été soumis avec succès. Merci pour votre contribution !",
-            "success",
-        )
-        return redirect(url_for("bug_reports.list_bug_reports"))
+            db.session.add(bug_report)
+            db.session.commit()
+
+            if request.args.get("format") == "json":
+                return jsonify({"success": True, "message": "Rapport soumis avec succès", "report": bug_report.to_dict()})
+
+            flash(
+                "Votre rapport de bug a été soumis avec succès. Merci pour votre contribution !",
+                "success",
+            )
+            return redirect(url_for("bug_reports.list_bug_reports"))
+        else:
+            if request.args.get("format") == "json":
+                return jsonify({"success": False, "errors": form.errors}), 400
 
     return render_template("bug_reports/new.html", form=form)
 
@@ -166,6 +189,15 @@ def view_bug_report(report_id):
     if current_user.role == "admin":
         admin_form = BugReportAdminForm()
         admin_form.status.data = bug_report.status
+
+    if request.args.get("format") == "json":
+        return jsonify(
+            {
+                "success": True,
+                "data": bug_report.to_dict(),
+                "is_admin": current_user.role == "admin",
+            }
+        )
 
     return render_template(
         "bug_reports/view.html", bug_report=bug_report, admin_form=admin_form
@@ -206,7 +238,14 @@ def update_bug_report(report_id):
         bug_report.updated_at = datetime.utcnow()
 
         db.session.commit()
+        
+        if request.args.get("format") == "json":
+            return jsonify({"success": True, "message": "Rapport mis à jour", "report": bug_report.to_dict()})
+
         flash("Le rapport a été mis à jour avec succès.", "success")
+    else:
+        if request.args.get("format") == "json":
+            return jsonify({"success": False, "errors": form.errors}), 400
 
     return redirect(url_for("bug_reports.view_bug_report", report_id=bug_report.id))
 

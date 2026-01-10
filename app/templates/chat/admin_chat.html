@@ -81,7 +81,6 @@
   </head>
 
   <body class="bg-slate-900 h-screen flex text-slate-100 overflow-hidden">
-
     <!-- App Lock Overlay -->
     {% if current_user.is_authenticated and current_user.is_app_lock_enabled %}
     {% include 'components/lock_screen.html' %} {% endif %}
@@ -464,7 +463,20 @@
       }
 
       function playNotification() {
-        // Beep
+        const audioCtx = new (window.AudioContext ||
+          window.webkitAudioContext)();
+        const oscillator = audioCtx.createOscillator();
+        const gainNode = audioCtx.createGain();
+
+        oscillator.connect(gainNode);
+        gainNode.connect(audioCtx.destination);
+
+        oscillator.type = "sine";
+        oscillator.frequency.setValueAtTime(587.33, audioCtx.currentTime);
+        gainNode.gain.setValueAtTime(0.1, audioCtx.currentTime);
+
+        oscillator.start();
+        oscillator.stop(audioCtx.currentTime + 0.1);
       }
     </script>
   </body>

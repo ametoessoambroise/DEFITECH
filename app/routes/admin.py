@@ -2281,7 +2281,7 @@ def admin_global_notifications():
         GlobalNotification.date_creation.desc()
     ).all()
     return render_template(
-        "admin/global_notifications.html", notifications=notifications
+        "admin/admin_notifications.html", notifications=notifications
     )
 
 
@@ -2324,7 +2324,7 @@ def admin_create_global_notification():
             )
             flash("Erreur lors de la création de la notification.", "error")
 
-    return render_template("admin/create_global_notification.html")
+    return render_template("admin/admin_notifications.html")
 
 
 @admin_bp.route("/global-notification/toggle/<int:notif_id>", methods=["POST"])

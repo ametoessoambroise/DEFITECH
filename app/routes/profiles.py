@@ -20,9 +20,9 @@ from flask import (
     flash,
     request,
     current_app,
+    jsonify
 )
 from flask_login import login_required, current_user
-from werkzeug.utils import secure_filename
 from app.extensions import db
 from app.forms import UpdateProfileForm
 from app.models.user import User
@@ -257,6 +257,33 @@ def mon_profil():
                 approved_requests.append(req)
             elif req.statut == "rejete":
                 rejected_requests.append(req)
+
+    if request.is_json or request.args.get("format") == "json":
+        return jsonify(
+            {
+                "success": True,
+                "data": {
+                    "id": current_user.id,
+                    "nom": current_user.nom,
+                    "prenom": current_user.prenom,
+                    "email": current_user.email,
+                    "role": current_user.role,
+                    "telephone": current_user.telephone,
+                    "bio": current_user.bio,
+                    "photo": get_profile_picture(current_user),
+                    "last_seen": (
+                        current_user.last_seen.isoformat()
+                        if current_user.last_seen
+                        else None
+                    ),
+                    "pending_requests": len(pending_requests) > 0,
+                    # Additional role-specific fields
+                    "filiere": getattr(current_user, "filiere", None),
+                    "annee": getattr(current_user, "annee", None),
+                    "numero_etudiant": getattr(current_user, "numero_etudiant", None),
+                },
+            }
+        )
 
     return render_template(
         "profile/mon_profil.html",
@@ -871,6 +898,69 @@ def profil_avance():
     profile_data = cv_gen.get_user_data()
     completion = profile_data.get("completion", {"score": 0, "details": {}})
     suggestions = profile_data.get("suggestions", [])
+
+    if request.is_json or request.args.get("format") == "json":
+        return jsonify(
+            {
+                "success": True,
+                "data": {
+                    "competences": [
+                        {
+                            "id": c.id,
+                            "nom": c.nom,
+                            "niveau": c.niveau,
+                            "categorie": c.categorie,
+                        }
+                        for c in competences
+                    ],
+                    "formations": [
+                        {
+                            "id": f.id,
+                            "etablissement": f.etablissement,
+                            "diplome": f.diplome,
+                            "date_debut": (
+                                f.date_debut.isoformat() if f.date_debut else None
+                            ),
+                            "date_fin": f.date_fin.isoformat() if f.date_fin else None,
+                            "description": f.description,
+                        }
+                        for f in formations
+                    ],
+                    "langues": [
+                        {"id": l.id, "nom": l.nom, "niveau": l.niveau} for l in langues
+                    ],
+                    "projets": [
+                        {
+                            "id": p.id,
+                            "titre": p.titre,
+                            "description": p.description,
+                            "url": p.url,
+                            "date_debut": (
+                                p.date_debut.isoformat() if p.date_debut else None
+                            ),
+                            "date_fin": p.date_fin.isoformat() if p.date_fin else None,
+                        }
+                        for p in projets
+                    ],
+                    "experiences": [
+                        {
+                            "id": e.id,
+                            "entreprise": e.entreprise,
+                            "poste": e.poste,
+                            "lieu": e.lieu,
+                            "date_debut": (
+                                e.date_debut.isoformat() if e.date_debut else None
+                            ),
+                            "date_fin": e.date_fin.isoformat() if e.date_fin else None,
+                            "description": e.description,
+                        }
+                        for e in experiences
+                    ],
+                    "completion": completion,
+                    "suggestions": suggestions,
+                },
+            }
+        )
 
     return render_template(
         "profile/profil_avance.html",

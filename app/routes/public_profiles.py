@@ -1,4 +1,13 @@
-from flask import Blueprint, render_template, abort, flash, redirect, url_for, request
+from flask import (
+    Blueprint,
+    render_template,
+    abort,
+    flash,
+    redirect,
+    url_for,
+    request,
+    jsonify,
+)
 from app.models.user import User
 from app.models.formation import Formation
 from app.models.experience import Experience
@@ -28,6 +37,33 @@ def list_students():
 
     students = pagination.items
 
+    if request.is_json or request.args.get("format") == "json":
+        return jsonify(
+            {
+                "success": True,
+                "data": {
+                    "students": [
+                        {
+                            "id": s.id,
+                            "nom": s.nom,
+                            "prenom": s.prenom,
+                            "photo": s.photo if s.photo else None,
+                            "filiere": (
+                                s.etudiant.filiere if hasattr(s, "etudiant") else None
+                            ),
+                            "annee": (
+                                s.etudiant.annee if hasattr(s, "etudiant") else None
+                            ),
+                        }
+                        for s in students
+                    ],
+                    "total": pagination.total,
+                    "pages": pagination.pages,
+                    "current_page": pagination.page,
+                },
+            }
+        )
+
     return render_template(
         "profile/students_directory.html", students=students, pagination=pagination
     )
@@ -43,18 +79,18 @@ def view_profile(user_id):
 
     # Vérification du rôle (on se concentre sur les étudiants pour l'instant)
     if user.role != "etudiant":
+        if request.is_json or request.args.get("format") == "json":
+            return jsonify({"success": False, "error": "Profil non public"}), 403
         flash("Ce profil n'est pas accessible publiquement.", "warning")
         return redirect(url_for("main.index"))
 
     # Vérification de la visibilité
-    # Le propriétaire peut toujours voir son profil, même privé
     is_owner = current_user.is_authenticated and current_user.id == user.id
-
-    # Si le profil est privé et que ce n'est pas le propriétaire -> 404 ou page privée
-    # On utilise getattr par sécurité si la colonne n'est pas encore migrée partout, mais elle devrait l'être
     is_public = getattr(user, "is_public_profile", True)
 
     if not is_public and not is_owner:
+        if request.is_json or request.args.get("format") == "json":
+            return jsonify({"success": False, "error": "Profil privé"}), 404
         abort(404)
 
     etudiant = user.etudiant
@@ -75,6 +111,42 @@ def view_profile(user_id):
     )
     competences = Competence.query.filter_by(user_id=user.id).all()
     langues = Langue.query.filter_by(user_id=user.id).all()
+
+    if request.is_json or request.args.get("format") == "json":
+        return jsonify(
+            {
+                "success": True,
+                "data": {
+                    "user": {
+                        "id": user.id,
+                        "nom": user.nom,
+                        "prenom": user.prenom,
+                        "photo": user.photo if user.photo else None,
+                        "bio": user.bio,
+                        "filiere": etudiant.filiere if etudiant else None,
+                        "annee": etudiant.annee if etudiant else None,
+                    },
+                    "competences": [
+                        {"nom": c.nom, "niveau": c.niveau} for c in competences
+                    ],
+                    "formations": [
+                        {"etablissement": f.etablissement, "diplome": f.diplome}
+                        for f in formations
+                    ],
+                    "experiences": [
+                        {"entreprise": ex.entreprise, "poste": ex.poste}
+                        for ex in experiences
+                    ],
+                    "projets": [
+                        {"titre": p.titre, "description": p.description}
+                        for p in projets
+                    ],
+                    "langues": [
+                        {"nom": lang.nom, "niveau": lang.niveau} for lang in langues
+                    ],
+                },
+            }
+        )
 
     return render_template(
         "profile/public_view.html",

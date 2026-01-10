@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, request, redirect, url_for, flash
+from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify
 from flask_login import login_user, login_required, logout_user
 from werkzeug.security import check_password_hash, generate_password_hash
 from datetime import datetime, date, timedelta, UTC
@@ -24,8 +24,13 @@ def login():
     Page de connexion.
     """
     if request.method == "POST":
-        email = request.form["email"]
-        password = request.form["password"]
+        if request.is_json:
+            data = request.get_json()
+            email = data.get("email")
+            password = data.get("password")
+        else:
+            email = request.form["email"]
+            password = request.form["password"]
 
         print(f"🔍 Tentative de connexion pour: {email}")
 
@@ -39,34 +44,88 @@ def login():
                 print("✅ Mot de passe correct")
                 if user.statut == "approuve":
                     login_user(user)
-                    flash("Connexion réussie.", "success")
                     print("✅ Connexion réussie")
+
+                    if request.is_json:
+                        return jsonify(
+                            {
+                                "success": True,
+                                "message": "Connexion réussie",
+                                "user": {
+                                    "id": user.id,
+                                    "nom": user.nom,
+                                    "prenom": user.prenom,
+                                    "email": user.email,
+                                    "role": user.role,
+                                    "photo_profil": user.photo_profil,
+                                },
+                            }
+                        )
+
+                    flash("Connexion réussie.", "success")
 
                     # Vérifier s'il y a un paramètre 'next' pour la redirection
                     next_page = request.args.get("next")
                     # Basic open redirect protection
                     if next_page and next_page.startswith("/"):
                         return redirect(next_page)
-                    if user.role == 'admin':
+                    if user.role == "admin":
                         return redirect(url_for("admin.dashboard"))
-                    elif user.role == 'etudiant':
+                    elif user.role == "etudiant":
                         return redirect(url_for("students.dashboard"))
-                    elif user.role == 'enseignant':
+                    elif user.role == "enseignant":
                         return redirect(url_for("teachers.dashboard"))
                     else:
                         return redirect(url_for("main.index"))
                 else:
+                    if request.is_json:
+                        return (
+                            jsonify(
+                                {
+                                    "success": False,
+                                    "message": "Votre compte est en attente d'approbation.",
+                                }
+                            ),
+                            401,
+                        )
+
                     flash(
                         "Votre compte est en attente d'approbation par l'administration.",
                         "warning",
                     )
                     print("⚠️ Compte en attente d'approbation")
             else:
+                if request.is_json:
+                    return (
+                        jsonify(
+                            {
+                                "success": False,
+                                "message": "Email ou mot de passe incorrect.",
+                            }
+                        ),
+                        401,
+                    )
+
                 flash("Email ou mot de passe incorrect.", "error")
                 print("❌ Mot de passe incorrect")
         else:
+            if request.is_json:
+                return (
+                    jsonify(
+                        {
+                            "success": False,
+                            "message": "Email ou mot de passe incorrect.",
+                        }
+                    ),
+                    401,
+                )
+
             flash("Email ou mot de passe incorrect.", "error")
             print("❌ Utilisateur non trouvé")
+
+    # Si c'est une requête JSON mais pas POST (erreur méthode) ou autre cas
+    if request.is_json:
+        return jsonify({"success": False, "message": "Méthode non autorisée"}), 405
 
     return render_template("auth/login.html", current_year=datetime.now().year)
 

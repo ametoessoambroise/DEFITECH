@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Relevé de Notes</title>
+    <style>
+      @page {
+        size: A4;
+        margin: 2cm;
+      }
+      body {
+        font-family: "Helvetica", "Arial", sans-serif;
+        font-size: 11pt;
+        color: #333;
+      }
+      .header {
+        text-align: center;
+        border-bottom: 2px solid #000;
+        padding-bottom: 10px;
+        margin-bottom: 20px;
+      }
+      .logo {
+        text-transform: uppercase;
+        font-size: 18pt;
+        font-weight: bold;
+        color: #003366;
+      }
+      .sub-header {
+        font-size: 12pt;
+        color: #666;
+      }
+      .title {
+        text-align: center;
+        font-size: 16pt;
+        font-weight: bold;
+        text-decoration: underline;
+        margin: 20px 0;
+        text-transform: uppercase;
+      }
+      .student-info {
+        background-color: #f5f5f5;
+        padding: 15px;
+        border-radius: 5px;
+        margin-bottom: 20px;
+      }
+      .student-info p {
+        margin: 5px 0;
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-bottom: 20px;
+      }
+      th,
+      td {
+        border: 1px solid #ccc;
+        padding: 8px;
+        text-align: left;
+      }
+      th {
+        background-color: #eee;
+        font-weight: bold;
+      }
+      .center {
+        text-align: center;
+      }
+      .right {
+        text-align: right;
+      }
+      .footer {
+        margin-top: 30px;
+        font-size: 9pt;
+        text-align: center;
+        border-top: 1px solid #ccc;
+        padding-top: 10px;
+      }
+      .signatures {
+        margin-top: 40px;
+        display: flex;
+        justify-content: space-between;
+      }
+      .signature-box {
+        width: 45%;
+        height: 100px;
+        border: 1px dashed #999;
+        text-align: center;
+        padding-top: 10px;
+      }
+      .qr-code {
+        position: absolute;
+        top: 2cm;
+        right: 2cm;
+        width: 80px;
+      }
+      .status-badge {
+        display: inline-block;
+        padding: 5px 10px;
+        border-radius: 4px;
+        font-weight: bold;
+      }
+      .admis {
+        background-color: #d4edda;
+        color: #155724;
+      }
+      .redouble {
+        background-color: #f8d7da;
+        color: #721c24;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="header">
+      <div class="logo">DEFITECH - INSTITUT SUPÉRIEUR</div>
+      <div class="sub-header">Excellence & Innovation Technologique</div>
+      <div>Année Académique : {{ data.annee }}</div>
+    </div>
+
+    <img src="data:image/png;base64,{{ qr_code }}" class="qr-code" />
+
+    <div class="title">
+      Relevé de Notes {{ 'OFFICIEL' if data.is_official else '(PROVISOIRE)' }}
+    </div>
+
+    <div class="student-info">
+      <p>
+        <strong>Nom & Prénom :</strong> {{ data.student.user.nom }} {{
+        data.student.user.prenom }}
+      </p>
+      <p><strong>Matricule :</strong> {{ data.student.matricule or 'N/A' }}</p>
+      <p><strong>Filière :</strong> {{ data.filiere }}</p>
+      <p><strong>Niveau :</strong> {{ data.annee }}</p>
+    </div>
+
+    <table>
+      <thead>
+        <tr>
+          <th>Matière</th>
+          <th class="center">Coef (Crédits)</th>
+          <th class="center">Moyenne /20</th>
+          <th class="center">Statut</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for item in data.details %} {% if data.is_official %} {# Format
+        Archive #}
+        <tr>
+          <td>{{ item.matiere_nom }}</td>
+          <td class="center">{{ item.credits_matiere }}</td>
+          <td class="center">{{ item.moyenne_matiere }}</td>
+          <td class="center">
+            {% if item.is_validated %}
+            <span class="status-badge admi">VALIDÉ</span>
+            {% else %}
+            <span class="status-badge redouble">NON VALIDÉ</span>
+            {% endif %}
+          </td>
+        </tr>
+        {% else %} {# Format Live/Détails Engine #}
+        <tr>
+          <td>{{ item.matiere.nom }}</td>
+          <td class="center">{{ item.matiere.credits }}</td>
+          <td class="center">{{ item.stats.moyenne }}</td>
+          <td class="center">
+            {% if item.stats.is_validated %}
+            <span class="status-badge admis">VALIDÉ</span>
+            {% else %}
+            <span class="status-badge redouble">Note < 10</span>
+            {% endif %}
+          </td>
+        </tr>
+        {% endif %} {% endfor %}
+      </tbody>
+      <tfoot>
+        <tr style="background-color: #f9f9f9; font-weight: bold">
+          <td class="right" colspan="2">TOTAL CRÉDITS VALIDÉS :</td>
+          <td class="center" colspan="2">{{ data.credits_total }} / 60</td>
+        </tr>
+        <tr
+          style="background-color: #e9ecef; font-weight: bold; font-size: 1.1em"
+        >
+          <td class="right" colspan="2">DÉCISION DU JURY :</td>
+          <td class="center" colspan="2">{{ data.decision }}</td>
+        </tr>
+      </tfoot>
+    </table>
+
+    <div class="signatures">
+      <div class="signature-box">
+        <p>Le Directeur Académique</p>
+      </div>
+      <div class="signature-box">
+        <p>Le Secrétaire Général</p>
+      </div>
+    </div>
+
+    <div class="footer">
+      <p>Ce document est un relevé de notes officiel de l'institut DEFITECH.</p>
+      <p>
+        Vérifiable via le QR Code ci-dessus ou à l'adresse : {{ verify_url }}
+      </p>
+      <p>Généré le : {{ now_date }}</p>
+    </div>
+  </body>
+</html>

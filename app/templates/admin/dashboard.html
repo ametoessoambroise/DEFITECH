@@ -205,6 +205,41 @@ DEFITECH{% endblock %} {% block content %}
 
     <!-- Grille principale -->
     <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+      <!-- NEW CARD: Gestion Académique -->
+      <div class="lg:col-span-12 mb-6">
+        <div
+          class="bg-gradient-to-r from-indigo-900 to-purple-900 rounded-2xl shadow-xl overflow-hidden relative"
+        >
+          <div
+            class="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full -mr-16 -mt-16 blur-2xl"
+          ></div>
+
+          <div
+            class="p-8 flex flex-col md:flex-row items-center justify-between relative z-10"
+          >
+            <div class="mb-6 md:mb-0">
+              <h2 class="text-2xl font-black text-white mb-2">
+                Clôture Annuelle & Résultats
+              </h2>
+              <p class="text-indigo-200 max-w-xl">
+                Accédez au tableau de bord de fin d'année. Calculez
+                automatiquement les moyennes, validez les passages et archivez
+                les résultats officiels.
+              </p>
+            </div>
+            <a
+              href="{{ url_for('admin_academic.dashboard') }}"
+              class="px-8 py-4 bg-white text-indigo-900 font-bold rounded-xl shadow-lg hover:bg-indigo-50 transition-all flex items-center group"
+            >
+              <i
+                class="fas fa-graduation-cap text-xl mr-3 group-hover:scale-110 transition-transform"
+              ></i>
+              Gérer l'année académique
+            </a>
+          </div>
+        </div>
+      </div>
+
       <!-- Actions rapides -->
       <div class="lg:col-span-4">
         <div
@@ -250,6 +285,23 @@ DEFITECH{% endblock %} {% block content %}
               >
               <i
                 class="fas fa-chevron-right text-green-600 opacity-0 group-hover:opacity-100 transition-opacity"
+              ></i>
+            </a>
+
+            <a
+              href="{{ url_for('academic_history.search_history') }}"
+              class="group flex items-center p-4 bg-gradient-to-r from-gray-50 to-gray-100 rounded-xl hover:from-gray-100 hover:to-gray-200 transition-all duration-300 hover:shadow-lg hover:shadow-gray-500/20 hover:-translate-x-1"
+            >
+              <div
+                class="w-12 h-12 bg-white rounded-xl shadow-md flex items-center justify-center mr-4 group-hover:scale-110 group-hover:rotate-3 transition-all duration-300"
+              >
+                <i class="fas fa-history text-gray-600 text-lg"></i>
+              </div>
+              <span class="text-sm font-bold text-gray-900 flex-1"
+                >Archives & Historique</span
+              >
+              <i
+                class="fas fa-chevron-right text-gray-600 opacity-0 group-hover:opacity-100 transition-opacity"
               ></i>
             </a>
 

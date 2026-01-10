@@ -73,13 +73,18 @@ current_user.prenom }} | DEFITECH{% endblock %} {% block content %}
 
 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
   <!-- Informations personnelles -->
-  <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4 sm:p-6 mb-6 sm:mb-8">
-    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 gap-3">
+  <div
+    class="bg-white rounded-lg shadow-sm border border-gray-200 p-4 sm:p-6 mb-6 sm:mb-8"
+  >
+    <div
+      class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 gap-3"
+    >
       <h2 class="text-lg sm:text-xl font-semibold text-gray-900">
         Informations personnelles
       </h2>
       <span
-        class="inline-flex items-center px-3 py-1 text-xs sm:text-sm font-semibold rounded-full bg-green-100 text-green-800 w-fit">
+        class="inline-flex items-center px-3 py-1 text-xs sm:text-sm font-semibold rounded-full bg-green-100 text-green-800 w-fit"
+      >
         <i class="fas fa-check-circle mr-1"></i>Actif
       </span>
     </div>
@@ -96,7 +101,10 @@ current_user.prenom }} | DEFITECH{% endblock %} {% block content %}
 
       <div>
         <p class="text-xs sm:text-sm font-medium text-gray-600 mb-1">Email</p>
-        <p class="text-base sm:text-lg text-gray-900 truncate" title="{{ current_user.email }}">
+        <p
+          class="text-base sm:text-lg text-gray-900 truncate"
+          title="{{ current_user.email }}"
+        >
           {{ current_user.email }}
         </p>
       </div>
@@ -134,9 +142,13 @@ current_user.prenom }} | DEFITECH{% endblock %} {% block content %}
   </div>
 
   <!-- Statistiques -->
-  <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 md:gap-6 mb-6 sm:mb-8">
+  <div
+    class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 md:gap-6 mb-6 sm:mb-8"
+  >
     <!-- Moyenne générale -->
-    <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4 sm:p-6">
+    <div
+      class="bg-white rounded-lg shadow-sm border border-gray-200 p-4 sm:p-6"
+    >
       <div class="flex flex-col sm:flex-row sm:items-center gap-3">
         <div class="p-2 sm:p-3 rounded-full bg-green-100 text-green-600 w-fit">
           <i class="fas fa-star text-lg sm:text-2xl"></i>
@@ -153,7 +165,9 @@ current_user.prenom }} | DEFITECH{% endblock %} {% block content %}
     </div>
 
     <!-- Matières -->
-    <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4 sm:p-6">
+    <div
+      class="bg-white rounded-lg shadow-sm border border-gray-200 p-4 sm:p-6"
+    >
       <div class="flex flex-col sm:flex-row sm:items-center gap-3">
         <div class="p-2 sm:p-3 rounded-full bg-blue-100 text-blue-600 w-fit">
           <i class="fas fa-book text-lg sm:text-2xl"></i>
@@ -168,9 +182,13 @@ current_user.prenom }} | DEFITECH{% endblock %} {% block content %}
     </div>
 
     <!-- Présence -->
-    <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4 sm:p-6">
+    <div
+      class="bg-white rounded-lg shadow-sm border border-gray-200 p-4 sm:p-6"
+    >
       <div class="flex flex-col sm:flex-row sm:items-center gap-3">
-        <div class="p-2 sm:p-3 rounded-full bg-purple-100 text-purple-600 w-fit">
+        <div
+          class="p-2 sm:p-3 rounded-full bg-purple-100 text-purple-600 w-fit"
+        >
           <i class="fas fa-calendar-check text-lg sm:text-2xl"></i>
         </div>
         <div>
@@ -184,9 +202,13 @@ current_user.prenom }} | DEFITECH{% endblock %} {% block content %}
     </div>
 
     <!-- Devoirs -->
-    <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4 sm:p-6">
+    <div
+      class="bg-white rounded-lg shadow-sm border border-gray-200 p-4 sm:p-6"
+    >
       <div class="flex flex-col sm:flex-row sm:items-center gap-3">
-        <div class="p-2 sm:p-3 rounded-full bg-yellow-100 text-yellow-600 w-fit">
+        <div
+          class="p-2 sm:p-3 rounded-full bg-yellow-100 text-yellow-600 w-fit"
+        >
           <i class="fas fa-tasks text-lg sm:text-2xl"></i>
         </div>
         <div>
@@ -202,51 +224,105 @@ current_user.prenom }} | DEFITECH{% endblock %} {% block content %}
   <!-- Actions rapides et contenu -->
   <div class="grid grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 mb-6 sm:mb-8">
     <!-- Actions rapides -->
-    <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4 sm:p-6">
+    <div
+      class="bg-white rounded-lg shadow-sm border border-gray-200 p-4 sm:p-6"
+    >
       <h3 class="text-base sm:text-lg font-semibold text-gray-900 mb-4">
         Actions rapides
       </h3>
       <div class="space-y-2 sm:space-y-3">
-        <a href="{{ url_for('students.voir_notes') }}"
-          class="flex items-center p-3 bg-green-50 rounded-lg hover:bg-green-100 transition-colors group">
+        <a
+          href="{{ url_for('students.voir_notes') }}"
+          class="flex items-center p-3 bg-green-50 rounded-lg hover:bg-green-100 transition-colors group"
+        >
           <i class="fas fa-star text-green-600 mr-3 text-sm sm:text-base"></i>
-          <span class="text-sm sm:text-base text-green-900 group-hover:font-medium">Consulter mes notes</span>
+          <span
+            class="text-sm sm:text-base text-green-900 group-hover:font-medium"
+            >Consulter mes notes</span
+          >
         </a>
-        <a href="{{ url_for('students.emploi_temps') }}"
-          class="flex items-center p-3 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors group">
+        <a
+          href="{{ url_for('students.emploi_temps') }}"
+          class="flex items-center p-3 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors group"
+        >
           <i class="fas fa-clock text-blue-600 mr-3 text-sm sm:text-base"></i>
-          <span class="text-sm sm:text-base text-blue-900 group-hover:font-medium">Emploi du temps</span>
+          <span
+            class="text-sm sm:text-base text-blue-900 group-hover:font-medium"
+            >Emploi du temps</span
+          >
         </a>
-        <a href="{{ url_for('students.devoirs') }}"
-          class="flex items-center p-3 bg-purple-50 rounded-lg hover:bg-purple-100 transition-colors group">
+        <a
+          href="{{ url_for('students.devoirs') }}"
+          class="flex items-center p-3 bg-purple-50 rounded-lg hover:bg-purple-100 transition-colors group"
+        >
           <i class="fas fa-tasks text-purple-600 mr-3 text-sm sm:text-base"></i>
-          <span class="text-sm sm:text-base text-purple-900 group-hover:font-medium">Devoirs et examens</span>
+          <span
+            class="text-sm sm:text-base text-purple-900 group-hover:font-medium"
+            >Devoirs et examens</span
+          >
         </a>
-        <a href="{{ url_for('community.index') }}"
-          class="flex items-center p-2 bg-gradient-to-r from-pink-50 to-pink-100 rounded-lg hover:from-pink-100 hover:to-pink-200 transition-all duration-200 group">
+        <a
+          href="{{ url_for('community.index') }}"
+          class="flex items-center p-2 bg-gradient-to-r from-pink-50 to-pink-100 rounded-lg hover:from-pink-100 hover:to-pink-200 transition-all duration-200 group"
+        >
           <i class="fas fa-users text-pink-600 mr-2"></i>
-          <span class="text-sm font-medium text-pink-900 flex-1">Communauté</span>
+          <span class="text-sm font-medium text-pink-900 flex-1"
+            >Communauté</span
+          >
         </a>
-        <a href="{{ url_for('resources.index') }}"
-          class="flex items-center p-3 bg-green-50 rounded-lg hover:bg-green-100 transition-colors group">
+        <a
+          href="{{ url_for('resources.index') }}"
+          class="flex items-center p-3 bg-green-50 rounded-lg hover:bg-green-100 transition-colors group"
+        >
           <i class="fas fa-book text-green-600 mr-3 text-sm sm:text-base"></i>
-          <span class="text-sm sm:text-base text-green-900 group-hover:font-medium">Ressources numériques</span>
+          <span
+            class="text-sm sm:text-base text-green-900 group-hover:font-medium"
+            >Ressources numériques</span
+          >
+        </a>
+        <a
+          href="{{ url_for('students.projets_list') }}"
+          class="flex items-center p-3 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors group"
+        >
+          <i class="fas fa-code text-blue-600 mr-3 text-sm sm:text-base"></i>
+          <span
+            class="text-sm sm:text-base text-blue-900 group-hover:font-medium"
+            >Mes Projets (VS Code)</span
+          >
+        </a>
+        <a
+          href="{{ url_for('academic_history.my_history') }}"
+          class="flex items-center p-3 bg-indigo-50 rounded-lg hover:bg-indigo-100 transition-colors group"
+        >
+          <i
+            class="fas fa-history text-indigo-600 mr-3 text-sm sm:text-base"
+          ></i>
+          <span
+            class="text-sm sm:text-base text-indigo-900 group-hover:font-medium"
+            >Mes Bulletins & Archives</span
+          >
         </a>
       </div>
     </div>
 
     <!-- Notes récentes -->
-    <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4 sm:p-6">
+    <div
+      class="bg-white rounded-lg shadow-sm border border-gray-200 p-4 sm:p-6"
+    >
       <h3 class="text-base sm:text-lg font-semibold text-gray-900 mb-4">
         Notes récentes
       </h3>
       {% if notes %}
       <div class="space-y-2 sm:space-y-3">
         {% for note in notes[:5] %}
-        <div class="p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+        <div
+          class="p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
+        >
           <div class="flex items-center justify-between gap-2">
             <div class="min-w-0 flex-1">
-              <p class="font-medium text-gray-900 text-sm sm:text-base truncate">
+              <p
+                class="font-medium text-gray-900 text-sm sm:text-base truncate"
+              >
                 {{ note.matiere.nom }}
               </p>
               <p class="text-xs sm:text-sm text-gray-600 truncate">
@@ -254,7 +330,8 @@ current_user.prenom }} | DEFITECH{% endblock %} {% block content %}
               </p>
             </div>
             <span
-              class="inline-flex px-2 py-1 text-xs font-semibold rounded-full whitespace-nowrap {% if note.note >= 10 %}bg-green-100 text-green-800{% elif note.note >= 8 %}bg-yellow-100 text-yellow-800{% else %}bg-red-100 text-red-800{% endif %}">
+              class="inline-flex px-2 py-1 text-xs font-semibold rounded-full whitespace-nowrap {% if note.note >= 10 %}bg-green-100 text-green-800{% elif note.note >= 8 %}bg-yellow-100 text-yellow-800{% else %}bg-red-100 text-red-800{% endif %}"
+            >
               {{ note.note }}/20
             </span>
           </div>
@@ -263,20 +340,26 @@ current_user.prenom }} | DEFITECH{% endblock %} {% block content %}
       </div>
       {% else %}
       <div class="text-center py-6 sm:py-8">
-        <i class="fas fa-star text-3xl sm:text-4xl text-gray-300 mb-3 sm:mb-4"></i>
+        <i
+          class="fas fa-star text-3xl sm:text-4xl text-gray-300 mb-3 sm:mb-4"
+        ></i>
         <p class="text-sm sm:text-base text-gray-500">Aucune note disponible</p>
       </div>
       {% endif %}
     </div>
 
     <!-- Notifications récentes -->
-    <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4 sm:p-6">
+    <div
+      class="bg-white rounded-lg shadow-sm border border-gray-200 p-4 sm:p-6"
+    >
       <h3 class="text-base sm:text-lg font-semibold text-gray-900 mb-4">
         Notifications
       </h3>
       <div class="space-y-2 sm:space-y-3">
         {% if notifications %} {% for notif in notifications[:5] %}
-        <div class="p-3 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors">
+        <div
+          class="p-3 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors"
+        >
           <p class="text-xs sm:text-sm text-blue-900">{{ notif.message }}</p>
           <p class="text-xs text-blue-600 mt-1">
             {{ notif.date_created.strftime('%d/%m/%Y %H:%M') }}
@@ -284,8 +367,63 @@ current_user.prenom }} | DEFITECH{% endblock %} {% block content %}
         </div>
         {% endfor %} {% else %}
         <div class="text-center py-6 sm:py-8">
-          <i class="fas fa-bell text-3xl sm:text-4xl text-gray-300 mb-3 sm:mb-4"></i>
+          <i
+            class="fas fa-bell text-3xl sm:text-4xl text-gray-300 mb-3 sm:mb-4"
+          ></i>
           <p class="text-sm sm:text-base text-gray-500">Aucune notification</p>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- NOUVEAU : Derniers Projets (VS Code) -->
+    <div
+      class="bg-white rounded-lg shadow-sm border border-gray-200 p-4 sm:p-6"
+    >
+      <div class="flex items-center justify-between mb-4">
+        <h3 class="text-base sm:text-lg font-semibold text-gray-900">
+          Projets récents
+        </h3>
+        <a
+          href="{{ url_for('students.projets_list') }}"
+          class="text-xs text-blue-600 hover:underline"
+          >Voir tout</a
+        >
+      </div>
+      <div class="space-y-3">
+        {% if projets_recents %} {% for p in projets_recents %}
+        <div
+          class="p-3 bg-gradient-to-r from-gray-50 to-white rounded-xl border border-gray-100 hover:border-blue-200 transition-all group"
+        >
+          <div class="flex items-start justify-between">
+            <div>
+              <p
+                class="text-sm font-semibold text-gray-900 truncate max-w-[150px]"
+              >
+                {{ p.titre }}
+              </p>
+              <p class="text-[10px] text-gray-500 italic mt-1">
+                Sync: {{ p.updated_at.strftime('%d/%m %H:%M') }}
+              </p>
+            </div>
+            <i
+              class="fas fa-code text-blue-400 opacity-20 group-hover:opacity-100 transition-opacity"
+            ></i>
+          </div>
+          <div class="mt-2 flex flex-wrap gap-1">
+            {% if p.technologies %} {% for tech in p.technologies.split(',')[:2]
+            %}
+            <span
+              class="text-[9px] px-2 py-0.5 bg-blue-50 text-blue-600 rounded-md border border-blue-100"
+              >{{ tech.strip() }}</span
+            >
+            {% endfor %} {% endif %}
+          </div>
+        </div>
+        {% endfor %} {% else %}
+        <div class="text-center py-6">
+          <i class="fas fa-terminal text-2xl text-gray-200 mb-2"></i>
+          <p class="text-xs text-gray-400">Aucun projet synchronisé</p>
         </div>
         {% endif %}
       </div>
@@ -303,7 +441,9 @@ current_user.prenom }} | DEFITECH{% endblock %} {% block content %}
       {% if emploi_temps and emploi_temps|length > 0 %}
       <ul class="divide-y divide-gray-200">
         {% for cours in emploi_temps %}
-        <li class="py-3 flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2">
+        <li
+          class="py-3 flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2"
+        >
           <div class="flex items-center gap-2">
             <i class="fas fa-clock text-blue-600 text-sm"></i>
             <span class="text-sm sm:text-base text-gray-900 font-medium">
@@ -313,14 +453,18 @@ current_user.prenom }} | DEFITECH{% endblock %} {% block content %}
           </div>
           <div class="flex items-center gap-2 ml-6 sm:ml-0">
             <i class="fas fa-door-open text-gray-500 text-sm"></i>
-            <span class="text-sm sm:text-base text-gray-700">{{ cours.salle }}</span>
+            <span class="text-sm sm:text-base text-gray-700"
+              >{{ cours.salle }}</span
+            >
           </div>
         </li>
         {% endfor %}
       </ul>
       {% else %}
       <div class="text-center py-6 sm:py-8">
-        <i class="fas fa-calendar-day text-3xl sm:text-4xl text-gray-300 mb-3 sm:mb-4"></i>
+        <i
+          class="fas fa-calendar-day text-3xl sm:text-4xl text-gray-300 mb-3 sm:mb-4"
+        ></i>
         <p class="text-sm sm:text-base text-gray-500">
           Aucun cours programmé aujourd'hui
         </p>

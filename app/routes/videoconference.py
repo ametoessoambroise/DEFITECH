@@ -299,6 +299,54 @@ def list_participants(token):
     )
 
 
+@bp.route("/api/active-rooms", methods=["GET"])
+@login_required
+def active_rooms():
+    """
+    Liste les salles de visioconférence actives accessibles à l'utilisateur.
+    """
+    today = datetime.now().date()
+
+    if current_user.role == "enseignant":
+        enseignant = Enseignant.query.filter_by(user_id=current_user.id).first()
+        rooms = Room.query.filter(
+            Room.host_id == current_user.id,
+            Room.is_active == True,
+            func.date(Room.created_at) == today,
+        ).all()
+    else:
+        etudiant = Etudiant.query.filter_by(user_id=current_user.id).first()
+        # Salles liées aux matières de la filière de l'étudiant
+        # On peut aussi filtrer par invitations
+        rooms = (
+            Room.query.join(Matiere)
+            .filter(
+                Matiere.filiere_id
+                == Filiere.query.filter_by(nom=etudiant.filiere).first().id,
+                Room.is_active == True,
+                func.date(Room.created_at) == today,
+            )
+            .all()
+        )
+
+    return jsonify(
+        {
+            "success": True,
+            "rooms": [
+                {
+                    "id": r.id,
+                    "name": r.name,
+                    "token": r.room_token,
+                    "course": r.course.nom,
+                    "host": f"{r.host.prenom} {r.host.nom}",
+                    "created_at": r.created_at.isoformat(),
+                }
+                for r in rooms
+            ],
+        }
+    )
+
+
 @bp.route("/room", methods=["GET"])
 @login_required
 def room():
@@ -307,19 +355,26 @@ def room():
     Gère la création automatique pour les enseignants et l'accès pour les étudiants.
     """
     room_token = request.args.get("token")
+    format_json = request.args.get("format") == "json" or request.is_json
 
     # Si l'utilisateur est un enseignant
     if current_user.role == "enseignant":
         course_id = request.args.get("course_id")
 
         if not course_id:
-            flash("ID de cours manquant", "error")
+            msg = "ID de cours manquant"
+            if format_json:
+                return jsonify({"success": False, "error": msg}), 400
+            flash(msg, "error")
             return redirect(url_for("enseignants.dashboard"))
 
         # Vérifier si l'utilisateur est bien un enseignant
         enseignant = Enseignant.query.filter_by(user_id=current_user.id).first()
         if not enseignant:
-            flash("Profil enseignant non trouvé", "error")
+            msg = "Profil enseignant non trouvé"
+            if format_json:
+                return jsonify({"success": False, "error": msg}), 404
+            flash(msg, "error")
             return redirect(url_for("enseignants.dashboard"))
 
         # Vérifier si le cours appartient bien à l'enseignant
@@ -327,7 +382,10 @@ def room():
             id=course_id, enseignant_id=enseignant.id
         ).first()
         if not course:
-            flash("Cours non trouvé ou accès non autorisé", "error")
+            msg = "Cours non trouvé ou accès non autorisé"
+            if format_json:
+                return jsonify({"success": False, "error": msg}), 403
+            flash(msg, "error")
             return redirect(url_for("enseignants.dashboard"))
 
         # Vérifier si une salle existe déjà pour ce cours aujourd'hui
@@ -354,18 +412,20 @@ def room():
         # Envoyer les invitations aux étudiants inscrits
         try:
             result = send_room_invitations(room_obj.id, current_app)
-            if result.get("success"):
-                flash(f"Salle créée avec succès. {result['message']}", "success")
-            else:
-                flash(
-                    f"La salle a été créée mais des erreurs sont survenues lors de l'envoi des invitations: {result.get('message', 'Erreur inconnue')}",
-                    "warning",
-                )
+            if not format_json:
+                if result.get("success"):
+                    flash(f"Salle créée avec succès. {result['message']}", "success")
+                else:
+                    flash(
+                        f"La salle a été créée mais des erreurs sont survenues lors de l'envoi des invitations: {result.get('message', 'Erreur inconnue')}",
+                        "warning",
+                    )
         except Exception as e:
             current_app.logger.error(
                 f"Erreur lors de l'envoi des invitations: {str(e)}"
             )
-            flash("Erreur lors de l'envoi des invitations.", "warning")
+            if not format_json:
+                flash("Erreur lors de l'envoi des invitations.", "warning")
 
         # Enregistrer la participation de l'enseignant comme hôte
         participation = RoomParticipant.query.filter_by(
@@ -382,6 +442,20 @@ def room():
             db.session.add(participation)
             db.session.commit()
 
+        if format_json:
+            return jsonify(
+                {
+                    "success": True,
+                    "room": {
+                        "id": room_obj.id,
+                        "name": room_obj.name,
+                        "token": room_obj.room_token,
+                        "course": course.nom,
+                        "is_teacher": True,
+                    },
+                }
+            )
+
         return render_template(
             "videoconference/room.html",
             room=room_obj,
@@ -395,25 +469,37 @@ def room():
         room_obj = Room.query.filter_by(room_token=room_token).first()
 
         if not room_obj:
-            flash("Salle de cours introuvable ou expirée", "error")
+            msg = "Salle de cours introuvable ou expirée"
+            if format_json:
+                return jsonify({"success": False, "error": msg}), 404
+            flash(msg, "error")
             return redirect(url_for("students.etudiant_dashboard"))
 
         # Récupérer les informations du cours
         course = Matiere.query.get(room_obj.course_id)
         if not course:
-            flash("Cours introuvable", "error")
+            msg = "Cours introuvable"
+            if format_json:
+                return jsonify({"success": False, "error": msg}), 404
+            flash(msg, "error")
             return redirect(url_for("students.etudiant_dashboard"))
 
         # Récupérer l'étudiant
         etudiant = Etudiant.query.filter_by(user_id=current_user.id).first()
         if not etudiant:
-            flash("Profil étudiant introuvable", "error")
+            msg = "Profil étudiant introuvable"
+            if format_json:
+                return jsonify({"success": False, "error": msg}), 404
+            flash(msg, "error")
             return redirect(url_for("students.etudiant_dashboard"))
 
         # Vérifier si la matière est dans l'emploi du temps de la filière de l'étudiant
         filiere = Filiere.query.filter_by(nom=etudiant.filiere).first()
         if not filiere:
-            flash("Filière introuvable", "error")
+            msg = "Filière introuvable"
+            if format_json:
+                return jsonify({"success": False, "error": msg}), 404
+            flash(msg, "error")
             return redirect(url_for("students.etudiant_dashboard"))
 
         # Vérifier si le cours est dans l'emploi du temps de cette filière
@@ -422,7 +508,10 @@ def room():
         ).first()
 
         if not emploi:
-            flash("Vous n'êtes pas inscrit à ce cours", "error")
+            msg = "Vous n'êtes pas inscrit à ce cours"
+            if format_json:
+                return jsonify({"success": False, "error": msg}), 403
+            flash(msg, "error")
             return redirect(url_for("students.etudiant_dashboard"))
 
         # Enregistrer la participation de l'étudiant
@@ -450,6 +539,20 @@ def room():
 
         db.session.commit()
 
+        if format_json:
+            return jsonify(
+                {
+                    "success": True,
+                    "room": {
+                        "id": room_obj.id,
+                        "name": room_obj.name,
+                        "token": room_obj.room_token,
+                        "course": course.nom,
+                        "is_teacher": False,
+                    },
+                }
+            )
+
         return render_template(
             "videoconference/room.html",
             room=room_obj,
@@ -459,5 +562,8 @@ def room():
         )
 
     # Accès non autorisé
-    flash("Accès non autorisé à la salle de visioconférence", "error")
+    msg = "Accès non autorisé à la salle de visioconférence"
+    if format_json:
+        return jsonify({"success": False, "error": msg}), 403
+    flash(msg, "error")
     return redirect(url_for("main.index"))

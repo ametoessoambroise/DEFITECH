@@ -275,8 +275,80 @@
               });
             </script>
           </div>
+      </div>
+
+      {% if current_user.role == 'etudiant' and current_user.etudiant %}
+      <!-- Parcours Scolaire -->
+      <div class="bg-white rounded-xl border border-gray-200 overflow-hidden mt-4">
+        <div class="px-4 py-3 sm:px-6 sm:py-4 border-b border-gray-100">
+          <h2 class="text-base sm:text-lg font-semibold text-gray-900">Parcours Scolaire</h2>
+        </div>
+        <div class="px-4 py-4 sm:px-6 sm:py-5">
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <p class="text-xs font-medium text-gray-500">Lieu de naissance</p>
+              <p class="mt-1 text-sm text-gray-900">{{ current_user.etudiant.lieu_naissance or 'Non renseigné' }}</p>
+            </div>
+            <div>
+              <p class="text-xs font-medium text-gray-500">Nationalité</p>
+              <p class="mt-1 text-sm text-gray-900">{{ current_user.etudiant.nationalite or 'Non renseigné' }}</p>
+            </div>
+            <div>
+              <p class="text-xs font-medium text-gray-500">Baccalauréat (Série)</p>
+              <p class="mt-1 text-sm text-gray-900">{{ current_user.etudiant.bac_serie or 'Non renseigné' }}</p>
+            </div>
+            <div>
+              <p class="text-xs font-medium text-gray-500">Année du Bac</p>
+              <p class="mt-1 text-sm text-gray-900">{{ current_user.etudiant.bac_annee or 'Non renseigné' }}</p>
+            </div>
+            <div class="sm:col-span-2">
+              <p class="text-xs font-medium text-gray-500">Établissement de provenance</p>
+              <p class="mt-1 text-sm text-gray-900">{{ current_user.etudiant.etablissement_provenance or 'Non renseigné' }}</p>
+            </div>
+          </div>
         </div>
       </div>
+
+      <!-- Coordonnées Parent -->
+      <div class="bg-white rounded-xl border border-gray-200 overflow-hidden mt-4">
+        <div class="px-4 py-3 sm:px-6 sm:py-4 border-b border-gray-100">
+          <h2 class="text-base sm:text-lg font-semibold text-gray-900">Coordonnées Parent / Tuteur</h2>
+        </div>
+        <div class="px-4 py-4 sm:px-6 sm:py-5">
+          {% if current_user.etudiant.parents %}
+            {% set parent = current_user.etudiant.parents[0] %}
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <p class="text-xs font-medium text-gray-500">Nom & Prénom</p>
+                <p class="mt-1 text-sm text-gray-900">{{ parent.nom }} {{ parent.prenom }}</p>
+              </div>
+              <div>
+                <p class="text-xs font-medium text-gray-500">Profession</p>
+                <p class="mt-1 text-sm text-gray-900">{{ parent.profession or 'Non renseigné' }}</p>
+              </div>
+              <div>
+                <p class="text-xs font-medium text-gray-500">Téléphone (Bur.)</p>
+                <p class="mt-1 text-sm text-gray-900">{{ parent.tel_bureau or 'Non renseigné' }}</p>
+              </div>
+              <div>
+                <p class="text-xs font-medium text-gray-500">Téléphone (Dom.)</p>
+                <p class="mt-1 text-sm text-gray-900">{{ parent.tel_domicile or 'Non renseigné' }}</p>
+              </div>
+              <div class="sm:col-span-2">
+                <p class="text-xs font-medium text-gray-500">Email</p>
+                <p class="mt-1 text-sm text-gray-900">{{ parent.email or 'Non renseigné' }}</p>
+              </div>
+              <div class="sm:col-span-2">
+                <p class="text-xs font-medium text-gray-500">Adresse</p>
+                <p class="mt-1 text-sm text-gray-900">{{ parent.adresse or 'Non renseigné' }}</p>
+              </div>
+            </div>
+          {% else %}
+            <p class="text-sm text-gray-500 italic">Aucune information parentale enregistrée.</p>
+          {% endif %}
+        </div>
+      </div>
+      {% endif %}
 
       <!-- Visibilité & Profil Public -->
       <div class="bg-white rounded-xl border border-gray-200 overflow-hidden mt-4 mb-4">
@@ -312,7 +384,7 @@
                     </a>
                     <div class="flex items-center justify-end bg-gray-50 rounded-lg p-2 border border-gray-200">
                          <input type="text" readonly value="{{ url_for('public_profile.view_profile', user_id=current_user.id, _external=True) }}" class="bg-transparent border-none p-0 text-xs text-gray-600 focus:ring-0 w-48 sm:w-64 text-right sm:text-left truncate mr-2">
-                        <button type="button" onclick="navigator.clipboard.writeText('{{ url_for('public_profile.view_profile', user_id=current_user.id, _external=True) }}'); alert('Lien copié !')" class="text-gray-400 hover:text-blue-600 p-1" title="Copier le lien">
+                        <button type="button" onclick="navigator.clipboard.writeText(`{{ url_for('public_profile.view_profile', user_id=current_user.id, _external=True) }}`); alert('Lien copié !')" class="text-gray-400 hover:text-blue-600 p-1" title="Copier le lien">
                              <i class="far fa-copy"></i>
                         </button>
                     </div>
@@ -808,7 +880,8 @@
           pinSettings.classList.toggle('opacity-50', !isEnabled);
           pinSettings.classList.toggle('pointer-events-none', !isEnabled);
           
-          if (isEnabled && !{{ 'true' if current_user.app_lock_pin_hash else 'false' }}) {
+          const hasPin = {% if current_user.app_lock_pin_hash %}true{% else %}false{% endif %};
+          if (isEnabled && !hasPin) {
             this.openPinModal();
           }
         }

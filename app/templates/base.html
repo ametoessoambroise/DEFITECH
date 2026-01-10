@@ -14,7 +14,7 @@
     <!-- Alipine js -->
     <script
       defer
-      src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"
+      src="https://cdn.jsdelivr.net/npm/alpinejs@3.15.3/dist/cdn.min.js"
     ></script>
 
     <link
@@ -139,7 +139,7 @@
     class="bg-gray-50 min-h-screen flex flex-col w-full font-['Inter'] text-black"
   >
     <!-- Global Loading Component -->
-    {% include 'components/loading.html' %}
+    {% include 'components/bar.html' %}
 
     <!-- App Lock Overlay -->
     {% if current_user.is_authenticated and current_user.is_app_lock_enabled %}
@@ -164,7 +164,7 @@
           <!-- Logo et navigation principale -->
           <div class="flex items-center space-x-4 sm:space-x-6 flex-1 min-w-0">
             <a
-              href="{% if current_user.is_authenticated and current_user.role == 'admin' %}{{ url_for('admin.dashboard') }}{% elif current_user.is_authenticated and current_user.role == 'enseignant' %}{{ url_for('teachers.dashboard') }}{% elif current_user.is_authenticated and current_user.role == 'etudiant' %}{{ url_for('students.dashboard') }}{% else %}{{ url_for('main.index') }}{% endif %}"
+              href="{% if current_user.is_authenticated and current_user.role == 'admin' %}{{ url_for('admin.dashboard') }}{% elif current_user.is_authenticated and current_user.role == 'enseignant' %}{{ url_for('teachers.dashboard') }}{% elif current_user.is_authenticated and current_user.role == 'etudiant' %}{{ url_for('students.dashboard') }}{% elif current_user.is_authenticated and current_user.role == 'parent' %}{{ url_for('parents.dashboard') }}{% else %}{{ url_for('main.index') }}{% endif %}"
               class="flex items-center space-x-2 flex-shrink-0"
               data-tooltip="Retour à l'accueil"
             >
@@ -182,7 +182,7 @@
             {% if current_user.is_authenticated %}
             <div class="flex items-center space-x-3 sm:space-x-4 min-w-0">
               <a
-                href="{% if current_user.role == 'admin' %}{{ url_for('admin.dashboard') }}{% elif current_user.role == 'enseignant' %}{{ url_for('teachers.dashboard') }}{% elif current_user.role == 'etudiant' %}{{ url_for('students.dashboard') }}{% else %}{{ url_for('main.index') }}{% endif %}"
+                href="{% if current_user.role == 'admin' %}{{ url_for('admin.dashboard') }}{% elif current_user.role == 'enseignant' %}{{ url_for('teachers.dashboard') }}{% elif current_user.role == 'etudiant' %}{{ url_for('students.dashboard') }}{% elif current_user.is_authenticated and current_user.role == 'parent' %}{{ url_for('parents.dashboard') }}{% else %}{{ url_for('main.index') }}{% endif %}"
                 class="text-gray-700 hover:text-blue-600 transition font-medium text-xs sm:text-sm hidden md:flex whitespace-nowrap"
                 data-tooltip="Accéder au tableau de bord"
               >

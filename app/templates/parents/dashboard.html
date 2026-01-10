@@ -1,0 +1,577 @@
+{% extends "parents/base.html" %} {% block title %}Espace Parent | DEFITECH{%
+endblock %} {% block content %}
+<div class="min-h-screen bg-gray-50">
+  <!-- Header avec gradient -->
+  <div class="bg-gradient-to-r from-blue-700 to-blue-900 text-white">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+      <div
+        class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6"
+      >
+        <div class="flex items-start gap-4">
+          <div
+            class="hidden sm:flex w-16 h-16 bg-white/10 backdrop-blur-sm rounded-2xl items-center justify-center flex-shrink-0"
+          >
+            <i class="fas fa-user-circle text-3xl"></i>
+          </div>
+          <div>
+            <h1 class="text-3xl md:text-4xl font-bold mb-2">
+              Bienvenue, {{ current_user.prenom }}
+            </h1>
+            <p class="text-blue-100 text-base md:text-lg">
+              Suivez la scolarité de vos enfants en temps réel
+            </p>
+          </div>
+        </div>
+
+        <div class="flex flex-wrap items-center gap-3">
+          <a
+            href="{{ url_for('chat.user_chat') }}"
+            class="inline-flex items-center px-4 py-2.5 bg-white/10 backdrop-blur-sm border border-white/20 rounded-xl text-white font-medium hover:bg-white/20 transition-all shadow-lg"
+          >
+            <i class="fas fa-comments mr-2"></i>
+            <span class="hidden sm:inline">Contacter l'admin</span>
+            <span class="sm:hidden">Chat</span>
+          </a>
+
+          <a
+            href="{{ url_for('parents.parent_notifications') }}"
+            class="relative inline-flex items-center px-4 py-2.5 bg-white/10 backdrop-blur-sm border border-white/20 rounded-xl text-white font-medium hover:bg-white/20 transition-all shadow-lg"
+          >
+            <i class="fas fa-bell mr-2"></i>
+            <span class="hidden sm:inline">Notifications</span>
+            {% set unread_count =
+            Notification.query.filter_by(user_id=current_user.id,
+            est_lue=False).count() %} {% if unread_count > 0 %}
+            <span
+              class="absolute -top-1 -right-1 bg-red-600 text-white text-xs w-5 h-5 rounded-full flex items-center justify-center border-2 border-blue-900 font-bold shadow-lg"
+            >
+              {{ unread_count if unread_count < 10 else '9+' }}
+            </span>
+            {% endif %}
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Stats Cards -->
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-6 mb-8">
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-5">
+        <div class="flex items-center justify-between">
+          <div>
+            <p class="text-sm font-medium text-gray-600">Enfants liés</p>
+            <p class="text-3xl font-bold text-gray-900 mt-1">
+              {{ children|length }}
+            </p>
+          </div>
+          <div
+            class="w-12 h-12 bg-blue-50 rounded-xl flex items-center justify-center"
+          >
+            <i class="fas fa-users text-blue-600 text-xl"></i>
+          </div>
+        </div>
+      </div>
+
+      <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-5">
+        <div class="flex items-center justify-between">
+          <div>
+            <p class="text-sm font-medium text-gray-600">Moyenne générale</p>
+            <p class="text-3xl font-bold text-green-600 mt-1">
+              {{ global_average }}
+            </p>
+          </div>
+          <div
+            class="w-12 h-12 bg-green-50 rounded-xl flex items-center justify-center"
+          >
+            <i class="fas fa-chart-line text-green-600 text-xl"></i>
+          </div>
+        </div>
+      </div>
+
+      <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-5">
+        <div class="flex items-center justify-between">
+          <div>
+            <p class="text-sm font-medium text-gray-600">Taux présence</p>
+            <p class="text-3xl font-bold text-blue-600 mt-1">
+              {{ global_presence }}{% if global_presence != '--' %}%{% endif %}
+            </p>
+          </div>
+          <div
+            class="w-12 h-12 bg-blue-50 rounded-xl flex items-center justify-center"
+          >
+            <i class="fas fa-calendar-check text-blue-600 text-xl"></i>
+          </div>
+        </div>
+      </div>
+
+      <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-5">
+        <div class="flex items-center justify-between">
+          <div>
+            <p class="text-sm font-medium text-gray-600">Alertes actives</p>
+            <p class="text-3xl font-bold text-red-600 mt-1">
+              {{ unread_count or 0 }}
+            </p>
+          </div>
+          <div
+            class="w-12 h-12 bg-red-50 rounded-xl flex items-center justify-center"
+          >
+            <i class="fas fa-exclamation-triangle text-red-600 text-xl"></i>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Children Section -->
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-12">
+    {% if children %}
+    <div
+      class="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4"
+    >
+      <h2 class="text-2xl font-bold text-gray-900">
+        <i class="fas fa-graduation-cap text-blue-600 mr-2"></i>
+        Mes enfants
+      </h2>
+      <button
+        onclick="openLinkChildModal()"
+        class="inline-flex items-center px-4 py-2 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors shadow-sm"
+      >
+        <i class="fas fa-user-plus mr-2"></i>
+        Ajouter un enfant
+      </button>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      {% for child in children %}
+      <div
+        class="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-lg hover:border-blue-300 transition-all duration-300 group"
+      >
+        <!-- Header Card -->
+        <div class="bg-gradient-to-br from-blue-600 to-blue-800 p-6 text-white">
+          <div class="flex items-center gap-4 mb-4">
+            <div
+              class="w-16 h-16 rounded-2xl bg-white/20 backdrop-blur-sm flex items-center justify-center text-white text-2xl font-bold border-2 border-white/30 shadow-lg"
+            >
+              {{ child.user.nom[0] }}{{ child.user.prenom[0] }}
+            </div>
+            <div class="flex-1 min-w-0">
+              <h3 class="text-xl font-bold truncate">
+                {{ child.user.nom }} {{ child.user.prenom }}
+              </h3>
+              <p class="text-blue-100 text-sm">
+                <i class="fas fa-id-card mr-1"></i>
+                ID: {{ child.user.id }}
+              </p>
+            </div>
+          </div>
+
+          <div class="flex items-center gap-2 pt-3 border-t border-white/20">
+            <div class="flex-1">
+              <p class="text-xs text-blue-100 mb-1">Filière</p>
+              <p class="font-semibold text-sm truncate">{{ child.filiere }}</p>
+            </div>
+            <div class="w-px h-8 bg-white/20"></div>
+            <div class="flex-1">
+              <p class="text-xs text-blue-100 mb-1">Année</p>
+              <p class="font-semibold text-sm">{{ child.annee }}</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Body Card -->
+        <div class="p-6">
+          <!-- Quick Stats -->
+          <div class="grid grid-cols-3 gap-3 mb-6">
+            <div
+              class="text-center p-3 bg-blue-50 rounded-xl border border-blue-100"
+            >
+              <div class="text-2xl font-bold text-blue-700">
+                {{ child.average or '--' }}
+              </div>
+              <div class="text-[10px] text-gray-600 font-medium uppercase mt-1">
+                Moyenne
+              </div>
+            </div>
+            <div
+              class="text-center p-3 bg-green-50 rounded-xl border border-green-100"
+            >
+              <div class="text-2xl font-bold text-green-700">
+                {{ child.presence_rate }}%
+              </div>
+              <div class="text-[10px] text-gray-600 font-medium uppercase mt-1">
+                Présence
+              </div>
+            </div>
+            <div
+              class="text-center p-3 bg-purple-50 rounded-xl border border-purple-100"
+            >
+              <div class="text-2xl font-bold text-purple-700">
+                {{ child.unread_notifs }}
+              </div>
+              <div class="text-[10px] text-gray-600 font-medium uppercase mt-1">
+                Alertes
+              </div>
+            </div>
+          </div>
+
+          <!-- Progress Indicators -->
+          <div class="space-y-3 mb-6">
+            <div>
+              <div class="flex items-center justify-between text-xs mb-1">
+                <span class="text-gray-600 font-medium"
+                  >Performance académique</span
+                >
+                <span class="text-gray-900 font-bold"
+                  >{{ ((child.average / 20) * 100)|round|int if child.average
+                  else 0 }}%</span
+                >
+              </div>
+              <div class="h-2 bg-gray-100 rounded-full overflow-hidden">
+                <div
+                  class="h-full bg-gradient-to-r from-blue-500 to-blue-600 rounded-full"
+                  style="width: {{ ((child.average / 20) * 100)|round|int if child.average else 0 }}%"
+                ></div>
+              </div>
+            </div>
+
+            <div>
+              <div class="flex items-center justify-between text-xs mb-1">
+                <span class="text-gray-600 font-medium">Assiduité</span>
+                <span class="text-gray-900 font-bold"
+                  >{{ child.presence_rate }}%</span
+                >
+              </div>
+              <div class="h-2 bg-gray-100 rounded-full overflow-hidden">
+                <div
+                  class="h-full bg-gradient-to-r from-green-500 to-green-600 rounded-full"
+                  style="width: {{ child.presence_rate }}%"
+                ></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Action Button -->
+          <a
+            href="{{ url_for('parents.view_child', etudiant_id=child.id) }}"
+            class="w-full inline-flex items-center justify-center px-4 py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white font-semibold rounded-xl hover:from-blue-700 hover:to-blue-800 transition-all shadow-md hover:shadow-lg group/btn"
+          >
+            <span>Voir le profil complet</span>
+            <i
+              class="fas fa-arrow-right ml-2 group-hover/btn:translate-x-1 transition-transform"
+            ></i>
+          </a>
+        </div>
+
+        <!-- Footer avec status -->
+        <div class="px-6 pb-6">
+          <div
+            class="flex items-center justify-between p-3 bg-green-50 rounded-lg border border-green-200"
+          >
+            <div class="flex items-center gap-2">
+              <span
+                class="w-2 h-2 bg-green-500 rounded-full animate-pulse"
+              ></span>
+              <span class="text-xs font-medium text-green-700"
+                >Compte actif</span
+              >
+            </div>
+            <span class="text-xs text-gray-500"
+              >Dernière activité: Aujourd'hui</span
+            >
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+
+    {% else %}
+    <!-- Empty State -->
+    <div class="max-w-2xl mx-auto">
+      <div
+        class="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden"
+      >
+        <div class="p-12 text-center">
+          <div
+            class="inline-flex items-center justify-center w-24 h-24 bg-gradient-to-br from-blue-50 to-blue-100 rounded-3xl mb-6"
+          >
+            <i class="fas fa-user-plus text-5xl text-blue-600"></i>
+          </div>
+
+          <h2 class="text-2xl md:text-3xl font-bold text-gray-900 mb-3">
+            Aucun enfant lié pour le moment
+          </h2>
+
+          <p class="text-gray-600 mb-8 max-w-md mx-auto leading-relaxed">
+            Commencez par lier le compte de votre enfant pour accéder à son
+            suivi scolaire, ses notes et sa progression.
+          </p>
+
+          <!-- CTA Button -->
+          <button
+            onclick="openLinkChildModal()"
+            class="inline-flex items-center px-8 py-4 bg-gradient-to-r from-blue-600 to-blue-700 text-white font-semibold rounded-xl hover:from-blue-700 hover:to-blue-800 transition-all shadow-lg shadow-blue-500/30 hover:shadow-xl mb-6"
+          >
+            <i class="fas fa-link mr-2"></i>
+            Lier un compte étudiant
+          </button>
+
+          <!-- Info Cards -->
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-8">
+            <div class="p-4 bg-gray-50 rounded-xl text-left">
+              <div
+                class="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center mb-3"
+              >
+                <i class="fas fa-key text-blue-600"></i>
+              </div>
+              <h3 class="font-semibold text-gray-900 text-sm mb-1">
+                Code d'accès
+              </h3>
+              <p class="text-xs text-gray-600">
+                Demandez le code à votre enfant
+              </p>
+            </div>
+
+            <div class="p-4 bg-gray-50 rounded-xl text-left">
+              <div
+                class="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center mb-3"
+              >
+                <i class="fas fa-check-circle text-green-600"></i>
+              </div>
+              <h3 class="font-semibold text-gray-900 text-sm mb-1">
+                Validation
+              </h3>
+              <p class="text-xs text-gray-600">
+                Liaison instantanée et sécurisée
+              </p>
+            </div>
+
+            <div class="p-4 bg-gray-50 rounded-xl text-left">
+              <div
+                class="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center mb-3"
+              >
+                <i class="fas fa-chart-line text-purple-600"></i>
+              </div>
+              <h3 class="font-semibold text-gray-900 text-sm mb-1">Suivi</h3>
+              <p class="text-xs text-gray-600">Accès complet aux données</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    {% endif %}
+  </div>
+</div>
+
+<style>
+  @keyframes fadeInUp {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .bg-white {
+    animation: fadeInUp 0.4s ease-out;
+  }
+
+  /* Stagger animation for cards */
+  .grid > div:nth-child(1) {
+    animation-delay: 0s;
+  }
+  .grid > div:nth-child(2) {
+    animation-delay: 0.1s;
+  }
+  .grid > div:nth-child(3) {
+    animation-delay: 0.2s;
+  }
+  .grid > div:nth-child(4) {
+    animation-delay: 0.3s;
+  }
+</style>
+
+<script>
+  function openLinkChildModal() {
+    const modal = document.getElementById("linkChildModal");
+    modal.classList.remove("hidden");
+    modal.classList.add("flex");
+    document.body.style.overflow = "hidden";
+  }
+
+  function closeLinkChildModal() {
+    const modal = document.getElementById("linkChildModal");
+    modal.classList.add("hidden");
+    modal.classList.remove("flex");
+    document.body.style.overflow = "auto";
+  }
+
+  async function submitLinkChild() {
+    const code = document.getElementById("parentCode").value;
+    const btn = document.getElementById("submitLinkBtn");
+    const errorEl = document.getElementById("linkError");
+
+    if (!code) {
+      errorEl.textContent = "Veuillez entrer un code.";
+      errorEl.classList.remove("hidden");
+      return;
+    }
+
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Liaison...';
+    errorEl.classList.add("hidden");
+
+    try {
+      const formData = new FormData();
+      formData.append("code", code);
+      const csrfToken =
+        document
+          .querySelector('meta[name="csrf-token"]')
+          ?.getAttribute("content") || "";
+      const response = await fetch("{{ url_for('parents.link_child') }}", {
+        method: "POST",
+        body: formData,
+        headers: {
+          "X-Requested-With": "XMLHttpRequest",
+          "X-CSRFToken": csrfToken,
+        },
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        window.location.reload();
+      } else {
+        errorEl.textContent = data.message;
+        errorEl.classList.remove("hidden");
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fas fa-link mr-2"></i>Lier le compte';
+      }
+    } catch (error) {
+      errorEl.textContent = "Une erreur est survenue lors de la liaison.";
+      errorEl.classList.remove("hidden");
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fas fa-link mr-2"></i>Lier le compte';
+    }
+  }
+
+  // Animation on scroll
+  const observerOptions = {
+    threshold: 0.1,
+    rootMargin: "0px 0px -50px 0px",
+  };
+
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach((entry) => {
+      if (entry.isIntersecting) {
+        entry.target.style.opacity = "1";
+        entry.target.style.transform = "translateY(0)";
+      }
+    });
+  }, observerOptions);
+
+  document.addEventListener("DOMContentLoaded", () => {
+    const cards = document.querySelectorAll(".bg-white:not(.modal-content)");
+    cards.forEach((card, index) => {
+      if (index > 3) {
+        // Skip stats cards
+        card.style.opacity = "0";
+        card.style.transform = "translateY(20px)";
+        card.style.transition = "opacity 0.5s ease, transform 0.5s ease";
+        observer.observe(card);
+      }
+    });
+  });
+</script>
+
+<!-- Modal Liaison Enfant -->
+<div
+  id="linkChildModal"
+  class="fixed inset-0 z-[100] hidden items-center justify-center bg-gray-900/60 backdrop-blur-sm px-4"
+>
+  <div
+    class="bg-white rounded-2xl shadow-2xl max-w-md w-full overflow-hidden modal-content"
+  >
+    <div
+      class="bg-gradient-to-r from-blue-600 to-blue-800 p-6 text-white relative"
+    >
+      <h3 class="text-xl font-bold">Lier un compte étudiant</h3>
+      <p class="text-blue-100 text-sm mt-1">
+        Entrez le code unique généré par l'enfant
+      </p>
+      <button
+        onclick="closeLinkChildModal()"
+        class="absolute top-4 right-4 text-white/80 hover:text-white transition-colors"
+      >
+        <i class="fas fa-times text-xl"></i>
+      </button>
+    </div>
+    <div class="p-8">
+      <div class="mb-6">
+        <label
+          for="parentCode"
+          class="block text-sm font-bold text-gray-700 mb-2 uppercase tracking-wide"
+          >Code Parent de l'enfant</label
+        >
+        <div class="relative">
+          <div
+            class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none"
+          >
+            <i class="fas fa-key text-gray-400"></i>
+          </div>
+          <input
+            type="text"
+            id="parentCode"
+            name="code"
+            placeholder="Ex: AX78K2"
+            class="block w-full pl-11 pr-4 py-4 bg-gray-50 border-2 border-gray-100 rounded-xl text-gray-900 font-bold placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all uppercase text-lg tracking-widest"
+          />
+        </div>
+        <p id="linkError" class="mt-3 text-sm text-red-600 font-medium hidden">
+          <i class="fas fa-exclamation-circle mr-1"></i>
+          <span>Code invalide ou déjà utilisé.</span>
+        </p>
+      </div>
+
+      <div class="flex flex-col gap-3">
+        <button
+          onclick="submitLinkChild()"
+          id="submitLinkBtn"
+          class="w-full py-4 bg-gradient-to-r from-blue-600 to-blue-700 text-white font-bold rounded-xl hover:from-blue-700 hover:to-blue-800 transition-all shadow-lg shadow-blue-500/30 flex items-center justify-center gap-2"
+        >
+          <i class="fas fa-link"></i>
+          Lier le compte
+        </button>
+        <button
+          onclick="closeLinkChildModal()"
+          class="w-full py-4 bg-gray-100 text-gray-700 font-bold rounded-xl hover:bg-gray-200 transition-all"
+        >
+          Annuler
+        </button>
+      </div>
+
+      <div class="mt-8 pt-6 border-t border-gray-100">
+        <div class="flex items-start gap-4">
+          <div
+            class="w-10 h-10 bg-blue-50 rounded-lg flex items-center justify-center shrink-0"
+          >
+            <i class="fas fa-question-circle text-blue-600"></i>
+          </div>
+          <div>
+            <h4 class="text-sm font-bold text-gray-900">
+              Où trouver le code ?
+            </h4>
+            <p class="text-xs text-gray-600 mt-1 leading-relaxed">
+              Votre enfant peut générer ce code depuis son propre tableau de
+              bord dans la section "Lien Parent".
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

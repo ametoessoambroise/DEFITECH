@@ -692,6 +692,104 @@ EMAIL_TEMPLATES = {
         </html>
         """,
     },
+    "new_grade_parent": {
+        "subject": "Nouvelle note disponible - {{ etudiant.prenom }} {{ etudiant.nom }}",
+        "template": """
+        <!DOCTYPE html>
+        <html lang="fr">
+        <head>
+            <meta charset="utf-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>Nouvelle Note</title>
+            <script src="https://cdn.tailwindcss.com"></script>
+            <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+        </head>
+        <body class="bg-gray-50 font-sans">
+            <div class="max-w-2xl mx-auto my-8 bg-white shadow-lg rounded-lg overflow-hidden">
+                <div class="bg-blue-600 px-8 py-6">
+                    <h1 class="text-2xl font-bold text-white">Suivi Académique DEFITECH</h1>
+                </div>
+                <div class="px-8 py-8">
+                    <p class="text-gray-700 mb-4">Bonjour <strong>{{ parent_name }}</strong>,</p>
+                    <p class="text-gray-700 mb-6">
+                        Une nouvelle note vient d'être enregistrée pour votre enfant <strong>{{ etudiant.prenom }} {{ etudiant.nom }}</strong>.
+                    </p>
+                    <div class="bg-blue-50 border-l-4 border-blue-500 p-6 rounded mb-6">
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <p class="text-xs text-blue-600 uppercase font-bold">Matière</p>
+                                <p class="text-lg font-semibold text-gray-900">{{ matiere.nom }}</p>
+                            </div>
+                            <div>
+                                <p class="text-xs text-blue-600 uppercase font-bold">Évaluation</p>
+                                <p class="text-lg font-semibold text-gray-900">{{ type_eval }}</p>
+                            </div>
+                            <div class="col-span-2 mt-2">
+                                <p class="text-xs text-blue-600 uppercase font-bold">Note</p>
+                                <p class="text-3xl font-black text-blue-700">{{ note_val }}/20</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="text-center my-8">
+                        <a href="{{ dashboard_url }}" class="inline-block bg-blue-600 text-white font-bold px-8 py-3 rounded-lg hover:bg-blue-700 transition">
+                            Voir le détail complet
+                        </a>
+                    </div>
+                    <p class="text-sm text-gray-500 italic">Ceci est une notification automatique. Veuillez ne pas répondre à cet email.</p>
+                </div>
+            </div>
+        </body>
+        </html>
+        """,
+    },
+    "new_absence_parent": {
+        "subject": "Notification d'absence - {{ etudiant.prenom }} {{ etudiant.nom }}",
+        "template": """
+        <!DOCTYPE html>
+        <html lang="fr">
+        <head>
+            <meta charset="utf-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>Alerte Absence</title>
+            <script src="https://cdn.tailwindcss.com"></script>
+            <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+        </head>
+        <body class="bg-gray-50 font-sans">
+            <div class="max-w-2xl mx-auto my-8 bg-white shadow-lg rounded-lg overflow-hidden">
+                <div class="bg-red-600 px-8 py-6">
+                    <h1 class="text-2xl font-bold text-white">Alerte Absence DEFITECH</h1>
+                </div>
+                <div class="px-8 py-8">
+                    <p class="text-gray-700 mb-4">Bonjour <strong>{{ parent_name }}</strong>,</p>
+                    <p class="text-gray-700 mb-6">
+                        Nous vous informons que votre enfant <strong>{{ etudiant.prenom }} {{ etudiant.nom }}</strong> a été marqué absent lors du cours suivant :
+                    </p>
+                    <div class="bg-red-50 border-l-4 border-red-500 p-6 rounded mb-6">
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <p class="text-xs text-red-600 uppercase font-bold">Cours</p>
+                                <p class="text-lg font-semibold text-gray-900">{{ matiere.nom }}</p>
+                            </div>
+                            <div>
+                                <p class="text-xs text-red-600 uppercase font-bold">Date</p>
+                                <p class="text-lg font-semibold text-gray-900">{{ date_abs }}</p>
+                            </div>
+                        </div>
+                    </div>
+                    <p class="text-gray-600 mb-6">
+                        Le suivi régulier de l'assiduité est essentiel pour la réussite académique. Si cette absence est justifiée, veuillez vous rapprocher de l'administration.
+                    </p>
+                    <div class="text-center my-8">
+                        <a href="{{ dashboard_url }}" class="inline-block bg-red-600 text-white font-bold px-8 py-3 rounded-lg hover:bg-red-700 transition">
+                            Consulter l'espace parent
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </body>
+        </html>
+        """,
+    },
     "suggestion_notification": {
         "subject": "Nouvelle suggestion - DEFITECH",
         "template": """
@@ -1276,6 +1374,41 @@ def send_room_invitation(etudiant, enseignant, course, room_token, app):
         enseignant=enseignant.user if hasattr(enseignant, "user") else enseignant,
         course=course,
         join_url=join_url,
+    )
+
+
+def send_grade_notification_parent(parent_user, etudiant, matiere, type_eval, note_val):
+    """Envoie un email de notification de note au parent"""
+    from flask import url_for
+
+    dashboard_url = url_for("parents.dashboard", _external=True)
+    return send_email(
+        to=parent_user.email,
+        subject=f"Nouvelle note : {matiere.nom} - {etudiant.user.nom}",
+        template_name="new_grade_parent",
+        parent_name=f"{parent_user.prenom} {parent_user.nom}",
+        etudiant=etudiant.user,
+        matiere=matiere,
+        type_eval=type_eval,
+        note_val=note_val,
+        dashboard_url=dashboard_url,
+    )
+
+
+def send_absence_notification_parent(parent_user, etudiant, matiere, date_abs):
+    """Envoie un email de notification d'absence au parent"""
+    from flask import url_for
+
+    dashboard_url = url_for("parents.dashboard", _external=True)
+    return send_email(
+        to=parent_user.email,
+        subject=f"Alerte Absence : {etudiant.user.prenom}",
+        template_name="new_absence_parent",
+        parent_name=f"{parent_user.prenom} {parent_user.nom}",
+        etudiant=etudiant.user,
+        matiere=matiere,
+        date_abs=date_abs,
+        dashboard_url=dashboard_url,
     )
 
 

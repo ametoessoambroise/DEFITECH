@@ -226,7 +226,7 @@
     class="bg-gradient-to-br from-gray-50 via-blue-50/30 to-gray-50 min-h-screen flex flex-col w-full font-['Inter'] antialiased text-black"
   >
     <!-- Global Loading Component -->
-    {% include 'components/loading.html' %}
+    {% include 'components/bar.html' %}
 
     <!-- App Lock Overlay -->
     {% if current_user.is_authenticated and current_user.is_app_lock_enabled %}

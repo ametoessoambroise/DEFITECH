@@ -98,7 +98,6 @@
   <body
     class="bg-slate-900 h-screen flex flex-col text-slate-100 overflow-hidden"
   >
-
     <!-- App Lock Overlay -->
     {% if current_user.is_authenticated and current_user.is_app_lock_enabled %}
     {% include 'components/lock_screen.html' %} {% endif %}
@@ -108,20 +107,21 @@
       class="h-16 glass-panel flex items-center justify-between px-4 z-20 shadow-lg"
     >
       <div class="flex items-center gap-4">
-        <a
-          href="/"
+        <button
+          onclick="window.history.back()"
           class="w-10 h-10 rounded-full flex items-center justify-center hover:bg-white/5 transition-colors text-slate-400 hover:text-white"
         >
           <i class="fas fa-arrow-left"></i>
-        </a>
+        </button>
 
         <div class="flex items-center gap-3">
           <!-- Admin Avatar -->
           <div class="relative">
             {% if admin.photo_profil %}
             <img
-              src="{{ url_for('static', filename='uploads/profile_pics/' + admin.photo_profil) }}"
+              src="{{ get_profile_picture(admin) }}"
               class="w-10 h-10 rounded-full object-cover border border-slate-600"
+              onerror="this.src='https://res.cloudinary.com/dmokvhpjt/image/upload/v1766894468/gep1294qd7tbddgvtmpj.png'"
             />
             {% else %}
             <div

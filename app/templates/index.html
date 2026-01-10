@@ -99,6 +99,14 @@ DEFITECH | L'école des battants - BTS, Licence, Master
                 <span>Mon Espace Enseignant</span>
                 <i class="fas fa-chalkboard-teacher text-sm md:text-lg"></i>
               </a>
+              {% elif current_user.role == 'parent' %}
+              <a
+                href="{{ url_for('parents.dashboard') }}"
+                class="w-full xs:w-auto px-8 py-4 bg-defitech-red text-white font-bold rounded-xl shadow-xl hover:bg-red-700 hover:scale-105 transition-all text-center flex items-center justify-center gap-2 text-lg"
+              >
+                <span>Mon Espace parent</span>
+                <i class="fas fa-chalkboard-teacher text-sm md:text-lg"></i>
+              </a>
               {% elif current_user.role == 'admin' %}
               <a
                 href="{{ url_for('admin.dashboard') }}"
@@ -487,6 +495,13 @@ DEFITECH | L'école des battants - BTS, Licence, Master
                 class="bg-white text-defitech-blue px-8 py-3 rounded-full font-bold shadow-lg hover:bg-gray-100 transition-colors flex items-center justify-center gap-2"
               >
                 <i class="fas fa-chalkboard-teacher"></i> Mon Espace Enseignant
+              </button>
+              {% elif current_user.role == 'parent' %}
+              <button
+                onclick="location.href='{{ url_for('parents.dashboard') }}'"
+                class="bg-white text-defitech-blue px-8 py-3 rounded-full font-bold shadow-lg hover:bg-gray-100 transition-colors flex items-center justify-center gap-2"
+              >
+                <i class="fas fa-chalkboard-teacher"></i> Mon Espace Parent
               </button>
               {% elif current_user.role == 'admin' %}
               <button

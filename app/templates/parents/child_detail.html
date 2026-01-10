@@ -1,0 +1,194 @@
+{% extends "parents/base.html" %} {% block title %}Suivi de {{ etudiant.user.nom }} |
+DEFITECH{% endblock %} {% block content %}
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+  <!-- Back Button -->
+  <a
+    href="{{ url_for('parents.dashboard') }}"
+    class="inline-flex items-center text-sm font-medium text-gray-500 hover:text-blue-600 mb-6 transition-colors"
+  >
+    <i class="fas fa-arrow-left mr-2"></i>
+    Retour au tableau de bord
+  </a>
+
+  <!-- Student Header -->
+  <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-8">
+    <div
+      class="flex flex-col md:flex-row md:items-center justify-between gap-6"
+    >
+      <div class="flex items-center gap-6">
+        <div
+          class="w-20 h-20 rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white text-3xl font-bold shadow-lg shadow-blue-100"
+        >
+          {{ etudiant.user.nom[0] }}{{ etudiant.user.prenom[0] }}
+        </div>
+        <div>
+          <h1 class="text-2xl font-bold text-gray-900">
+            {{ etudiant.user.nom }} {{ etudiant.user.prenom }}
+          </h1>
+          <div class="flex flex-wrap gap-2 mt-1">
+            <span
+              class="px-3 py-1 bg-blue-50 text-blue-700 text-xs font-bold rounded-full uppercase"
+              >{{ etudiant.filiere }}</span
+            >
+            <span
+              class="px-3 py-1 bg-indigo-50 text-indigo-700 text-xs font-bold rounded-full uppercase"
+              >{{ etudiant.annee }}</span
+            >
+          </div>
+        </div>
+      </div>
+
+      <div class="flex gap-4">
+        <div
+          class="text-center px-6 py-2 bg-green-50 rounded-2xl border border-green-100"
+        >
+          <p
+            class="text-[10px] font-bold text-green-600 uppercase tracking-widest"
+          >
+            Moyenne
+          </p>
+          <p class="text-2xl font-black text-green-700">
+            {% if average %}{{ average }}{% else %}--{% endif %}<span
+              class="text-sm font-normal"
+              >/20</span
+            >
+          </p>
+        </div>
+        <div
+          class="text-center px-6 py-2 bg-purple-50 rounded-2xl border border-purple-100"
+        >
+          <p
+            class="text-[10px] font-bold text-purple-600 uppercase tracking-widest"
+          >
+            Présence
+          </p>
+          <p class="text-2xl font-black text-purple-700">
+            {{ presence }}<span class="text-sm font-normal">%</span>
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+    <!-- Main Content: Grades -->
+    <div class="lg:col-span-2 space-y-8">
+      <div
+        class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden"
+      >
+        <div
+          class="px-6 py-4 border-b border-gray-100 flex items-center justify-between"
+        >
+          <h2 class="text-lg font-bold text-gray-900">Résultats récents</h2>
+          <i class="fas fa-chart-line text-blue-500"></i>
+        </div>
+        <div class="p-0">
+          {% if recent_grades %}
+          <table class="w-full text-left border-collapse">
+            <thead>
+              <tr
+                class="bg-gray-50 text-[10px] uppercase tracking-widest font-bold text-gray-400"
+              >
+                <th class="px-6 py-4">Matière</th>
+                <th class="px-6 py-4">Évaluation</th>
+                <th class="px-6 py-4">Note</th>
+                <th class="px-6 py-4">Date</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-50">
+              {% for n in recent_grades %}
+              <tr class="hover:bg-gray-50 transition-colors">
+                <td class="px-6 py-4 font-medium text-gray-900">
+                  {{ n.matiere.nom }}
+                </td>
+                <td class="px-6 py-4 text-sm text-gray-600">
+                  {{ n.type_evaluation }}
+                </td>
+                <td class="px-6 py-4">
+                  <span
+                    class="inline-flex items-center px-2.5 py-0.5 rounded-full text-sm font-bold {% if n.note >= 12 %}bg-green-100 text-green-700{% elif n.note >= 10 %}bg-blue-100 text-blue-700{% else %}bg-red-100 text-red-700{% endif %}"
+                  >
+                    {{ n.note }}/20
+                  </span>
+                </td>
+                <td class="px-6 py-4 text-sm text-gray-500">
+                  {{ n.date_evaluation.strftime('%d/%m/%Y') }}
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+          {% else %}
+          <div class="p-12 text-center text-gray-500">
+            <i class="fas fa-clipboard-list text-3xl mb-4 opacity-20"></i>
+            <p>Aucune note enregistrée pour le moment.</p>
+          </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+
+    <!-- Sidebar: Info & Actions -->
+    <div class="space-y-8">
+      <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+        <h2 class="text-lg font-bold text-gray-900 mb-6">
+          Informations Étudiant
+        </h2>
+        <div class="space-y-4">
+          <div>
+            <p
+              class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1"
+            >
+              Numéro Étudiant
+            </p>
+            <p class="text-gray-900 font-medium">
+              {{ etudiant.numero_etudiant }}
+            </p>
+          </div>
+          <div>
+            <p
+              class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1"
+            >
+              Email Académique
+            </p>
+            <p class="text-gray-900 font-medium truncate">
+              {{ etudiant.user.email }}
+            </p>
+          </div>
+          <div>
+            <p
+              class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1"
+            >
+              Filière
+            </p>
+            <p class="text-gray-900 font-medium">{{ etudiant.filiere }}</p>
+          </div>
+        </div>
+      </div>
+
+      <div
+        class="bg-gradient-to-br from-blue-600 to-indigo-700 rounded-2xl shadow-lg p-6 text-white text-center"
+      >
+        <i class="fas fa-lightbulb text-3xl mb-4 opacity-50"></i>
+        <h3 class="font-bold text-lg mb-2">Suivi Quotidien</h3>
+        <p class="text-sm text-blue-100 mb-6 leading-relaxed">
+          Les notes et absences sont mises à jour en temps réel par les
+          enseignants.
+        </p>
+        <a
+          href="{{ url_for('parents.view_calendar', etudiant_id=etudiant.id) }}"
+          class="w-full py-3 bg-white text-blue-600 font-bold rounded-xl hover:bg-blue-50 transition-colors shadow-lg block whitespace-nowrap mb-4"
+        >
+          <i class="fas fa-calendar-alt mr-2"></i>
+          Calendrier Académique
+        </a>
+        <button
+          class="w-full py-3 bg-blue-500/20 text-white font-bold rounded-xl hover:bg-white/20 transition-colors border border-white/30"
+        >
+          Contacter l'école
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

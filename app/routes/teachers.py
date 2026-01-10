@@ -6,6 +6,7 @@ from flask import (
     url_for,
     flash,
     jsonify,
+    current_app,
 )
 from flask_login import login_required, current_user
 from datetime import datetime
@@ -22,6 +23,7 @@ from app.models.filiere import Filiere
 from app.models.devoir import Devoir
 from app.models.devoir_vu import DevoirVu
 from app.models.notification import Notification
+from app.services.notification_service import NotificationService
 from app.models.presence import Presence
 from app.models.note import Note
 from app.models.note_modification_request import NoteModificationRequest
@@ -339,6 +341,15 @@ def notes():
             )
             db.session.add(note)
         db.session.commit()
+
+        # Notification
+        try:
+            matiere = Matiere.query.get(matiere_id)
+            NotificationService.notify_grade_recorded(
+                etu, matiere, type_eval, note_float
+            )
+        except Exception as e:
+            current_app.logger.error(f"Error in automatic notification: {e}")
 
         if request.is_json:
             return jsonify({"success": True, "message": "Note enregistrée"})
@@ -1103,6 +1114,18 @@ def set_etudiant_presence():
             )
             db.session.add(new_presence)
         db.session.commit()
+
+        # Notification si absence
+        if not present:
+            try:
+                etu = Etudiant.query.get(etudiant_id)
+                matiere = Matiere.query.get(matiere_id)
+                NotificationService.notify_absence_recorded(etu, matiere, date.today())
+            except Exception as e:
+                current_app.logger.error(
+                    f"Error in automatic absence notification: {e}"
+                )
+
         return jsonify({"success": True})
     except Exception as e:
         return jsonify({"success": False, "error": str(e)}), 500

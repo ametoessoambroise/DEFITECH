@@ -127,9 +127,9 @@
       <!-- Bottom User Info -->
       <div class="p-4 border-t border-white/5 flex items-center gap-3">
         <img
-          src="{{ url_for('static', filename='uploads/profile_pics/' + current_user.photo_profil) if current_user.photo_profil else '' }}"
+          src="{{ get_profile_picture(current_user) }}"
           class="w-8 h-8 rounded-full bg-slate-700 object-cover"
-          onerror="this.src='https://ui-avatars.com/api/?name=Admin&background=random'"
+          onerror="this.src='https://res.cloudinary.com/dmokvhpjt/image/upload/v1766894468/gep1294qd7tbddgvtmpj.png'"
         />
         <div class="flex-1 min-w-0">
           <p class="text-sm font-medium truncate">
@@ -207,7 +207,7 @@
           />
           <button
             type="submit"
-            class="bg-blue-600 hover:bg-blue-500 text-white px-6 rounded-lg font-medium transition-colors"
+            class="bg-blue-600 hover:bg-blue-500 text-white px-6 rounded-full font-medium transition-colors"
           >
             Envoyer
           </button>
@@ -334,8 +334,10 @@
                     <div class="relative">
                         <img src="${
                           c.user.photo_profil
-                            ? "/static/uploads/profile_pics/" +
-                              c.user.photo_profil
+                            ? c.user.photo_profil.startsWith("http")
+                              ? c.user.photo_profil
+                              : "/static/uploads/profile_pics/" +
+                                c.user.photo_profil
                             : "https://ui-avatars.com/api/?name=" +
                               c.user.prenom
                         }" 
@@ -385,7 +387,9 @@
         DOM.headerName.innerText = `${conv.user.prenom} ${conv.user.nom}`;
         DOM.headerRole.innerText = conv.user.role || "Utilisateur";
         DOM.headerAvatar.src = conv.user.photo_profil
-          ? `/static/uploads/profile_pics/${conv.user.photo_profil}`
+          ? conv.user.photo_profil.startsWith("http")
+            ? conv.user.photo_profil
+            : `/static/uploads/profile_pics/${conv.user.photo_profil}`
           : `https://ui-avatars.com/api/?name=${conv.user.prenom}`;
 
         // Re-render list to show active state

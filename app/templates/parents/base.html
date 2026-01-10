@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{% block title %}{% endblock %} | DEFITECH Parent</title>
+
+    <!-- Font Awesome -->
+    <link
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
+      rel="stylesheet"
+    />
+
+    <!-- Alpine js -->
+    <script
+      defer
+      src="https://cdn.jsdelivr.net/npm/alpinejs@3.15.3/dist/cdn.min.js"
+    ></script>
+
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+
+    <!-- Custom CSS -->
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='css/style.css') }}"
+    />
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='css/compiled.css') }}"
+    />
+
+    <!-- CSRF Token -->
+    <meta name="csrf-token" content="{{ csrf_token() }}" />
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Favicon -->
+    <link
+      rel="icon"
+      href="https://res.cloudinary.com/dmokvhpjt/image/upload/v1766894416/bijcryrbjli0daglbsim.png"
+    />
+
+    {% block extra_head %}{% endblock %} {% block extra_css %}{% endblock %}
+  </head>
+
+  <body class="bg-gray-50 min-h-screen flex flex-col font-['Inter']">
+    {% include 'components/bar.html' %}
+
+    <header class="bg-white border-b border-gray-200 sticky top-0 z-50">
+      <nav
+        class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between"
+      >
+        <div class="flex items-center gap-8">
+          <a
+            href="{{ url_for('parents.dashboard') }}"
+            class="flex items-center gap-2"
+          >
+            <img
+              src="https://res.cloudinary.com/dmokvhpjt/image/upload/v1766894416/bijcryrbjli0daglbsim.png"
+              alt="Logo"
+              class="w-8 h-8 rounded-full"
+            />
+            <span class="font-bold text-blue-600 text-lg">DEFITECH</span>
+          </a>
+
+          <div class="hidden md:flex items-center gap-6">
+            <a
+              href="{{ url_for('parents.dashboard') }}"
+              class="text-sm font-medium text-gray-700 hover:text-blue-600 transition"
+              >Tableau de bord</a
+            >
+            <a
+              href="{{ url_for('parents.parent_notifications') }}"
+              class="text-sm font-medium text-gray-700 hover:text-blue-600 transition"
+              >Notifications</a
+            >
+            <a
+              href="{{ url_for('chat.user_chat') }}"
+              class="text-sm font-medium text-gray-700 hover:text-blue-600 transition"
+              >Assistance</a
+            >
+          </div>
+        </div>
+
+        <div class="flex items-center gap-4">
+          <div class="text-right hidden sm:block">
+            <p class="text-sm font-bold text-gray-900 leading-tight">
+              {{ current_user.prenom }} {{ current_user.nom }}
+            </p>
+            <p
+              class="text-[10px] text-gray-500 uppercase tracking-wider font-semibold"
+            >
+              Espace Parent
+            </p>
+          </div>
+          <a
+            href="{{ url_for('auth.logout') }}"
+            class="p-2 text-gray-400 hover:text-red-600 transition"
+            title="Déconnexion"
+          >
+            <i class="fas fa-sign-out-alt text-lg"></i>
+          </a>
+        </div>
+      </nav>
+    </header>
+
+    <main class="flex-grow">{% block content %}{% endblock %}</main>
+
+    <footer class="bg-white border-t border-gray-200 py-8">
+      <div class="max-w-7xl mx-auto px-4 text-center">
+        <p class="text-sm text-gray-500">
+          © 2026 DEFITECH - Système de Suivi Parental
+        </p>
+      </div>
+    </footer>
+
+    {% block extra_js %}{% endblock %}
+  </body>
+</html>

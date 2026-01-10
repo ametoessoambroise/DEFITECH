@@ -22,6 +22,7 @@ from app.extensions import (
 )
 from app.services.defai_permissions import DEFAI_ALLOWED_ENDPOINTS
 from app.sockets.videoconference import register_socketio_handlers
+from app.models.notification import Notification
 
 # Load environment variables from .env file
 env_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), ".env")
@@ -149,6 +150,7 @@ def create_app(config_class=None):
     from app.routes.academic_history import academic_history_bp
 
     from app.routes.api import api_bp
+    from app.routes.parents import parents_bp
 
     csrf.exempt(api_bp)
     app.register_blueprint(api_bp)
@@ -176,6 +178,7 @@ def create_app(config_class=None):
     app.register_blueprint(app_lock_bp)
     app.register_blueprint(admin_academic_bp)
     app.register_blueprint(academic_history_bp)
+    app.register_blueprint(parents_bp)
 
     # Register SocketIO handlers
     register_socketio_handlers(socketio)
@@ -203,6 +206,7 @@ def create_app(config_class=None):
                 else lambda: []
             ),
             now=now,
+            Notification=Notification if "Notification" in globals() else None,
         )
 
     @app.template_filter("nl2br")

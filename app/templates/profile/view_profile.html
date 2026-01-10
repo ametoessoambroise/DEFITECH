@@ -115,7 +115,7 @@ user.nom }} | DEFITECH{% endblock %} {% block content %}
 
       <!-- Informations spécifiques au rôle -->
       {% if user.role == 'etudiant' and user.etudiant %}
-      <div class="bg-white shadow rounded-lg">
+      <div class="bg-white shadow rounded-lg mb-6">
         <div class="px-6 py-4 border-b border-gray-200">
           <h2 class="text-lg font-semibold text-gray-900">
             Informations académiques
@@ -138,6 +138,107 @@ user.nom }} | DEFITECH{% endblock %} {% block content %}
               </p>
             </div>
           </div>
+        </div>
+      </div>
+
+      <!-- Nouveau: Parcours Scolaire -->
+      <div class="bg-white shadow rounded-lg mb-6">
+        <div class="px-6 py-4 border-b border-gray-200">
+          <h2 class="text-lg font-semibold text-gray-900">Parcours Scolaire</h2>
+        </div>
+        <div class="px-6 py-4">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <p class="text-sm font-medium text-gray-600">Lieu de naissance</p>
+              <p class="text-lg text-gray-900">
+                {{ user.etudiant.lieu_naissance or 'Non renseigné' }}
+              </p>
+            </div>
+            <div>
+              <p class="text-sm font-medium text-gray-600">Nationalité</p>
+              <p class="text-lg text-gray-900">
+                {{ user.etudiant.nationalite or 'Non renseigné' }}
+              </p>
+            </div>
+            <div>
+              <p class="text-sm font-medium text-gray-600">
+                Baccalauréat (Série)
+              </p>
+              <p class="text-lg text-gray-900">
+                {{ user.etudiant.bac_serie or 'Non renseigné' }}
+              </p>
+            </div>
+            <div>
+              <p class="text-sm font-medium text-gray-600">Année du Bac</p>
+              <p class="text-lg text-gray-900">
+                {{ user.etudiant.bac_annee or 'Non renseigné' }}
+              </p>
+            </div>
+            <div class="md:col-span-2">
+              <p class="text-sm font-medium text-gray-600">
+                Établissement de provenance
+              </p>
+              <p class="text-lg text-gray-900">
+                {{ user.etudiant.etablissement_provenance or 'Non renseigné' }}
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Nouveau: Coordonnées Parent -->
+      <div class="bg-white shadow rounded-lg mb-6">
+        <div class="px-6 py-4 border-b border-gray-200">
+          <h2 class="text-lg font-semibold text-gray-900">
+            Coordonnées Parent / Tuteur
+          </h2>
+        </div>
+        <div class="px-6 py-4">
+          {% if user.etudiant.parents %} {% set parent =
+          user.etudiant.parents[0] %}
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <p class="text-sm font-medium text-gray-600">Nom & Prénom</p>
+              <p class="text-lg text-gray-900">
+                {{ parent.nom }} {{ parent.prenom }}
+              </p>
+            </div>
+            <div>
+              <p class="text-sm font-medium text-gray-600">Profession</p>
+              <p class="text-lg text-gray-900">
+                {{ parent.profession or 'Non renseigné' }}
+              </p>
+            </div>
+            <div>
+              <p class="text-sm font-medium text-gray-600">Téléphone (Bur.)</p>
+              <p class="text-lg text-gray-900">
+                {{ parent.tel_bureau or 'Non renseigné' }}
+              </p>
+            </div>
+            <div>
+              <p class="text-sm font-medium text-gray-600">Téléphone (Dom.)</p>
+              <p class="text-lg text-gray-900">
+                {{ parent.tel_domicile or 'Non renseigné' }}
+              </p>
+            </div>
+            <div class="md:col-span-2">
+              <p class="text-sm font-medium text-gray-600">Email</p>
+              <p class="text-lg text-gray-900">
+                {{ parent.email or 'Non renseigné' }}
+              </p>
+            </div>
+            <div class="md:col-span-2">
+              <p class="text-sm font-medium text-gray-600">Adresse</p>
+              <p class="text-lg text-gray-900">
+                {{ parent.adresse or 'Non renseigné' }}
+              </p>
+            </div>
+          </div>
+          {% else %}
+          <p class="text-sm text-gray-500 italic">
+            Aucune information parentale enregistrée.
+          </p>
+          {% endif %}
         </div>
       </div>
       {% endif %} {% if user.role == 'enseignant' and user.enseignant %}

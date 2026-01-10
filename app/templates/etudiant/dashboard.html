@@ -79,14 +79,50 @@ current_user.prenom }} | DEFITECH{% endblock %} {% block content %}
     <div
       class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 gap-3"
     >
-      <h2 class="text-lg sm:text-xl font-semibold text-gray-900">
-        Informations personnelles
-      </h2>
-      <span
-        class="inline-flex items-center px-3 py-1 text-xs sm:text-sm font-semibold rounded-full bg-green-100 text-green-800 w-fit"
+      <div class="flex items-center gap-3">
+        <h2 class="text-lg sm:text-xl font-semibold text-gray-900">
+          Informations personnelles
+        </h2>
+        <span
+          class="inline-flex items-center px-3 py-1 text-xs sm:text-sm font-semibold rounded-full bg-green-100 text-green-800 w-fit"
+        >
+          <i class="fas fa-check-circle mr-1"></i>Actif
+        </span>
+      </div>
+
+      <!-- Nouveau: Code d'accès Parent -->
+      <div
+        class="bg-blue-50 border border-blue-100 rounded-xl px-4 py-2 flex items-center gap-3"
       >
-        <i class="fas fa-check-circle mr-1"></i>Actif
-      </span>
+        {% if etudiant.code_parent %}
+        <div>
+          <p
+            class="text-[10px] font-bold text-blue-600 uppercase tracking-wider"
+          >
+            Code d'accès Parent
+          </p>
+          <p class="text-lg font-mono font-bold text-blue-900">
+            {{ etudiant.code_parent }}
+          </p>
+        </div>
+        <button
+          onclick="navigator.clipboard.writeText('{{ etudiant.code_parent }}'); alert('Code copié !')"
+          class="p-2 hover:bg-blue-100 rounded-lg text-blue-600 transition-colors"
+          title="Copier le code"
+        >
+          <i class="far fa-copy"></i>
+        </button>
+        {% else %}
+        <div class="flex items-center gap-2">
+          <div
+            class="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"
+          ></div>
+          <p class="text-xs font-bold text-green-700 uppercase tracking-wider">
+            Compte Parent Lié
+          </p>
+        </div>
+        {% endif %}
+      </div>
     </div>
 
     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
@@ -259,6 +295,19 @@ current_user.prenom }} | DEFITECH{% endblock %} {% block content %}
           <span
             class="text-sm sm:text-base text-purple-900 group-hover:font-medium"
             >Devoirs et examens</span
+          >
+        </a>
+        <!-- Nouveau: Suivi des présences -->
+        <a
+          href="{{ url_for('students.voir_presences') }}"
+          class="flex items-center p-3 bg-red-50 rounded-lg hover:bg-red-100 transition-colors group"
+        >
+          <i
+            class="fas fa-calendar-check text-red-600 mr-3 text-sm sm:text-base"
+          ></i>
+          <span
+            class="text-sm sm:text-base text-red-900 group-hover:font-medium"
+            >Suivi des présences</span
           >
         </a>
         <a

@@ -1,12 +1,17 @@
 {% extends "base.html" %} {% block title %}Inscription | DEFITECH{% endblock %}
 {% block content %}
 
-<div class="min-h-screen flex flex-col justify-center items-center bg-gray-50 py-8 px-4 sm:px-6 lg:px-8">
+<div
+  class="min-h-screen flex flex-col justify-center items-center bg-gray-50 py-8 px-4 sm:px-6 lg:px-8"
+>
   <div
-    class="w-full max-w-2xl bg-white shadow-lg rounded-2xl p-6 sm:p-8 space-y-6 transition-all duration-300 hover:shadow-xl">
+    class="w-full max-w-2xl bg-white shadow-lg rounded-2xl p-6 sm:p-8 space-y-6 transition-all duration-300 hover:shadow-xl"
+  >
     <!-- En-tête -->
     <div class="text-center">
-      <div class="mx-auto h-12 w-12 flex items-center justify-center rounded-full bg-blue-600">
+      <div
+        class="mx-auto h-12 w-12 flex items-center justify-center rounded-full bg-blue-600"
+      >
         <i class="fas fa-graduation-cap text-white text-xl"></i>
       </div>
       <h2 class="mt-4 text-2xl sm:text-3xl font-extrabold text-gray-900">
@@ -16,7 +21,6 @@
         Rejoignez notre communauté universitaire
       </p>
     </div>
-
 
     <!-- Formulaire -->
     <form class="space-y-4 sm:space-y-6" method="POST">
@@ -28,17 +32,30 @@
           <label for="nom" class="block text-sm font-medium text-gray-700 mb-1">
             Nom <span class="text-red-600">*</span>
           </label>
-          <input id="nom" name="nom" type="text" required
+          <input
+            id="nom"
+            name="nom"
+            type="text"
+            required
             class="appearance-none rounded-lg w-full px-3 py-2 border border-gray-300 placeholder-gray-400 text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm transition"
-            placeholder="Votre nom" />
+            placeholder="Votre nom"
+          />
         </div>
         <div>
-          <label for="prenom" class="block text-sm font-medium text-gray-700 mb-1">
+          <label
+            for="prenom"
+            class="block text-sm font-medium text-gray-700 mb-1"
+          >
             Prénom <span class="text-red-600">*</span>
           </label>
-          <input id="prenom" name="prenom" type="text" required
+          <input
+            id="prenom"
+            name="prenom"
+            type="text"
+            required
             class="appearance-none rounded-lg w-full px-3 py-2 border border-gray-300 placeholder-gray-400 text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm transition"
-            placeholder="Votre prénom" />
+            placeholder="Votre prénom"
+          />
         </div>
       </div>
 
@@ -47,9 +64,15 @@
         <label for="email" class="block text-sm font-medium text-gray-700 mb-1">
           Email <span class="text-red-600">*</span>
         </label>
-        <input id="email" name="email" type="email" required pattern="^[\w\.-]+@[\w\.-]+\.[a-zA-Z]{2,}$"
+        <input
+          id="email"
+          name="email"
+          type="email"
+          required
+          pattern="^[\w\.-]+@[\w\.-]+\.[a-zA-Z]{2,}$"
           class="appearance-none rounded-lg w-full px-3 py-2 border border-gray-300 placeholder-gray-400 text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm transition"
-          placeholder="votre@email.com" />
+          placeholder="votre@email.com"
+        />
         <span id="email-error" class="text-xs text-red-600 mt-1 hidden">
           Adresse email invalide
         </span>
@@ -57,15 +80,26 @@
 
       <!-- Mot de passe -->
       <div>
-        <label for="password" class="block text-sm font-medium text-gray-700 mb-1">
+        <label
+          for="password"
+          class="block text-sm font-medium text-gray-700 mb-1"
+        >
           Mot de passe <span class="text-red-600">*</span>
         </label>
         <div class="relative">
-          <input type="password" id="password" name="password" required autocomplete="new-password"
+          <input
+            type="password"
+            id="password"
+            name="password"
+            required
+            autocomplete="new-password"
             class="w-full rounded-lg border border-gray-300 px-3 py-2 pr-10 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
-            placeholder="••••••••" />
-          <i id="togglePassword"
-            class="fas fa-eye text-gray-400 absolute right-3 top-2.5 cursor-pointer hover:text-gray-600 transition"></i>
+            placeholder="••••••••"
+          />
+          <i
+            id="togglePassword"
+            class="fas fa-eye text-gray-400 absolute right-3 top-2.5 cursor-pointer hover:text-gray-600 transition"
+          ></i>
         </div>
         <div class="mt-2">
           <meter max="5" id="password-strength" class="w-full h-2"></meter>
@@ -76,18 +110,33 @@
       <!-- Date de naissance et Sexe -->
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
-          <label for="date_naissance" class="block text-sm font-medium text-gray-700 mb-1">
+          <label
+            for="date_naissance"
+            class="block text-sm font-medium text-gray-700 mb-1"
+          >
             Date de naissance <span class="text-red-600">*</span>
           </label>
-          <input id="date_naissance" name="date_naissance" type="date" required
-            class="appearance-none rounded-lg w-full px-3 py-2 border border-gray-300 text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm transition" />
+          <input
+            id="date_naissance"
+            name="date_naissance"
+            type="date"
+            required
+            class="appearance-none rounded-lg w-full px-3 py-2 border border-gray-300 text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm transition"
+          />
         </div>
         <div>
-          <label for="sexe" class="block text-sm font-medium text-gray-700 mb-1">
+          <label
+            for="sexe"
+            class="block text-sm font-medium text-gray-700 mb-1"
+          >
             Sexe <span class="text-red-600">*</span>
           </label>
-          <select id="sexe" name="sexe" required
-            class="appearance-none rounded-lg w-full px-3 py-2 border border-gray-300 text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm transition">
+          <select
+            id="sexe"
+            name="sexe"
+            required
+            class="appearance-none rounded-lg w-full px-3 py-2 border border-gray-300 text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm transition"
+          >
             <option value="">Sélectionner</option>
             <option value="M">Masculin</option>
             <option value="F">Féminin</option>
@@ -100,39 +149,316 @@
         <label for="role" class="block text-sm font-medium text-gray-700 mb-1">
           Rôle <span class="text-red-600">*</span>
         </label>
-        <select id="role" name="role" required
-          class="appearance-none rounded-lg w-full px-3 py-2 border border-gray-300 text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm transition">
+        <select
+          id="role"
+          name="role"
+          required
+          class="appearance-none rounded-lg w-full px-3 py-2 border border-gray-300 text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm transition"
+        >
           <option value="">Sélectionner votre rôle</option>
           <option value="etudiant">Étudiant</option>
           <option value="enseignant">Enseignant</option>
+          <option value="parent">Parent</option>
         </select>
       </div>
 
       <!-- Champs Étudiant -->
       <div id="etudiant-fields" class="hidden space-y-4">
-        <div>
-          <label for="filiere_etudiant" class="block text-sm font-medium text-gray-700 mb-1">
-            Filière <span class="text-red-600">*</span>
-          </label>
-          <select id="filiere_etudiant" name="filiere"
-            class="appearance-none rounded-lg w-full px-3 py-2 border border-gray-300 text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm transition">
-            <option value="">Sélectionner la filière</option>
-            {% for f in filieres %}
-            <option value="{{ f.nom }}">{{ f.nom }}</option>
-            {% endfor %}
-          </select>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label
+              for="lieu_naissance"
+              class="block text-sm font-medium text-gray-700 mb-1"
+            >
+              Lieu de naissance <span class="text-red-600">*</span>
+            </label>
+            <input
+              id="lieu_naissance"
+              name="lieu_naissance"
+              type="text"
+              class="appearance-none rounded-lg w-full px-3 py-2 border border-gray-300 text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm transition"
+            />
+          </div>
+          <div>
+            <label
+              for="nationalite"
+              class="block text-sm font-medium text-gray-700 mb-1"
+            >
+              Nationalité <span class="text-red-600">*</span>
+            </label>
+            <input
+              id="nationalite"
+              name="nationalite"
+              type="text"
+              class="appearance-none rounded-lg w-full px-3 py-2 border border-gray-300 text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm transition"
+            />
+          </div>
         </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label
+              for="bac_serie"
+              class="block text-sm font-medium text-gray-700 mb-1"
+            >
+              Baccalauréat (Série) <span class="text-red-600">*</span>
+            </label>
+            <input
+              id="bac_serie"
+              name="bac_serie"
+              type="text"
+              placeholder="D"
+              class="appearance-none rounded-lg w-full px-3 py-2 border border-gray-300 text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm transition"
+            />
+          </div>
+          <div>
+            <label
+              for="bac_annee"
+              class="block text-sm font-medium text-gray-700 mb-1"
+            >
+              Année d'obtention <span class="text-red-600">*</span>
+            </label>
+            <input
+              id="bac_annee"
+              name="bac_annee"
+              type="text"
+              maxlength="4"
+              class="appearance-none rounded-lg w-full px-3 py-2 border border-gray-300 text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm transition"
+            />
+          </div>
+        </div>
+
         <div>
-          <label for="annee_etudiant" class="block text-sm font-medium text-gray-700 mb-1">
-            Année <span class="text-red-600">*</span>
+          <label
+            for="etablissement_provenance"
+            class="block text-sm font-medium text-gray-700 mb-1"
+          >
+            Établissement de provenance <span class="text-red-600">*</span>
           </label>
-          <select id="annee_etudiant" name="annee"
-            class="appearance-none rounded-lg w-full px-3 py-2 border border-gray-300 text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm transition">
-            <option value="">Sélectionner l'année</option>
-            {% for a in annees %}
-            <option value="{{ a.nom }}">{{ a.nom }}</option>
-            {% endfor %}
-          </select>
+          <input
+            id="etablissement_provenance"
+            name="etablissement_provenance"
+            type="text"
+            class="appearance-none rounded-lg w-full px-3 py-2 border border-gray-300 text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm transition"
+          />
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label
+              for="filiere_etudiant"
+              class="block text-sm font-medium text-gray-700 mb-1"
+            >
+              Filière Choisie <span class="text-red-600">*</span>
+            </label>
+            <select
+              id="filiere_etudiant"
+              name="filiere"
+              class="appearance-none rounded-lg w-full px-3 py-2 border border-gray-300 text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm transition"
+            >
+              <option value="">Sélectionner la filière</option>
+              {% for f in filieres %}
+              <option value="{{ f.nom }}">{{ f.nom }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div>
+            <label
+              for="annee_etudiant"
+              class="block text-sm font-medium text-gray-700 mb-1"
+            >
+              Niveau d'Inscription <span class="text-red-600">*</span>
+            </label>
+            <select
+              id="annee_etudiant"
+              name="annee"
+              class="appearance-none rounded-lg w-full px-3 py-2 border border-gray-300 text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm transition"
+            >
+              <option value="">Sélectionner l'année</option>
+              {% for a in annees %}
+              <option value="{{ a.nom }}">{{ a.nom }}</option>
+              {% endfor %}
+            </select>
+          </div>
+        </div>
+
+        <!-- Section Parent -->
+        <div class="pt-4 border-t border-gray-200">
+          <h3 class="text-lg font-semibold text-gray-900 mb-4">
+            Informations Parent ou Tuteur
+          </h3>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label
+                for="parent_nom"
+                class="block text-sm font-medium text-gray-700 mb-1"
+                >Nom <span class="text-red-600">*</span></label
+              >
+              <input
+                id="parent_nom"
+                name="parent_nom"
+                type="text"
+                class="appearance-none rounded-lg w-full px-3 py-2 border border-gray-300 text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm transition"
+              />
+            </div>
+            <div>
+              <label
+                for="parent_prenom"
+                class="block text-sm font-medium text-gray-700 mb-1"
+                >Prénoms <span class="text-red-600">*</span></label
+              >
+              <input
+                id="parent_prenom"
+                name="parent_prenom"
+                type="text"
+                class="appearance-none rounded-lg w-full px-3 py-2 border border-gray-300 text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm transition"
+              />
+            </div>
+          </div>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
+            <div>
+              <label
+                for="parent_profession"
+                class="block text-sm font-medium text-gray-700 mb-1"
+                >Profession</label
+              >
+              <input
+                id="parent_profession"
+                name="parent_profession"
+                type="text"
+                class="appearance-none rounded-lg w-full px-3 py-2 border border-gray-300 text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm transition"
+              />
+            </div>
+            <div>
+              <label
+                for="parent_organisme"
+                class="block text-sm font-medium text-gray-700 mb-1"
+                >Organisme Employeur</label
+              >
+              <input
+                id="parent_organisme"
+                name="parent_organisme"
+                type="text"
+                class="appearance-none rounded-lg w-full px-3 py-2 border border-gray-300 text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm transition"
+              />
+            </div>
+          </div>
+          <div class="mt-4">
+            <label
+              for="parent_adresse"
+              class="block text-sm font-medium text-gray-700 mb-1"
+              >Adresse</label
+            >
+            <textarea
+              id="parent_adresse"
+              name="parent_adresse"
+              rows="2"
+              class="appearance-none rounded-lg w-full px-3 py-2 border border-gray-300 text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm transition"
+            ></textarea>
+          </div>
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-4">
+            <div>
+              <label
+                for="parent_tel_bur"
+                class="block text-sm font-medium text-gray-700 mb-1"
+                >Tél. Bur.</label
+              >
+              <input
+                id="parent_tel_bur"
+                name="parent_tel_bur"
+                type="text"
+                class="appearance-none rounded-lg w-full px-3 py-2 border border-gray-300 text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm transition"
+              />
+            </div>
+            <div>
+              <label
+                for="parent_tel_dom"
+                class="block text-sm font-medium text-gray-700 mb-1"
+                >Tél. Dom.</label
+              >
+              <input
+                id="parent_tel_dom"
+                name="parent_tel_dom"
+                type="text"
+                class="appearance-none rounded-lg w-full px-3 py-2 border border-gray-300 text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm transition"
+              />
+            </div>
+            <div>
+              <label
+                for="parent_email"
+                class="block text-sm font-medium text-gray-700 mb-1"
+                >E-mail</label
+              >
+              <input
+                id="parent_email"
+                name="parent_email"
+                type="email"
+                class="appearance-none rounded-lg w-full px-3 py-2 border border-gray-300 text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm transition"
+              />
+            </div>
+          </div>
+        </div>
+
+        <!-- Section Paiement -->
+        <div class="pt-4 border-t border-gray-200">
+          <h3 class="text-lg font-semibold text-gray-900 mb-4">
+            Modalités de Paiement
+          </h3>
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <label class="flex items-center space-x-3 cursor-pointer">
+              <input
+                type="radio"
+                name="modalite_paiement"
+                value="Comptant"
+                class="text-blue-600 focus:ring-blue-500"
+              />
+              <span class="text-sm text-gray-700">Comptant</span>
+            </label>
+            <label class="flex items-center space-x-3 cursor-pointer">
+              <input
+                type="radio"
+                name="modalite_paiement"
+                value="3 Tranches"
+                class="text-blue-600 focus:ring-blue-500"
+              />
+              <span class="text-sm text-gray-700">3 Tranches</span>
+            </label>
+            <label class="flex items-center space-x-3 cursor-pointer">
+              <input
+                type="radio"
+                name="modalite_paiement"
+                value="7 Tranches"
+                class="text-blue-600 focus:ring-blue-500"
+              />
+              <span class="text-sm text-gray-700">7 Tranches</span>
+            </label>
+          </div>
+          <div class="mt-4">
+            <label
+              for="autres_modalites"
+              class="block text-sm font-medium text-gray-700 mb-1"
+              >Autres Modalités</label
+            >
+            <input
+              id="autres_modalites"
+              name="autres_modalites"
+              type="text"
+              class="appearance-none rounded-lg w-full px-3 py-2 border border-gray-300 text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm transition"
+            />
+          </div>
+          <div class="mt-4">
+            <label
+              for="modalites_choisies"
+              class="block text-sm font-medium text-gray-700 mb-1"
+              >Modalités Choisies (en majuscule)</label
+            >
+            <input
+              id="modalites_choisies"
+              name="modalites_choisies"
+              type="text"
+              class="appearance-none rounded-lg w-full px-3 py-2 border border-gray-300 text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm transition"
+            />
+          </div>
         </div>
       </div>
 
@@ -143,12 +469,18 @@
             Filières enseignées <span class="text-red-600">*</span>
           </label>
           <div
-            class="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-64 overflow-y-auto p-3 border border-gray-200 rounded-lg bg-gray-50">
+            class="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-64 overflow-y-auto p-3 border border-gray-200 rounded-lg bg-gray-50"
+          >
             {% for filiere in filieres_enseignees %}
             <label
-              class="flex items-start text-xs sm:text-sm text-gray-700 hover:bg-blue-50 p-2 rounded cursor-pointer transition">
-              <input type="checkbox" name="filieres_enseignees" value="{{ filiere }}"
-                class="mt-0.5 mr-2 text-blue-600 focus:ring-blue-500" />
+              class="flex items-start text-xs sm:text-sm text-gray-700 hover:bg-blue-50 p-2 rounded cursor-pointer transition"
+            >
+              <input
+                type="checkbox"
+                name="filieres_enseignees"
+                value="{{ filiere }}"
+                class="mt-0.5 mr-2 text-blue-600 focus:ring-blue-500"
+              />
               <span>{{ filiere }}</span>
             </label>
             {% endfor %}
@@ -159,12 +491,19 @@
           <label class="block text-sm font-medium text-blue-600 mb-2">
             Année(s) d'enseignement <span class="text-red-600">*</span>
           </label>
-          <div class="flex flex-wrap gap-3 p-3 border border-gray-200 rounded-lg bg-gray-50">
+          <div
+            class="flex flex-wrap gap-3 p-3 border border-gray-200 rounded-lg bg-gray-50"
+          >
             {% for annee in annees_enseignement %}
             <label
-              class="flex items-center text-xs sm:text-sm text-gray-700 hover:bg-blue-50 px-3 py-2 rounded cursor-pointer transition">
-              <input type="checkbox" name="annees_enseignant" value="{{ annee }}"
-                class="mr-2 text-blue-600 focus:ring-blue-500" />
+              class="flex items-center text-xs sm:text-sm text-gray-700 hover:bg-blue-50 px-3 py-2 rounded cursor-pointer transition"
+            >
+              <input
+                type="checkbox"
+                name="annees_enseignant"
+                value="{{ annee }}"
+                class="mr-2 text-blue-600 focus:ring-blue-500"
+              />
               <span>{{ annee }}</span>
             </label>
             {% endfor %}
@@ -172,10 +511,35 @@
         </div>
       </div>
 
+      <!-- Champs Parent -->
+      <div id="parent-fields" class="hidden space-y-4">
+        <div>
+          <label
+            for="parent_code"
+            class="block text-sm font-medium text-gray-700 mb-1"
+          >
+            Code d'accès Parent <span class="text-red-600">*</span>
+          </label>
+          <input
+            id="parent_code"
+            name="parent_code"
+            type="text"
+            class="appearance-none rounded-lg w-full px-3 py-2 border border-gray-300 placeholder-gray-400 text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm transition"
+            placeholder="Ex: D3F1-X"
+          />
+          <p class="text-[10px] text-gray-500 mt-1 italic">
+            Ce code est visible sur le dashboard de votre enfant.
+          </p>
+        </div>
+      </div>
+
       <!-- Bouton de soumission -->
       <div>
-        <button type="submit" id="register"
-          class="group relative w-full flex justify-center items-center py-3 px-4 border border-transparent text-sm sm:text-base font-medium rounded-lg text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all duration-300 shadow-sm hover:shadow">
+        <button
+          type="submit"
+          id="register"
+          class="group relative w-full flex justify-center items-center py-3 px-4 border border-transparent text-sm sm:text-base font-medium rounded-lg text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all duration-300 shadow-sm hover:shadow"
+        >
           <span class="absolute left-4 flex items-center">
             <i class="fas fa-user-plus"></i>
           </span>
@@ -186,7 +550,10 @@
 
       <!-- Lien de connexion -->
       <div class="text-center">
-        <a href="{{ url_for('auth.login') }}" class="text-sm font-medium text-blue-600 hover:text-blue-700 transition">
+        <a
+          href="{{ url_for('auth.login') }}"
+          class="text-sm font-medium text-blue-600 hover:text-blue-700 transition"
+        >
           Déjà inscrit ? Se connecter
         </a>
       </div>
@@ -195,7 +562,10 @@
 </div>
 
 <!-- Toast notifications -->
-<div id="toast-container" class="fixed top-20 left-1/2 transform -translate-x-1/2 z-50 w-full max-w-xs px-4"></div>
+<div
+  id="toast-container"
+  class="fixed top-20 left-1/2 transform -translate-x-1/2 z-50 w-full max-w-xs px-4"
+></div>
 
 <style>
   @keyframes fade-in {
@@ -244,130 +614,102 @@
 
 {% endblock %} {% block extra_js %}
 <script>
-  document.addEventListener('DOMContentLoaded', function () {
-    // Toast notifications
-    const messages = [
-      {% with messages = get_flashed_messages(with_categories = true) %}
-        {% if messages %}
-  {% for category, message in messages %}
-  { category: '{{ category }}', message: `{{ message|escape }}` } {% if not loop.last %}, {% endif %}
-  {% endfor %}
-  {% endif %}
-  {% endwith %}
-    ];
+  document.addEventListener("DOMContentLoaded", function () {
+    // Role-based fields
+    const roleSelect = document.getElementById("role");
+    const etudiantFields = document.getElementById("etudiant-fields");
+    const enseignantFields = document.getElementById("enseignant-fields");
+    const parentFields = document.getElementById("parent-fields");
 
-  const colors = {
-    success: 'bg-green-500 text-white',
-    error: 'bg-red-500 text-white',
-    warning: 'bg-yellow-400 text-gray-900',
-    info: 'bg-blue-500 text-white',
-  };
-
-  const container = document.getElementById('toast-container');
-
-  messages.forEach((msg, i) => {
-    const toast = document.createElement('div');
-    toast.className = `flex items-center justify-between px-4 py-3 rounded-lg shadow-lg mb-2 animate-fade-in ${colors[msg.category] || colors.info}`;
-    toast.style.opacity = 0;
-    toast.innerHTML = `
-        <span class="flex-1 pr-2 text-sm">${msg.message}</span>
-        <button class="ml-2 text-xl font-bold focus:outline-none hover:opacity-80" aria-label="Fermer">&times;</button>
-      `;
-    container.appendChild(toast);
-
-    setTimeout(() => { toast.style.opacity = 1; }, 100);
-
-    toast.querySelector('button').onclick = () => {
-      toast.style.opacity = 0;
-      setTimeout(() => toast.remove(), 400);
-    };
-
-    setTimeout(() => {
-      toast.style.opacity = 0;
-      setTimeout(() => toast.remove(), 400);
-    }, 4000 + i * 200);
-  });
-
-  // Toggle password visibility
-  const togglePassword = document.getElementById("togglePassword");
-  const passwordField = document.getElementById("password");
-
-  togglePassword.addEventListener("click", function () {
-    const type = passwordField.getAttribute("type") === "password" ? "text" : "password";
-    passwordField.setAttribute("type", type);
-    this.classList.toggle("fa-eye");
-    this.classList.toggle("fa-eye-slash");
-  });
-
-  // Role-based fields
-  const roleSelect = document.getElementById("role");
-  const etudiantFields = document.getElementById("etudiant-fields");
-  const enseignantFields = document.getElementById("enseignant-fields");
-
-  function updateFields() {
-    if (roleSelect.value === "etudiant") {
-      etudiantFields.classList.remove("hidden");
-      enseignantFields.classList.add("hidden");
-    } else if (roleSelect.value === "enseignant") {
-      enseignantFields.classList.remove("hidden");
-      etudiantFields.classList.add("hidden");
-    } else {
-      etudiantFields.classList.add("hidden");
-      enseignantFields.classList.add("hidden");
+    function updateFields() {
+      if (!roleSelect) return;
+      const role = roleSelect.value;
+      if (etudiantFields)
+        etudiantFields.classList.toggle("hidden", role !== "etudiant");
+      if (enseignantFields)
+        enseignantFields.classList.toggle("hidden", role !== "enseignant");
+      if (parentFields)
+        parentFields.classList.toggle("hidden", role !== "parent");
     }
-  }
 
-  roleSelect.addEventListener("change", updateFields);
-  updateFields();
-
-  // Email validation
-  const emailInput = document.getElementById("email");
-  const emailError = document.getElementById("email-error");
-
-  emailInput.addEventListener("input", function () {
-    const pattern = /^[\w\.-]+@[\w\.-]+\.[a-zA-Z]{2,}$/;
-    if (!pattern.test(emailInput.value) && emailInput.value.length > 0) {
-      emailError.classList.remove("hidden");
-    } else {
-      emailError.classList.add("hidden");
+    if (roleSelect) {
+      roleSelect.addEventListener("change", updateFields);
+      updateFields();
     }
-  });
 
-  // Password strength
-  const passwordInput = document.getElementById("password");
-  const passwordStrength = document.getElementById("password-strength");
-  const passwordStrengthText = document.getElementById("password-strength-text");
+    // Toggle password visibility
+    const togglePassword = document.getElementById("togglePassword");
+    const passwordField = document.getElementById("password");
 
-  passwordInput.addEventListener("input", function () {
-    const val = passwordInput.value;
-    let score = 0;
-
-    if (val.length >= 8) score++;
-    if (/[A-Z]/.test(val)) score++;
-    if (/[a-z]/.test(val)) score++;
-    if (/\d/.test(val)) score++;
-    if (/[^A-Za-z0-9]/.test(val)) score++;
-
-    passwordStrength.value = score;
-
-    if (score <= 2) {
-      passwordStrengthText.textContent = "Faible";
-      passwordStrengthText.className = "text-xs font-medium text-red-600";
-    } else if (score === 3 || score === 4) {
-      passwordStrengthText.textContent = "Moyen";
-      passwordStrengthText.className = "text-xs font-medium text-yellow-600";
-    } else if (score >= 5) {
-      passwordStrengthText.textContent = "Fort";
-      passwordStrengthText.className = "text-xs font-medium text-green-600";
+    if (togglePassword && passwordField) {
+      togglePassword.addEventListener("click", function () {
+        const type =
+          passwordField.getAttribute("type") === "password"
+            ? "text"
+            : "password";
+        passwordField.setAttribute("type", type);
+        this.classList.toggle("fa-eye");
+        this.classList.toggle("fa-eye-slash");
+      });
     }
-  });
-  });
 
-  const spinner = document.getElementById("spinner");
-  const registerBtn = document.getElementById("register");
+    // Email validation
+    const emailInput = document.getElementById("email");
+    const emailError = document.getElementById("email-error");
 
-  registerBtn.addEventListener("click", () => {
-    spinner.classList.remove("hidden");
+    if (emailInput && emailError) {
+      emailInput.addEventListener("input", function () {
+        const pattern = /^[\w\.-]+@[\w\.-]+\.[a-zA-Z]{2,10}$/;
+        if (!pattern.test(emailInput.value) && emailInput.value.length > 0) {
+          emailError.classList.remove("hidden");
+        } else {
+          emailError.classList.add("hidden");
+        }
+      });
+    }
+
+    // Password strength
+    const passwordInput = document.getElementById("password");
+    const passwordStrength = document.getElementById("password-strength");
+    const passwordStrengthText = document.getElementById(
+      "password-strength-text"
+    );
+
+    if (passwordInput && passwordStrength) {
+      passwordInput.addEventListener("input", function () {
+        const val = passwordInput.value;
+        let score = 0;
+        if (val.length >= 8) score++;
+        if (/[A-Z]/.test(val)) score++;
+        if (/[a-z]/.test(val)) score++;
+        if (/\d/.test(val)) score++;
+        if (/[^A-Za-z0-9]/.test(val)) score++;
+        passwordStrength.value = score;
+        if (score <= 2) {
+          passwordStrengthText.textContent = "Faible";
+          passwordStrengthText.className = "text-xs font-medium text-red-600";
+        } else if (score === 3 || score === 4) {
+          passwordStrengthText.textContent = "Moyen";
+          passwordStrengthText.className =
+            "text-xs font-medium text-yellow-600";
+        } else if (score >= 5) {
+          passwordStrengthText.textContent = "Fort";
+          passwordStrengthText.className = "text-xs font-medium text-green-600";
+        }
+      });
+    }
+
+    // Spinner on submit
+    const registerBtn = document.getElementById("register");
+    const spinner = document.getElementById("spinner");
+    if (registerBtn && spinner) {
+      registerBtn.addEventListener("click", () => {
+        const form = registerBtn.closest("form");
+        if (form && form.checkValidity()) {
+          spinner.classList.remove("hidden");
+        }
+      });
+    }
   });
 </script>
 {% endblock %}

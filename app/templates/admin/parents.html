@@ -1,0 +1,318 @@
+{% extends "admin/base.html" %} {% block title %}Gestion des Parents - DEFITECH
+Admin{% endblock %} {% block admin_content %}
+<div class="space-y-6">
+  <!-- En-tête -->
+  <div
+    class="flex flex-col md:flex-row md:items-center md:justify-between gap-4"
+  >
+    <div>
+      <h1 class="text-2xl font-bold text-gray-900">Gestion des Parents</h1>
+      <p class="text-gray-500 text-sm">
+        Gérez les comptes parents et leurs liens avec les étudiants.
+      </p>
+    </div>
+    <div class="flex flex-col sm:flex-row items-center gap-3">
+      <div class="relative flex-grow max-w-md w-full">
+        <div
+          class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"
+        >
+          <i class="fas fa-search text-gray-400 text-sm"></i>
+        </div>
+        <input
+          type="text"
+          id="parentSearch"
+          placeholder="Rechercher un parent (nom, email...)"
+          class="block w-full pl-10 pr-3 py-2 bg-white border border-gray-300 rounded-xl text-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all shadow-sm"
+        />
+      </div>
+      <span
+        class="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-medium whitespace-nowrap"
+      >
+        {{ parents_data|length }} Parents inscrits
+      </span>
+    </div>
+  </div>
+
+  <!-- Onglets -->
+  <div x-data="{ activeTab: 'links' }" class="space-y-4">
+    <div class="border-b border-gray-200">
+      <nav class="flex space-x-8" aria-label="Tabs">
+        <button
+          @click="activeTab = 'links'"
+          :class="activeTab === 'links' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
+          class="py-4 px-1 border-b-2 font-medium text-sm whitespace-nowrap transition-all duration-200"
+        >
+          <i class="fas fa-link mr-2"></i>Comptes Parents & Liens
+        </button>
+        <button
+          @click="activeTab = 'codes'"
+          :class="activeTab === 'codes' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
+          class="py-4 px-1 border-b-2 font-medium text-sm whitespace-nowrap transition-all duration-200"
+        >
+          <i class="fas fa-key mr-2"></i>Codes d'accès Étudiants
+        </button>
+      </nav>
+    </div>
+
+    <!-- Contenu Onglet 1: Liens Parents -->
+    <div
+      x-show="activeTab === 'links'"
+      x-transition:enter="transition ease-out duration-200"
+      x-transition:enter-start="opacity-0 transform -translate-y-2"
+    >
+      <div
+        class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden"
+      >
+        <div class="overflow-x-auto">
+          <table class="min-w-full divide-y divide-gray-200">
+            <thead class="bg-gray-50">
+              <tr>
+                <th
+                  class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider"
+                >
+                  Parent
+                </th>
+                <th
+                  class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider"
+                >
+                  Contact
+                </th>
+                <th
+                  class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider"
+                >
+                  Enfant(s) Lié(s)
+                </th>
+                <th
+                  class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider"
+                >
+                  Statut Compte
+                </th>
+              </tr>
+            </thead>
+            <tbody class="bg-white divide-y divide-gray-200">
+              {% for item in parents_data %}
+              <tr class="hover:bg-gray-50 transition-colors">
+                <td class="px-6 py-4">
+                  <div class="flex items-center">
+                    <div
+                      class="h-8 w-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-bold mr-3"
+                    >
+                      {{ item.user.nom[0] }}{{ item.user.prenom[0] }}
+                    </div>
+                    <div class="text-sm font-medium text-gray-900">
+                      {{ item.user.nom }} {{ item.user.prenom }}
+                    </div>
+                  </div>
+                </td>
+                <td class="px-6 py-4">
+                  <div class="text-sm text-gray-500">{{ item.user.email }}</div>
+                </td>
+                <td class="px-6 py-4">
+                  <div class="space-y-1">
+                    {% for child in item.children %}
+                    <div class="flex items-center text-sm text-gray-700">
+                      <i
+                        class="fas fa-user-graduate mr-2 text-gray-400 text-xs"
+                      ></i>
+                      {{ child.user.nom }} {{ child.user.prenom }}
+                      <span
+                        class="ml-2 text-[10px] px-1.5 py-0.5 bg-gray-100 text-gray-600 rounded"
+                        >{{ child.filiere }}</span
+                      >
+                    </div>
+                    {% else %}
+                    <span class="text-xs text-red-500 italic"
+                      >Aucun enfant lié</span
+                    >
+                    {% endfor %}
+                  </div>
+                </td>
+                <td class="px-6 py-4">
+                  <span
+                    class="px-2 py-1 text-xs rounded-full font-medium {% if item.user.statut == 'approuve' %}bg-green-100 text-green-700 {% elif item.user.statut == 'en_attente' %}bg-yellow-100 text-yellow-700 {% else %}bg-red-100 text-red-700{% endif %}"
+                  >
+                    {{ item.user.statut|capitalize }}
+                  </span>
+                </td>
+              </tr>
+              {% else %}
+              <tr>
+                <td
+                  colspan="4"
+                  class="px-6 py-10 text-center text-gray-500 italic"
+                >
+                  Aucun compte parent trouvé.
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Contenu Onglet 2: Codes Étudiants -->
+    <div
+      x-show="activeTab === 'codes'"
+      x-transition:enter="transition ease-out duration-200"
+      x-transition:enter-start="opacity-0 transform -translate-y-2"
+    >
+      <div
+        class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden"
+      >
+        <div
+          class="p-4 border-b border-gray-100 bg-gray-50 flex items-center justify-between"
+        >
+          <h3 class="text-sm font-semibold text-gray-700">
+            Génération de codes d'accès
+          </h3>
+          <div class="text-xs text-gray-500 italic">
+            Un code est nécessaire pour l'inscription initiale d'un parent.
+          </div>
+        </div>
+        <div class="overflow-x-auto">
+          <table class="min-w-full divide-y divide-gray-200">
+            <thead class="bg-gray-50">
+              <tr>
+                <th
+                  class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider"
+                >
+                  Étudiant
+                </th>
+                <th
+                  class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider"
+                >
+                  Filière / Année
+                </th>
+                <th
+                  class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider"
+                >
+                  Code Actuel
+                </th>
+                <th
+                  class="px-6 py-3 text-center text-xs font-semibold text-gray-500 uppercase tracking-wider"
+                >
+                  Actions
+                </th>
+              </tr>
+            </thead>
+            <tbody class="bg-white divide-y divide-gray-200">
+              {% for etudiant in all_etudiants %}
+              <tr class="hover:bg-gray-50 transition-colors">
+                <td class="px-6 py-4">
+                  <div class="text-sm font-medium text-gray-900">
+                    {{ etudiant.user.nom }} {{ etudiant.user.prenom }}
+                  </div>
+                  <div class="text-[10px] text-gray-400 font-mono">
+                    {{ etudiant.numero_etudiant }}
+                  </div>
+                </td>
+                <td class="px-6 py-4">
+                  <div class="text-xs text-gray-600">
+                    {{ etudiant.filiere }}
+                  </div>
+                  <div class="text-[10px] text-gray-400">
+                    {{ etudiant.annee }}
+                  </div>
+                </td>
+                <td class="px-6 py-4">
+                  <div id="code-container-{{ etudiant.id }}">
+                    {% if etudiant.code_parent %}
+                    <span
+                      class="font-mono bg-blue-50 text-blue-700 px-3 py-1 rounded border border-blue-200 font-bold tracking-wider"
+                    >
+                      {{ etudiant.code_parent }}
+                    </span>
+                    {% else %}
+                    <span
+                      class="text-xs text-green-600 font-medium flex items-center"
+                    >
+                      <i class="fas fa-check-circle mr-1.5"></i> Compte Parent
+                      Lié
+                    </span>
+                    {% endif %}
+                  </div>
+                </td>
+                <td class="px-6 py-4 text-center">
+                  <button
+                    onclick="regenerateCode({{ etudiant.id }})"
+                    class="inline-flex items-center px-3 py-1 bg-white border border-gray-300 rounded-lg text-xs font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition shadow-sm"
+                  >
+                    <i class="fas fa-sync-alt mr-1.5 text-blue-500"></i>
+                    {% if etudiant.code_parent %}Régénérer{% else %}Générer
+                    nouveau{% endif %}
+                  </button>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  async function regenerateCode(etudiantId) {
+    if (
+      !confirm(
+        "Voulez-vous vraiment générer un nouveau code ? L'ancien sera invalidé."
+      )
+    )
+      return;
+
+    try {
+      const response = await fetch(
+        `/admin/regenerate_parent_code/${etudiantId}`,
+        {
+          method: "POST",
+          headers: {
+            "X-CSRF-Token": document.querySelector('meta[name="csrf-token"]')
+              .content,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      const data = await response.json();
+
+      if (data.success) {
+        const container = document.getElementById(
+          `code-container-${etudiantId}`
+        );
+        container.innerHTML = `<span class="font-mono bg-blue-50 text-blue-700 px-3 py-1 rounded border border-blue-200 font-bold tracking-wider animate-pulse">${data.new_code}</span>`;
+
+        // Notification toast (si disponible dans le système admin)
+        if (window.showToast) {
+          showToast(data.message, "success");
+        } else {
+          alert(data.message);
+        }
+      } else {
+        alert("Erreur: " + data.message);
+      }
+    } catch (error) {
+      console.error("Erreur lors de la régénération:", error);
+      alert("Une erreur est survenue.");
+    }
+  }
+  // Recherche de parents
+  document
+    .getElementById("parentSearch")
+    ?.addEventListener("input", function (e) {
+      const term = e.target.value.toLowerCase();
+      const rows = document.querySelectorAll("tbody tr");
+
+      rows.forEach((row) => {
+        // On ne cherche que dans l'onglet des liens pour l'instant
+        if (
+          row.closest("div").getAttribute("x-show") === "activeTab === 'links'"
+        ) {
+          const text = row.textContent.toLowerCase();
+          row.style.display = text.includes(term) ? "" : "none";
+        }
+      });
+    });
+</script>
+{% endblock %}

@@ -45,6 +45,23 @@ def dashboard():
         flash("Profil étudiant non trouvé. Contactez l'administration.", "error")
         return redirect(url_for("auth.logout"))
 
+    # Générer le code parent s'il n'existe pas et qu'aucun compte n'est lié
+    has_linked_parent = any(p.user_id is not None for p in etudiant.parents)
+    if not etudiant.code_parent and not has_linked_parent:
+        import secrets
+        import string
+
+        new_code = "".join(
+            secrets.choice(string.ascii_uppercase + string.digits) for _ in range(6)
+        )
+        # S'assurer de l'unicité
+        while Etudiant.query.filter_by(code_parent=new_code).first():
+            new_code = "".join(
+                secrets.choice(string.ascii_uppercase + string.digits) for _ in range(6)
+            )
+        etudiant.code_parent = new_code
+        db.session.commit()
+
     # Récupérer les notes de l'étudiant
     notes = Note.query.filter_by(etudiant_id=etudiant.id).all()
 
@@ -166,7 +183,6 @@ def voir_notes():
         flash("Accès non autorisé.", "error")
         return redirect(url_for("main.index"))
 
-    # Récupérer le profil et les notes
     etudiant = Etudiant.query.filter_by(user_id=current_user.id).first()
     if not etudiant:
         flash("Profil étudiant introuvable.", "error")
@@ -213,6 +229,56 @@ def voir_notes():
         )
 
     return render_template("etudiant/voir_notes.html", notes=notes_display)
+
+
+@students_bp.route("/voir_presences")
+@login_required
+def voir_presences():
+    """
+    Permet à l'étudiant (ou son parent) de consulter ses présences/absences.
+    """
+    if current_user.role != "etudiant":
+        flash("Accès non autorisé.", "error")
+        return redirect(url_for("main.index"))
+
+    etudiant = Etudiant.query.filter_by(user_id=current_user.id).first()
+
+    if not etudiant:
+        flash("Profil étudiant introuvable.", "error")
+        return redirect(url_for("main.index"))
+
+    # Récupérer l'historique des présences
+    presences = (
+        Presence.query.filter_by(etudiant_id=etudiant.id)
+        .order_by(Presence.date.desc())
+        .all()
+    )
+
+    # Calcul des stats
+    total_cours = len(presences)
+    total_present = sum(1 for p in presences if p.present)
+    presence_pct = (
+        round((total_present / total_cours) * 100, 1) if total_cours > 0 else 0.0
+    )
+
+    history = []
+    for p in presences:
+        history.append(
+            {
+                "date": p.date,
+                "matiere": p.matiere.nom if p.matiere else "-",
+                "present": p.present,
+            }
+        )
+
+    return render_template(
+        "etudiant/voir_presences.html",
+        etudiant=etudiant,
+        history=history,
+        total_cours=total_cours,
+        total_present=total_present,
+        presence=presence_pct,
+    )
 
 
 @students_bp.route("/emploi-temps")

@@ -26,6 +26,7 @@ from sqlalchemy.orm import sessionmaker
 from app.extensions import db
 from app.models.user import User
 from app.models.etudiant import Etudiant
+from app.models.parent import Parent
 from app.models.enseignant import Enseignant
 from app.models.filiere import Filiere
 from app.models.annee import Annee
@@ -273,6 +274,63 @@ def admin_etudiants():
         prenom_filter=prenom_filter,
         email_filter=email_filter,
         id_filter=id_filter,
+    )
+
+
+@admin_bp.route("/parents")
+@login_required
+def admin_parents():
+    """Page d'administration des parents."""
+    if current_user.role != "admin":
+        flash("Accès non autorisé.", "error")
+        return redirect(url_for("main.index"))
+
+    # On veut une liste d'utilisateurs ayant le rôle 'parent' avec leurs enfants
+    parent_users = User.query.filter_by(role="parent").all()
+
+    parents_data = []
+    for p_user in parent_users:
+        # Trouver tous les enregistrements Parent liés à cet utilisateur
+        links = Parent.query.filter_by(user_id=p_user.id).all()
+        children = [link.etudiant for link in links if link.etudiant]
+        parents_data.append({"user": p_user, "children": children})
+
+    # Liste des étudiants
+    all_etudiants = Etudiant.query.all()
+
+    return render_template(
+        "admin/parents.html", parents_data=parents_data, all_etudiants=all_etudiants
+    )
+
+
+@admin_bp.route("/regenerate_parent_code/<int:etudiant_id>", methods=["POST"])
+@login_required
+def regenerate_parent_code(etudiant_id):
+    """Régénère un code d'accès parent pour un étudiant."""
+    if current_user.role != "admin":
+        return jsonify({"success": False, "message": "Accès non autorisé"}), 403
+
+    etudiant = Etudiant.query.get_or_404(etudiant_id)
+
+    import string
+    import random
+
+    chars = string.ascii_uppercase + string.digits
+
+    while True:
+        # Toujours privilégier un format lisible
+        new_code = "".join(random.choices(chars, k=6))
+        if not Etudiant.query.filter_by(code_parent=new_code).first():
+            etudiant.code_parent = new_code
+            db.session.commit()
+            break
+
+    return jsonify(
+        {
+            "success": True,
+            "message": f"Nouveau code généré : {new_code}",
+            "new_code": new_code,
+        }
     )
 
 
@@ -2636,27 +2694,35 @@ def admin_emploi_temps():
     if request.method == "POST" and selected_filiere:
         try:
             # Fonction de validation locale (ou pourrait être dans utils/services)
-            def enseignant_est_disponible(session, enseignant_id, jour, heure_debut, heure_fin, exclude_id=None):
+            def enseignant_est_disponible(
+                session, enseignant_id, jour, heure_debut, heure_fin, exclude_id=None
+            ):
                 """Vérifie si un enseignant est disponible sur un créneau donné."""
                 q = session.query(EmploiTemps).filter(
                     EmploiTemps.enseignant_id == enseignant_id,
                     EmploiTemps.jour == jour,
                     EmploiTemps.heure_debut < heure_fin,
-                    EmploiTemps.heure_fin > heure_debut
+                    EmploiTemps.heure_fin > heure_debut,
                 )
                 if exclude_id:
                     q = q.filter(EmploiTemps.id != exclude_id)
                 return not session.query(q.exists()).scalar()
 
             conflict_detected = False
-            
+
             for jour in jours:
                 for horaire in horaires:
                     matiere_id = request.form.get(f"matiere_{jour}_{horaire}")
-                    salle_input = request.form.get(f"salle_{jour}_{horaire}", "").strip()
-                    
-                    # Gestion de la salle : NULL si vide ou "À définir"
-                    salle = None if not salle_input or salle_input == "À définir" else salle_input
+                    salle_input = request.form.get(
+                        f"salle_{jour}_{horaire}", ""
+                    ).strip()
+
+                    # Gestion de la salle : NULL si vide ou "GL_003"
+                    salle = (
+                        None
+                        if not salle_input or salle_input == "GL_003"
+                        else salle_input
+                    )
 
                     heure_debut_str, heure_fin_str = horaire.split(" - ")
                     heure_debut = datetime.strptime(heure_debut_str, "%H:%M").time()
@@ -2673,10 +2739,20 @@ def admin_emploi_temps():
                             # Validation de disponibilité de l'enseignant
                             # On passe l'ID de l'emploi actuel pour l'exclure de la vérification (cas de modification)
                             emploi_id = emploi.id if emploi else None
-                            if not enseignant_est_disponible(db.session, matiere.enseignant_id, jour, heure_debut, heure_fin, emploi_id):
-                                flash(f"❌ Conflit : L'enseignant {matiere.enseignant.nom} de {matiere.nom} est déjà occupé le {jour} de {horaire}.", "error")
+                            if not enseignant_est_disponible(
+                                db.session,
+                                matiere.enseignant_id,
+                                jour,
+                                heure_debut,
+                                heure_fin,
+                                emploi_id,
+                            ):
+                                flash(
+                                    f"❌ Conflit : L'enseignant {matiere.enseignant.nom} de {matiere.nom} est déjà occupé le {jour} de {horaire}.",
+                                    "error",
+                                )
                                 conflict_detected = True
-                                continue # On ne sauvegarde pas ce créneau spécifique
+                                continue  # On ne sauvegarde pas ce créneau spécifique
 
                             if not emploi:
                                 emploi = EmploiTemps(
@@ -2688,7 +2764,7 @@ def admin_emploi_temps():
                                     heure_fin=heure_fin,
                                     salle=salle,
                                 )
-                                
+
                             db.session.add(emploi)
                         else:
                             emploi.matiere_id = matiere_id
@@ -2932,27 +3008,3 @@ def api_unresolved_incidents_count():
 
     count = SecurityIncident.query.filter_by(is_resolved=False).count()
     return jsonify({"count": count})
-
-
-# INSTRUCTIONS POUR AJOUTER CES ROUTES À admin.py:
-# Ajouter ces décorateurs juste avant chaque fonction dans admin.py:
-
-# @admin_bp.route("/security-incidents")
-# @login_required
-# def security_incidents():
-#     return admin_security_incidents()
-
-# @admin_bp.route("/security-incidents/<int:incident_id>/resolve", methods=["POST"])
-# @login_required
-# def resolve_incident(incident_id):
-#     return admin_resolve_incident(incident_id)
-
-# @admin_bp.route("/security-incidents/<int:incident_id>/add-note", methods=["POST"])
-# @login_required
-# def add_incident_note(incident_id):
-#     return admin_add_incident_note(incident_id)
-
-# @admin_bp.route("/api/security-incidents/count")
-# @login_required
-# def unresolved_incidents_count():
-#     return api_unresolved_incidents_count()

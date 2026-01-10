@@ -34,6 +34,7 @@ try:
         AcademicArchivedGrade,
         PromotionRule,
     )  # noqa: F401
+    from .parent import Parent  # noqa: F401
     from .academic_year_config import AcademicYearConfig  # noqa: F401
     from .evaluation_period import EvaluationPeriod  # noqa: F401
 except Exception:
@@ -77,6 +78,7 @@ def init_models():
     """Initialise les modèles et évite les imports circulaires"""
     from .user import User
     from .etudiant import Etudiant
+    from .parent import Parent
     from .enseignant import Enseignant
     from .filiere import Filiere, FiliereAdmin
     from .post import Post
@@ -110,6 +112,7 @@ def init_models():
     return {
         "User": User,
         "Etudiant": Etudiant,
+        "Parent": Parent,
         "Enseignant": Enseignant,
         "Filiere": Filiere,
         "FiliereAdmin": FiliereAdmin,
@@ -148,6 +151,7 @@ def init_models():
 __all__ = [
     "User",
     "Etudiant",
+    "Parent",
     "Enseignant",
     # Modèles Study Buddy
     "StudyDocument",

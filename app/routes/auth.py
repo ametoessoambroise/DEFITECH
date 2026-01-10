@@ -157,9 +157,30 @@ def register():
         ).date()
         sexe = request.form["sexe"]
 
-        # Champs spécifiques
+        # Champs spécifiques Étudiant
+        lieu_naissance = request.form.get("lieu_naissance")
+        nationalite = request.form.get("nationalite")
+        bac_serie = request.form.get("bac_serie")
+        bac_annee = request.form.get("bac_annee")
+        etablissement_provenance = request.form.get("etablissement_provenance")
         filiere = request.form.get("filiere")
         annee = request.form.get("annee")
+
+        # Champs spécifiques Parent
+        parent_nom = request.form.get("parent_nom")
+        parent_prenom = request.form.get("parent_prenom")
+        parent_profession = request.form.get("parent_profession")
+        parent_organisme = request.form.get("parent_organisme")
+        parent_adresse = request.form.get("parent_adresse")
+        parent_tel_bur = request.form.get("parent_tel_bur")
+        parent_tel_dom = request.form.get("parent_tel_dom")
+        parent_email = request.form.get("parent_email")
+
+        # Champs spécifiques Paiement
+        modalite_paiement = request.form.get("modalite_paiement")
+        autres_modalites = request.form.get("autres_modalites")
+        modalites_choisies = request.form.get("modalites_choisies")
+
         filieres_enseignees_form = request.form.getlist("filieres_enseignees")
         annees_enseignant = request.form.getlist("annees_enseignant")
 
@@ -235,8 +256,35 @@ def register():
                 filiere=filiere,
                 annee=annee,
                 numero_etudiant=new_numero,
+                lieu_naissance=lieu_naissance,
+                nationalite=nationalite,
+                bac_serie=bac_serie,
+                bac_annee=bac_annee,
+                etablissement_provenance=etablissement_provenance,
+                modalite_paiement=modalite_paiement,
+                autres_modalites=autres_modalites,
+                modalites_choisies=modalites_choisies,
             )
             db.session.add(etudiant)
+            db.session.flush()  # Pour avoir l'id de l'étudiant
+
+            # Créer le profil Parent
+            if parent_nom and parent_prenom:
+                from app.models.parent import Parent
+
+                parent = Parent(
+                    etudiant_id=etudiant.id,
+                    nom=parent_nom,
+                    prenom=parent_prenom,
+                    profession=parent_profession,
+                    organisme_employeur=parent_organisme,
+                    adresse=parent_adresse,
+                    tel_bureau=parent_tel_bur,
+                    tel_domicile=parent_tel_dom,
+                    email=parent_email,
+                )
+                db.session.add(parent)
+
             db.session.commit()
         # Si enseignant, créer le profil Enseignant
         elif role == "enseignant" and filieres_enseignees_form and annees_enseignant:
@@ -248,6 +296,52 @@ def register():
                 ),
             )
             db.session.add(enseignant)
+            db.session.commit()
+
+        # Si parent, lier à l'étudiant via le code
+        elif role == "parent":
+            parent_code = request.form.get("parent_code")
+            if not parent_code:
+                # Si le code est manquant, on supprime l'utilisateur créé pour éviter les orphelins
+                db.session.delete(user)
+                db.session.commit()
+                flash("Le code d'accès parent est obligatoire.", "error")
+                return render_template(
+                    "auth/register.html", filieres=filieres, annees=annees
+                )
+
+            # Trouver l'étudiant par son code
+            etudiant_target = Etudiant.query.filter_by(code_parent=parent_code).first()
+            if not etudiant_target:
+                db.session.delete(user)
+                db.session.commit()
+                flash("Code d'accès parent invalide.", "error")
+                return render_template(
+                    "auth/register.html", filieres=filieres, annees=annees
+                )
+
+            # Créer ou mettre à jour l'enregistrement Parent
+            from app.models.parent import Parent
+
+            # On cherche s'il y a déjà un parent pour cet étudiant avec cet email
+            p_record = Parent.query.filter_by(
+                etudiant_id=etudiant_target.id, email=user.email
+            ).first()
+            if not p_record:
+                # Créer un nouvel enregistrement Parent lié à l'utilisateur
+                p_record = Parent(
+                    etudiant_id=etudiant_target.id,
+                    nom=user.nom,
+                    prenom=user.prenom,
+                    email=user.email,
+                    user_id=user.id,
+                )
+                db.session.add(p_record)
+            else:
+                p_record.user_id = user.id
+
+            # Invalider le code après utilisation (usage unique)
+            etudiant_target.code_parent = None
             db.session.commit()
 
         flash(

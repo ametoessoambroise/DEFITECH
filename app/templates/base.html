@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>{% block title %}{% endblock %}</title>
+    <title>{% block title %}Accueil{% endblock %} | DEFITECH</title>
 
     <!-- Font Awesome -->
     <link
@@ -446,7 +446,7 @@
           </div>
           <div class="flex-shrink-0">
             <button
-              onclick="dismissNotification({{ notification.id }})"
+              onclick="dismissNotification({{ notification.id }});"
               class="text-gray-400 hover:text-gray-600 p-1 transition-colors"
               aria-label="Fermer cette notification"
               data-tooltip="Fermer"

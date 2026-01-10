@@ -250,7 +250,7 @@ def voir_presences():
     # Récupérer l'historique des présences
     presences = (
         Presence.query.filter_by(etudiant_id=etudiant.id)
-        .order_by(Presence.date.desc())
+        .order_by(Presence.date_cours.desc())
         .all()
     )
 
@@ -265,7 +265,7 @@ def voir_presences():
     for p in presences:
         history.append(
             {
-                "date": p.date,
+                "date": p.date_cours,
                 "matiere": p.matiere.nom if p.matiere else "-",
                 "present": p.present,
             }

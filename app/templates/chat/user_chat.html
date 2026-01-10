@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Messagerie - Support</title>
+    <title>Messagerie</title>
 
     <!-- Styles globaux -->
     <link
@@ -219,8 +219,8 @@
     <script src="{{ url_for('static', filename='js/app_lock.js') }}"></script>
     <script>
       const CONFIG = {
-        adminId: {{ admin.id }},
-        userId: {{ current_user.id }},
+        adminId: {{ admin.id | default(0) }},
+        userId: {{ current_user.id | default(0) }},
         userAvatar: "{{ current_user.photo_profil or '' }}",
         adminAvatar: "{{ admin.photo_profil or '' }}"
       };

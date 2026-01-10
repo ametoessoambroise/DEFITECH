@@ -20,7 +20,7 @@ from flask import (
     flash,
     request,
     current_app,
-    jsonify
+    jsonify,
 )
 from flask_login import login_required, current_user
 from app.extensions import db
@@ -834,8 +834,8 @@ def get_profile_picture(user):
     return url_for("static", filename="assets/favicon.ico")
 
 
-# Ajouter la fonction au contexte du template
-@profile_bp.context_processor
+# Ajouter la fonction au contexte du template (Globalement)
+@profile_bp.app_context_processor
 def utility_processor():
     """
     Ajoute la fonction get_profile_picture au contexte du template.

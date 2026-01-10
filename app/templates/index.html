@@ -1,8 +1,7 @@
 {% extends "base.html" %}
 
-{% block title %}
-DEFITECH | L'école des battants - BTS, Licence, Master
-{% endblock %}
+{% block title %}L'école des battants{% endblock %}
+
 {% block extra_css %}
 
     <style>
@@ -249,7 +248,7 @@ DEFITECH | L'école des battants - BTS, Licence, Master
                     Communication
                   </li>
                 </ul>
-                <button onclick="location.href='{{ url_for('auth.register') }}'"
+                <button onclick="location.href='{{ url_for('auth.register') }}';"
                   class="w-full py-3 border-2 border-defitech-blue text-defitech-blue font-bold rounded-lg hover:bg-defitech-blue hover:text-white transition-colors"
                 >
                   En savoir plus
@@ -296,7 +295,7 @@ DEFITECH | L'école des battants - BTS, Licence, Master
                     Transport Logistique
                   </li>
                 </ul>
-                <button onclick="location.href='{{ url_for('auth.register') }}'"
+                <button onclick="location.href='{{ url_for('auth.register') }}';"
                   class="w-full py-3 bg-defitech-red text-white font-bold rounded-lg hover:bg-red-700 transition-colors shadow-lg"
                 >
                   Candidater maintenant
@@ -334,7 +333,7 @@ DEFITECH | L'école des battants - BTS, Licence, Master
                     Management
                   </li>
                 </ul>
-                <button onclick="location.href='{{ url_for('auth.register') }}'"
+                <button onclick="location.href='{{ url_for('auth.register') }}';"
                   class="w-full py-3 border-2 border-gray-800 text-gray-800 font-bold rounded-lg hover:bg-gray-800 hover:text-white transition-colors"
                 >
                   En savoir plus
@@ -520,7 +519,7 @@ DEFITECH | L'école des battants - BTS, Licence, Master
               {% endif %}
             {% else %}
             <button
-              onclick="location.href='{{ url_for('auth.register') }}'"
+              onclick="location.href='{{ url_for('auth.register') }}';"
               class="bg-white text-defitech-blue px-8 py-3 rounded-full font-bold shadow-lg hover:bg-gray-100 transition-colors"
             >
               S'inscrire en ligne

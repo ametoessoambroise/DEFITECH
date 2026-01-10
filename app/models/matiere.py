@@ -1,6 +1,5 @@
 from app.extensions import db
 
-
 class Matiere(db.Model):
     """Modèle pour les matières"""
 
@@ -12,10 +11,12 @@ class Matiere(db.Model):
     enseignant_id = db.Column(
         db.Integer, db.ForeignKey("enseignant.id"), nullable=False
     )
+    code = db.Column(db.String(20), nullable=True)  # Code de la matière (ex: INF101)
     annee = db.Column(
         db.String(20), nullable=False, default="1ère année"
     )  # Ajout de l'année
     credit = db.Column(db.Integer, nullable=False, default=6)  # Ajout des crédits
+    semestre = db.Column(db.Integer, nullable=False, default=1)  # Ajout du semestre
 
     def validate_credits(self):
         """Valide que les crédits sont entre 2 et 6 selon la norme ECTS"""

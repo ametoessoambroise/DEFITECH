@@ -1664,7 +1664,9 @@ def gestion_matieres_filiere(filiere_id):
         matiere_data = {
             "id": m.id,
             "nom": m.nom,
+            "code": m.code,
             "annee": m.annee,  # Ajout de l'année
+            "semestre": m.semestre,
             "filiere_nom": filiere.nom,
             "filiere_id": filiere.id,
             "enseignant_id": m.enseignant_id,
@@ -1691,7 +1693,9 @@ def ajouter_matiere_filiere():
     data = request.get_json()
     filiere_id = data.get("filiere_id")
     nom = data.get("nom")
+    code = data.get("code")
     annee = data.get("annee")
+    semestre = data.get("semestre", 1)
     enseignant_id = data.get("enseignant_id")
 
     if not all([filiere_id, nom, annee, enseignant_id]):
@@ -1740,7 +1744,12 @@ def ajouter_matiere_filiere():
 
         # Créer la matière avec les relations
         matiere = Matiere(
-            nom=nom, filiere_id=filiere_id, enseignant_id=enseignant_id, annee=annee
+            nom=nom,
+            code=code,
+            filiere_id=filiere_id,
+            enseignant_id=enseignant_id,
+            annee=annee,
+            semestre=semestre,
         )
         db.session.add(matiere)
         db.session.flush()  # Pour obtenir l'ID de la matière
@@ -1884,7 +1893,9 @@ def modifier_matiere(matiere_id):
 
     data = request.get_json()
     nom = data.get("nom")
+    code = data.get("code")
     annee = data.get("annee")
+    semestre = data.get("semestre")
     enseignant_id = data.get("enseignant_id")
 
     if not all([nom, annee, enseignant_id]):
@@ -1900,6 +1911,13 @@ def modifier_matiere(matiere_id):
         enseignant = Enseignant.query.get(enseignant_id)
         if not enseignant:
             return jsonify({"success": False, "message": "Enseignant non trouvé"}), 404
+
+        matiere.nom = nom
+        matiere.code = code
+        matiere.annee = annee
+        if semestre is not None:
+            matiere.semestre = semestre
+        matiere.enseignant_id = enseignant_id
 
         # Vérifier si l'enseignant n'a pas déjà atteint la limite pour cette année
         # On exclut la matière actuelle du compte
@@ -2751,7 +2769,7 @@ def admin_emploi_temps():
                                     f"❌ Conflit : L'enseignant {matiere.enseignant.nom} de {matiere.nom} est déjà occupé le {jour} de {horaire}.",
                                     "error",
                                 )
-                                conflict_detected = True
+                                conflict_detected = True  # noqa
                                 continue  # On ne sauvegarde pas ce créneau spécifique
 
                             if not emploi:

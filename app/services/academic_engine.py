@@ -46,6 +46,8 @@ class AcademicEngine:
                 "moyenne": 0.0,
                 "note_cc": 0.0,
                 "note_exam": 0.0,
+                "note_devoir": 0.0,
+                "note_tp": 0.0,
                 "credits_obtenus": 0,
                 "is_validated": False,
             }
@@ -53,32 +55,25 @@ class AcademicEngine:
         # Séparation CC et Examen
         notes_cc = []
         note_exam = 0.0
-        has_exam = False
+        note_devoir_sum = 0.0
+        note_tp_sum = 0.0
 
         for n in notes:
             if n.note is None:
                 continue
 
-            if AcademicEngine._is_exam(n.type_evaluation):
-                # On prend la dernière note d'examen si plusieurs (ou max ?)
-                # Supposons une seule note d'examen par matière
+            type_lower = (n.type_evaluation or "").lower().strip()
+            if AcademicEngine._is_exam(type_lower):
                 note_exam = n.note
-                note_exam = n.note
-                # has_exam = True # Unused for now
+            elif "tp" in type_lower:
+                note_tp_sum += n.note
+                notes_cc.append(n.note)
             else:
+                # On considère le reste comme "Devoir" par défaut (ou Devoir explicitement)
+                note_devoir_sum += n.note
                 notes_cc.append(n.note)
 
         # Calcul du CC (Somme des devoirs + TP)
-        # Attention: Si la somme dépasse 20, cela peut fausser le calcul si on attend une moyenne sur 20.
-        # Le prompt dit : "la somme des notes eu lors des devoirs et tp * 40%"
-        # ET l'exemple : "(Devoirs + TP) x 0.40".
-        # Si on a 2 devoirs à 15/20 => Somme = 30. 30 * 0.4 = 12.
-        # Si Examen à 10/20 => 10 * 0.6 = 6.
-        # Total = 12 + 6 = 18/20.
-        # Cela semble correct si le système de notation permet d'accumuler des points CC.
-        # SI les devoirs sont notés sur 20 chacun, la somme peut être très élevée.
-        # INTERPRÉTATION : La "note de classe" est la somme des points acquis en CC.
-        # Si c'était une moyenne, l'utilisateur aurait dit "Moyenne des devoirs".
         sum_cc = sum(notes_cc)
 
         moyenne = (sum_cc * 0.40) + (note_exam * 0.60)
@@ -87,7 +82,6 @@ class AcademicEngine:
         moyenne = round(moyenne, 2)
 
         # Validation (Seuil par défaut 10, ou configurable via PromotionRule)
-        # On peut récupérer la règle active, sinon 10.
         rule = PromotionRule.query.filter_by(is_active=True).first()
         seuil = rule.seuil_moyenne_matiere if rule else 10.0
 
@@ -98,6 +92,8 @@ class AcademicEngine:
             "moyenne": moyenne,
             "note_cc": sum_cc,
             "note_exam": note_exam,
+            "note_devoir": note_devoir_sum,
+            "note_tp": note_tp_sum,
             "credits_obtenus": credits_obtenus,
             "is_validated": is_validated,
         }
@@ -116,7 +112,6 @@ class AcademicEngine:
         if not filiere_obj:
             return None
 
-        # Récupérer toutes les matières de l'année de l'étudiant
         # Récupérer toutes les matières de la filière pour filtrage robuste
         all_matieres_filiere = Matiere.query.filter_by(filiere_id=filiere_obj.id).all()
 

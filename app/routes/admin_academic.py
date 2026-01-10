@@ -87,7 +87,7 @@ def process_annual_closing(app, admin_id):
                         archive_id=archive.id,
                         matiere_nom=matiere.nom,
                         code_matiere=matiere.code,
-                        credits_matiere=matiere.credits,
+                        credits_matiere=matiere.credit,
                         moyenne_matiere=stats["moyenne"],
                         note_examen=stats["note_exam"],
                         note_classe=stats["note_cc"],

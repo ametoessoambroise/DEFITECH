@@ -1,8 +1,5 @@
 {% extends "base.html" %} {% block title %}Mon emplois du temps | DEFITECH{%
 endblock %} {% block extra_css %}
-<!-- FullCalendar -->
-<script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.js"></script>
-
 <script>
   tailwind.config = {
     darkMode: "class",
@@ -177,10 +174,6 @@ endblock %} {% block extra_css %}
 
       <!-- Schedule Table -->
       <div class="p-4 sm:p-6">
-        <!-- FullCalendar Container -->
-        <div id="calendar-view" class="p-4 bg-white dark:bg-gray-800 rounded-xl min-h-[700px]"></div>
-
-        <!-- Ancien tableau (Commenté)
         <div
           class="overflow-x-auto rounded-xl border-2 border-gray-200 dark:border-gray-700 shadow-inner bg-white dark:bg-gray-900"
         >
@@ -189,15 +182,16 @@ endblock %} {% block extra_css %}
             class="min-w-full divide-y divide-gray-200 dark:divide-gray-700"
           >
             <thead id="timetable-head">
+              <!-- Rempli dynamiquement via JS -->
             </thead>
             <tbody
               id="timetable-body"
               class="bg-white dark:bg-gray-900 divide-y divide-gray-200 dark:divide-gray-700"
             >
+              <!-- Rempli dynamiquement via JS -->
             </tbody>
           </table>
         </div>
-        -->
 
         <!-- Legend -->
         <div
@@ -518,94 +512,134 @@ endblock %} {% block extra_css %}
       return card;
     }
 
-    /* 
     async function loadEmploiTemps() {
-      // ... (existing logic commented out)
-    }
-    loadEmploiTemps();
-    */
+      if (isLoading) return;
+      isLoading = true;
 
-    // --- Nouvelle Logique FullCalendar ---
-    const calendarEl = document.getElementById('calendar-view');
-    const calendar = new FullCalendar.Calendar(calendarEl, {
-      initialView: 'timeGridWeek',
-      locale: 'fr',
-      headerToolbar: {
-        left: 'prev,next today',
-        center: 'title',
-        right: 'timeGridWeek,timeGridDay,listWeek'
-      },
-      firstDay: 1, // Lundi
-      slotMinTime: '07:00:00',
-      slotMaxTime: '20:00:00',
-      allDaySlot: false,
-      height: 'auto',
-      themeSystem: 'standard',
-      events: async function(info, successCallback, failureCallback) {
-        try {
-          const response = await fetch("/etudiant/api/emploi-temps");
-          const data = await response.json();
-          
-          const events = [];
-          const dayMapping = {
-            'Lundi': 1, 'Mardi': 2, 'Mercredi': 3, 'Jeudi': 4, 'Vendredi': 5, 'Samedi': 6, 'Dimanche': 0
-          };
-
-          const today = new Date();
-          const firstDayOfWeek = new Date(today);
-          firstDayOfWeek.setDate(today.getDate() - today.getDay() + (today.getDay() === 0 ? -6 : 1));
-
-          data.creneaux.forEach(c => {
-            const dayOffset = dayMapping[c.jour];
-            const eventDate = new Date(firstDayOfWeek);
-            eventDate.setDate(firstDayOfWeek.getDate() + (dayOffset - 1));
-
-            // Parse horaire: "07:30 - 09:30"
-            const times = c.horaire.split(' - ');
-            if (times.length === 2) {
-              const [startH, startM] = times[0].split(':');
-              const [endH, endM] = times[1].split(':');
-
-              const startDate = new Date(eventDate);
-              startDate.setHours(parseInt(startH), parseInt(startM), 0);
-              
-              const endDate = new Date(eventDate);
-              endDate.setHours(parseInt(endH), parseInt(endM), 0);
-
-              events.push({
-                title: c.matiere,
-                start: startDate,
-                end: endDate,
-                extendedProps: {
-                  enseignant: c.enseignant,
-                  salle: c.salle
-                },
-                backgroundColor: '#3b82f6',
-                borderColor: '#2563eb'
-              });
-            }
-          });
-          successCallback(events);
-        } catch (e) {
-          console.error(e);
-          failureCallback(e);
-        }
-      },
-      eventContent: function(arg) {
-        return {
-          html: `
-            <div class="p-1 overflow-hidden h-full">
-              <div class="font-bold text-xs truncate">${arg.event.title}</div>
-              <div class="text-[10px] opacity-90 truncate"><i class="fas fa-chalkboard-teacher mr-1"></i>${arg.event.extendedProps.enseignant}</div>
-              <div class="text-[10px] opacity-90 truncate"><i class="fas fa-door-open mr-1"></i>${arg.event.extendedProps.salle}</div>
-            </div>
-          `
-        };
+      const head = document.getElementById("timetable-head");
+      const body = document.getElementById("timetable-body");
+      if (!head || !body) {
+        isLoading = false;
+        return;
       }
-    });
-    calendar.render();
-  });
-</script>
+
+      try {
+        const response = await fetch("/etudiant/api/emploi-temps");
+        if (!response.ok) {
+          showToast("Erreur lors du chargement de l'emploi du temps", "error");
+          isLoading = false;
+          return;
+        }
+
+        const data = await response.json();
+
+        // Vider le tableau JUSTE AVANT de le remplir pour éviter les doublons lors d'appels rapides
+        head.innerHTML = "";
+        body.innerHTML = "";
+
+        const jours = data.jours || [
+          "Lundi",
+          "Mardi",
+          "Mercredi",
+          "Jeudi",
+          "Vendredi",
+        ];
+        const horaires = data.horaires || [];
+        const creneaux = data.creneaux || [];
+
+        const totalSlots = horaires.length * jours.length;
+
+        const headerRow = document.createElement("tr");
+        headerRow.className =
+          "bg-gradient-to-r from-gray-100 to-gray-50 dark:from-gray-800 dark:to-gray-800/50";
+
+        const thHoraire = document.createElement("th");
+        thHoraire.className =
+          "sticky left-0 z-10 px-4 sm:px-6 py-4 text-left text-xs font-bold text-gray-700 dark:text-gray-300 uppercase tracking-wider bg-gradient-to-r from-gray-100 to-gray-50 dark:from-gray-800 dark:to-gray-800/50 border-r-2 border-gray-300 dark:border-gray-600";
+        thHoraire.innerHTML =
+          '<div class="flex items-center gap-2"><i class="fas fa-clock text-blue-600 dark:text-blue-400"></i><span>Horaire</span></div>';
+        headerRow.appendChild(thHoraire);
+
+        jours.forEach((jour) => {
+          const th = document.createElement("th");
+          th.className =
+            "px-4 sm:px-6 py-4 text-center text-xs font-bold text-gray-700 dark:text-gray-300 uppercase tracking-wider border-r-2 border-gray-200 dark:border-gray-700 last:border-r-0";
+          th.innerHTML = `
+            <div class="flex flex-col items-center gap-1">
+              <i class="fas fa-calendar-day text-blue-600 dark:text-blue-400 text-sm"></i>
+              <span>${jour}</span>
+            </div>
+          `;
+          headerRow.appendChild(th);
+        });
+
+        head.appendChild(headerRow);
+
+        let occupiedSlots = 0;
+
+        const horaireConfig = data.horaire_config || [];
+
+        horaireConfig.forEach((config) => {
+          const row = document.createElement("tr");
+          row.className =
+            config.type === "pause"
+              ? "bg-gray-50/50 dark:bg-gray-900/20"
+              : "hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors duration-200";
+
+          const tdHoraire = document.createElement("td");
+          tdHoraire.className =
+            "sticky left-0 z-10 px-4 sm:px-6 py-4 text-sm font-bold text-gray-900 dark:text-white bg-gray-50 dark:bg-gray-800 border-r-2 border-gray-300 dark:border-gray-600 whitespace-nowrap";
+          tdHoraire.innerHTML = `
+            <div class="flex items-center gap-2">
+              <i class="fas fa-clock ${
+                config.type === "pause" ? "text-blue-400" : "text-gray-400"
+              } dark:text-gray-500 text-xs"></i>
+              <span>${config.label}</span>
+            </div>
+          `;
+          row.appendChild(tdHoraire);
+
+          jours.forEach((jour) => {
+            const td = document.createElement("td");
+            td.className =
+              "px-3 sm:px-4 py-3 border-r-2 border-gray-200 dark:border-gray-700 last:border-r-0";
+
+            if (config.type === "pause") {
+              td.appendChild(createBreakCard(config));
+            } else {
+              const match = creneaux.find(
+                (c) => c.jour === jour && c.horaire === config.label
+              );
+              if (match) {
+                td.appendChild(createCourseCard(match));
+                occupiedSlots += 1;
+              } else {
+                td.appendChild(createEmptyCell());
+              }
+            }
+
+            row.appendChild(td);
+          });
+
+          body.appendChild(row);
+        });
+
+        calculateStats(totalSlots, occupiedSlots);
+        const totalSlotsEl = document.getElementById("total-slots");
+        if (totalSlotsEl) totalSlotsEl.textContent = totalSlots;
+      } catch (error) {
+        console.error("Erreur chargement emploi du temps:", error);
+        showToast(
+          "Erreur réseau lors du chargement de l'emploi du temps",
+          "error"
+        );
+      } finally {
+        isLoading = false;
+      }
+    }
+
+    // Initialize
+    loadEmploiTemps();
   });
 </script>
 

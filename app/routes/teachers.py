@@ -395,6 +395,58 @@ def notes():
     )
 
 
+@teachers_bp.route("/api/grades/get", methods=["GET"])
+@login_required
+def get_grades_json():
+    """
+    API pour récupérer les notes d'une matière et d'un type d'évaluation spécifiques.
+    Retourne un JSON map: { etudiant_id: { valeur: float, note_id: int, has_pending: bool } }
+    """
+    if current_user.role != "enseignant":
+        return jsonify({"success": False, "message": "Accès non autorisé"}), 403
+
+    matiere_id = request.args.get("matiere_id")
+    type_eval = request.args.get("type_eval")
+
+    if not matiere_id or not type_eval:
+        return jsonify({"success": False, "message": "Paramètres manquants"}), 400
+
+    # Vérifier que l'enseignant enseigne cette matière
+    matiere = Matiere.query.get_or_404(matiere_id)
+    enseignant = Enseignant.query.filter_by(user_id=current_user.id).first()
+
+    if matiere.enseignant_id != enseignant.id:
+        return (
+            jsonify(
+                {"success": False, "message": "Accès non autorisé à cette matière"}
+            ),
+            403,
+        )
+
+    # Récupérer les notes
+    notes = Note.query.filter_by(matiere_id=matiere.id, type_evaluation=type_eval).all()
+
+    # Récupérer les modifications en attente
+    pending_requests = NoteModificationRequest.query.filter_by(
+        enseignant_id=enseignant.id, statut="pending"
+    ).all()
+    pending_note_ids = {req.note_id for req in pending_requests}
+
+    grades_map = {}
+    date_eval = None
+
+    for note in notes:
+        grades_map[note.etudiant_id] = {
+            "valeur": note.note,
+            "note_id": note.id,
+            "has_pending": note.id in pending_note_ids,
+        }
+        if not date_eval and note.date_evaluation:
+            date_eval = note.date_evaluation.strftime("%Y-%m-%d")
+
+    return jsonify({"success": True, "grades": grades_map, "date_eval": date_eval})
+
+
 @teachers_bp.route("/rattrapages", methods=["GET", "POST"])
 @login_required
 def manage_rattrapage():

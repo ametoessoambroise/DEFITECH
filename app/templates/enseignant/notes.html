@@ -44,7 +44,7 @@ current_user.prenom }} | DEFITECH{% endblock %} {% block content %}
               value="{{ matiere.id }}"
               data-credits="{{ matiere.credit }}"
             >
-              {{ matiere.nom }} ({{ matiere.filiere.nom }})
+              {{ matiere.nom }} {{ matiere.filiere.nom }} {{ matiere.filiere.annee }}
             </option>
             {% endfor %}
           </select>
@@ -392,82 +392,109 @@ current_user.prenom }} | DEFITECH{% endblock %} {% block content %}
     loadExistingNotes(matiereId);
   }
 
-  function loadExistingNotes(matiereId) {
+  async function loadExistingNotes(matiereId) {
     const typeEval = document.getElementById("type_eval").value;
 
     if (!matiereId || !typeEval) {
       document.querySelectorAll(".note-input").forEach((input) => {
         input.value = "";
+        resetInputState(input);
       });
       document.getElementById("date_eval").value = "";
       return;
     }
 
-    // Notes existantes passées depuis le backend
-    const dataContainer = document.getElementById("notes-data");
-    const notesExistantes = dataContainer
-      ? JSON.parse(dataContainer.getAttribute("data-notes-existantes") || "{}")
-      : {};
-    const datesEvaluations = dataContainer
-      ? JSON.parse(dataContainer.getAttribute("data-dates-evaluations") || "{}")
-      : {};
+    try {
+      // Indicateur de chargement (optionnel UX)
+      document
+        .querySelectorAll(".note-input")
+        .forEach((input) => (input.disabled = true));
 
-    // Pré-remplir la date d'évaluation si elle existe
-    const dateKey = `${matiereId}_${typeEval}`;
-    if (datesEvaluations[dateKey]) {
-      document.getElementById("date_eval").value = datesEvaluations[dateKey];
-    } else {
-      // Réinitialiser la date si aucune n'existe
-      document.getElementById("date_eval").value = "";
+      const response = await fetch(
+        `/enseignant/api/grades/get?matiere_id=${matiereId}&type_eval=${typeEval}`
+      );
+      if (!response.ok) throw new Error("Erreur réseau");
+
+      const data = await response.json();
+
+      if (data.success) {
+        const grades = data.grades;
+        const dateEval = data.date_eval;
+
+        // Mise à jour de la date
+        if (dateEval) {
+          document.getElementById("date_eval").value = dateEval;
+        } else {
+          // Garder la date actuelle ou vider ? Vider pour éviter confusion si nouvelle saisie
+          // Mais l'UX veut souvent la date du jour par défaut.
+          // On ne vide que si on change de contexte sans avoir de date.
+          // Si vide, on remet la date du jour
+          if (!document.getElementById("date_eval").value) {
+            document.getElementById("date_eval").value = new Date()
+              .toISOString()
+              .split("T")[0];
+          }
+        }
+
+        document.querySelectorAll(".note-input").forEach((input) => {
+          const etudiantId = input.getAttribute("data-etudiant-id");
+          const noteData = grades[etudiantId];
+
+          resetInputState(input); // Remet à l'état éditable par défaut
+
+          if (noteData) {
+            input.value = noteData.valeur;
+            input.setAttribute("data-note-id", noteData.note_id);
+
+            // Verrouiller
+            input.setAttribute("readonly", "true");
+            input.classList.add(
+              "bg-gray-100",
+              "cursor-not-allowed",
+              "text-gray-500"
+            );
+
+            // UI elements
+            const container = input.parentElement;
+            const editBtn = container.querySelector(".edit-note-btn");
+            const pendingBadge = container.querySelector(".pending-badge");
+
+            editBtn.classList.remove("hidden");
+
+            if (noteData.has_pending) {
+              pendingBadge.classList.remove("hidden");
+              editBtn.classList.add("hidden");
+            }
+          } else {
+            input.value = "";
+          }
+        });
+      }
+    } catch (e) {
+      console.error("Erreur chargement notes:", e);
+    } finally {
+      document
+        .querySelectorAll(".note-input")
+        .forEach((input) => (input.disabled = false));
     }
+  }
 
-    document.querySelectorAll(".note-input").forEach((input) => {
-      const etudiantId = input.getAttribute("data-etudiant-id");
-      const key = `${etudiantId}_${matiereId}_${typeEval}`;
+  function resetInputState(input) {
+    input.removeAttribute("readonly");
+    input.classList.remove(
+      "bg-gray-100",
+      "cursor-not-allowed",
+      "text-gray-500"
+    );
+    input.setAttribute("data-note-id", "");
 
-      // Reset UI elements
-      const container = input.parentElement; // .flex.items-center.space-x-2.relative
+    const container = input.parentElement;
+    if (container) {
       const editBtn = container.querySelector(".edit-note-btn");
       const pendingBadge = container.querySelector(".pending-badge");
-
-      input.removeAttribute("readonly");
-      input.classList.remove(
-        "bg-gray-100",
-        "cursor-not-allowed",
-        "text-gray-500"
-      );
-      editBtn.classList.add("hidden");
-      pendingBadge.classList.add("hidden");
-      input.setAttribute("data-note-id", "");
-
-      if (notesExistantes[key]) {
-        // Nouvelle structure: {valeur: x, note_id: y, has_pending: bool}
-        const noteData = notesExistantes[key];
-        input.value = noteData.valeur;
-        input.setAttribute("data-note-id", noteData.note_id);
-
-        // Verrouiller l'input car la note existe (Mode "Validation" implicite après sauvegarde)
-        input.setAttribute("readonly", "true");
-        input.classList.add(
-          "bg-gray-100",
-          "cursor-not-allowed",
-          "text-gray-500"
-        );
-        input.style.backgroundColor = ""; // Remove inline green style from previous logic if any
-
-        // Afficher le bouton edit
-        editBtn.classList.remove("hidden");
-
-        // Gérer le badge
-        if (noteData.has_pending) {
-          pendingBadge.classList.remove("hidden");
-          editBtn.classList.add("hidden"); // On ne peut pas redemander tant qu'une est en cours
-        }
-      } else {
-        input.value = "";
-        input.style.backgroundColor = "";
-      }
-    });
+      if (editBtn) editBtn.classList.add("hidden");
+      if (pendingBadge) pendingBadge.classList.add("hidden");
+    }
   }
 
   // Mettre à jour les notes quand le type d'évaluation change

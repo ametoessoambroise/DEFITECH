@@ -176,9 +176,8 @@ def dashboard():
 @login_required
 def voir_notes():
     """
-    Permet à l'étudiant de consulter ses notes.
+    Permet à l'étudiant de consulter ses notes groupées par matière.
     """
-
     if current_user.role != "etudiant":
         flash("Accès non autorisé.", "error")
         return redirect(url_for("main.index"))
@@ -188,45 +187,38 @@ def voir_notes():
         flash("Profil étudiant introuvable.", "error")
         return redirect(url_for("main.index"))
 
-    notes = (
-        Note.query.filter_by(etudiant_id=etudiant.id)
-        .order_by(Note.date_evaluation.desc())
-        .all()
-    )
+    from app.services.academic_engine import AcademicEngine
 
-    # Résoudre les noms de matière pour l'affichage (matiere peut être None)
+    # Récupérer toutes les matières liées aux notes de l'étudiant
+    # ou toutes les matières de sa filière/année ?
+    # On va prendre les matières où il a au moins une note.
+    notes_query = Note.query.filter_by(etudiant_id=etudiant.id).all()
+    matiere_ids = list(set([n.matiere_id for n in notes_query if n.matiere_id]))
+
     notes_display = []
-    for n in notes:
-        matiere = None
-        if n.matiere_id:
-            try:
-                matiere = Matiere.query.get(n.matiere_id)
-            except Exception:
-                matiere = None
+    for m_id in matiere_ids:
+        matiere = Matiere.query.get(m_id)
+        if not matiere:
+            continue
+
+        stats = AcademicEngine.calculate_subject_stats(etudiant.id, m_id)
         notes_display.append(
             {
-                "matiere": matiere.nom if matiere else "-",
-                "type": n.type_evaluation or "-",
-                "note": n.note if n.note is not None else "-",
-                "date": n.date_evaluation,
+                "code": matiere.code or "-",
+                "matiere": matiere.nom,
+                "devoir": stats["note_devoir"],
+                "exam": stats["note_exam"],
+                "tp": stats["note_tp"],
+                "note": stats["moyenne"],
+                "credit": stats["credits_obtenus"],
             }
         )
 
+    # Trier par code ou nom
+    notes_display.sort(key=lambda x: x["matiere"])
+
     if request.is_json or request.args.get("format") == "json":
-        return jsonify(
-            {
-                "success": True,
-                "data": [
-                    {
-                        "matiere": n["matiere"],
-                        "type": n["type"],
-                        "note": n["note"],
-                        "date": n["date"].strftime("%Y-%m-%d") if n["date"] else None,
-                    }
-                    for n in notes_display
-                ],
-            }
-        )
+        return jsonify({"success": True, "data": notes_display})
 
     return render_template("etudiant/voir_notes.html", notes=notes_display)
 
